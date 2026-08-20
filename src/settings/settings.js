@@ -89,34 +89,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
-  // Async Pet Avatar Task Scaffolding
+  // Pet Avatar Task - Executed on Node.js Side for full Node.js API / lib access
   async function runPetAvatarTask(userName, index, itemElement) {
     taskStates.set(userName, "running");
     updateItemTaskUI(itemElement, userName);
 
-    appendLog(`[${userName}] Start Sleep (2 seconds async task)...`, "info");
+    appendLog(
+      `[${userName}] Start Sleep - Dispatched to Node.js backend (2s async task)...`,
+      "info",
+    );
 
     try {
-      // Async 2-second sleep
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      if (window.electronAPI && window.electronAPI.runPetAvatarTask) {
+        const result = await window.electronAPI.runPetAvatarTask(userName);
 
-      // 50% random failure
-      const isFailure = Math.random() < 0.5;
-      if (isFailure) {
-        throw new Error(
-          `Petting task failed on ${userName}: Avatar was grumpy!`,
-        );
+        if (result.success) {
+          taskStates.set(userName, "success");
+          updateItemTaskUI(itemElement, userName);
+          appendLog(
+            `[${userName}] End Sleep - Success! [Node.js Crypto Random: ${result.cryptoRandom}]`,
+            "success",
+          );
+        } else {
+          taskStates.set(userName, "error");
+          updateItemTaskUI(itemElement, userName);
+          appendLog(
+            `[${userName}] Error sleep - ${result.error} [Node.js Crypto Random: ${result.cryptoRandom}]`,
+            "error",
+          );
+        }
       }
-
-      // Success
-      taskStates.set(userName, "success");
-      updateItemTaskUI(itemElement, userName);
-      appendLog(
-        `[${userName}] End Sleep - Success! Avatar was petted happily.`,
-        "success",
-      );
     } catch (err) {
-      // Error
       taskStates.set(userName, "error");
       updateItemTaskUI(itemElement, userName);
       appendLog(`[${userName}] Error sleep - ${err.message}`, "error");
@@ -135,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (state === "running") {
       indicatorEl.innerHTML =
-        '<span class="task-spinner" title="Pet task running..."></span>';
+        '<span class="task-spinner" title="Node.js pet task running..."></span>';
       if (petBtn) petBtn.disabled = true;
     } else if (state === "success") {
       indicatorEl.innerHTML =
@@ -196,7 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const petBtn = document.createElement("button");
       petBtn.type = "button";
       petBtn.className = "btn-pet";
-      petBtn.title = `Run async pet task for ${user}`;
+      petBtn.title = `Run Node.js async pet task for ${user}`;
       petBtn.innerHTML = `🐾 Pet`;
 
       petBtn.addEventListener("click", () => {

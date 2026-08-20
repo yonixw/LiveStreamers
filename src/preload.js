@@ -7,6 +7,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getUsers: () => ipcRenderer.invoke("users:get"),
   updateUsers: (users) => ipcRenderer.invoke("users:update", users),
 
+  // Node.js Side Tasks
+  runPetAvatarTask: (userName) =>
+    ipcRenderer.invoke("task:run-pet-avatar", userName),
+
   // Event Listeners
   onSettingsUpdated: (callback) => {
     const handler = (_event, data) => callback(data);
