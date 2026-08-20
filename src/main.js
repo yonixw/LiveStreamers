@@ -10,11 +10,18 @@ const {
 const path = require("node:path");
 const fs = require("node:fs");
 
-let mainWindow = null;
+let overlayWindow = null;
+let settingsWindow = null;
 let tray = null;
-let isAlwaysOnTop = true;
-let isIgnoringMouseEvents = false;
-let currentOpacity = 1.0;
+
+// Application state
+const state = {
+  users: ["Alex", "Sarah", "Jordan"],
+  isAlwaysOnTop: true,
+  isIgnoringMouseEvents: false,
+  currentOpacity: 1.0,
+  overlayVisible: true,
+};
 
 function createDefaultTrayIcon() {
   const iconPath = path.join(__dirname, "assets", "tray-icon.png");
@@ -33,9 +40,9 @@ function createDefaultTrayIcon() {
       const dist = Math.sqrt(dx * dx + dy * dy);
       const idx = (y * size + x) * 4;
       if (dist <= radius - 0.5) {
-        buffer[idx] = 64; // R
-        buffer[idx + 1] = 158; // G
-        buffer[idx + 2] = 255; // B
+        buffer[idx] = 99; // R
+        buffer[idx + 1] = 102; // G
+        buffer[idx + 2] = 241; // B
         buffer[idx + 3] = 255; // Alpha
       } else {
         buffer[idx + 3] = 0; // Transparent
@@ -45,18 +52,37 @@ function createDefaultTrayIcon() {
   return nativeImage.createFromBuffer(buffer, { width: size, height: size });
 }
 
-function createWindow() {
-  const windowSize = 260;
+function calculateOverlayDimensions(userCount) {
+  const count = Math.max(1, userCount || 1);
+  const width = Math.max(260, Math.min(1400, count * 150 + 40));
+  const height = 220;
+  return { width, height };
+}
 
-  mainWindow = new BrowserWindow({
-    width: windowSize,
-    height: windowSize,
+function updateOverlayBounds() {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  const { width, height } = calculateOverlayDimensions(state.users.length);
+  const bounds = overlayWindow.getBounds();
+  overlayWindow.setBounds({
+    x: bounds.x,
+    y: bounds.y,
+    width,
+    height,
+  });
+}
+
+function createOverlayWindow() {
+  const { width, height } = calculateOverlayDimensions(state.users.length);
+
+  overlayWindow = new BrowserWindow({
+    width,
+    height,
     transparent: true,
     frame: false,
     hasShadow: false,
-    resizable: false,
-    alwaysOnTop: isAlwaysOnTop,
-    opacity: currentOpacity,
+    resizable: true,
+    alwaysOnTop: state.isAlwaysOnTop,
+    opacity: state.currentOpacity,
     skipTaskbar: false,
     backgroundColor: "#00000000",
     webPreferences: {
@@ -67,125 +93,94 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
+  overlayWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
 
-  mainWindow.on("closed", () => {
-    mainWindow = null;
+  if (state.isIgnoringMouseEvents) {
+    overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  }
+
+  if (!state.overlayVisible) {
+    overlayWindow.hide();
+  }
+
+  overlayWindow.on("closed", () => {
+    overlayWindow = null;
   });
+}
+
+function createSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+    settingsWindow.focus();
+    return settingsWindow;
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: 580,
+    height: 720,
+    minWidth: 460,
+    minHeight: 540,
+    autoHideMenuBar: true,
+    title: "LiveStreamers Settings",
+    backgroundColor: "#0f172a",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  settingsWindow.loadFile(path.join(__dirname, "settings", "settings.html"));
+
+  settingsWindow.on("closed", () => {
+    settingsWindow = null;
+  });
+
+  return settingsWindow;
 }
 
 function createTray() {
   const icon = createDefaultTrayIcon();
   tray = new Tray(icon);
-  tray.setToolTip("LiveStreamer Circle UI");
+  tray.setToolTip("LiveStreamers Overlay");
 
   buildTrayMenu();
 
   tray.on("click", () => {
-    if (!mainWindow) {
-      createWindow();
-      return;
-    }
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-    } else {
-      mainWindow.show();
-      mainWindow.focus();
-    }
-    buildTrayMenu();
+    createSettingsWindow();
   });
 }
 
 function buildTrayMenu() {
   if (!tray) return;
 
-  const isVisible = mainWindow ? mainWindow.isVisible() : false;
+  const isOverlayOpen =
+    overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible();
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "LiveStreamer Circle Overlay",
+      label: "LiveStreamers",
       enabled: false,
     },
     { type: "separator" },
     {
-      label: isVisible ? "Hide Window" : "Show Window",
+      label: "Open Settings...",
       click: () => {
-        if (!mainWindow) {
-          createWindow();
-          return;
-        }
-        if (isVisible) {
-          mainWindow.hide();
-        } else {
-          mainWindow.show();
-        }
-        buildTrayMenu();
+        createSettingsWindow();
       },
     },
     {
-      label: "Always on Top",
-      type: "checkbox",
-      checked: isAlwaysOnTop,
-      click: (menuItem) => {
-        isAlwaysOnTop = menuItem.checked;
-        if (mainWindow) {
-          mainWindow.setAlwaysOnTop(isAlwaysOnTop);
-        }
-      },
-    },
-    {
-      label: "Click-Through (Ignore Mouse)",
-      type: "checkbox",
-      checked: isIgnoringMouseEvents,
-      click: (menuItem) => {
-        isIgnoringMouseEvents = menuItem.checked;
-        if (mainWindow) {
-          mainWindow.setIgnoreMouseEvents(isIgnoringMouseEvents, {
-            forward: true,
-          });
-        }
-      },
-    },
-    {
-      label: "Opacity / Transparency",
-      submenu: [
-        {
-          label: "100% (Solid)",
-          type: "radio",
-          checked: currentOpacity === 1.0,
-          click: () => setWindowOpacity(1.0),
-        },
-        {
-          label: "75%",
-          type: "radio",
-          checked: currentOpacity === 0.75,
-          click: () => setWindowOpacity(0.75),
-        },
-        {
-          label: "50%",
-          type: "radio",
-          checked: currentOpacity === 0.5,
-          click: () => setWindowOpacity(0.5),
-        },
-        {
-          label: "25%",
-          type: "radio",
-          checked: currentOpacity === 0.25,
-          click: () => setWindowOpacity(0.25),
-        },
-        {
-          label: "10%",
-          type: "radio",
-          checked: currentOpacity === 0.1,
-          click: () => setWindowOpacity(0.1),
-        },
-      ],
-    },
-    {
-      label: "Center on Screen",
+      label: isOverlayOpen ? "Hide Overlay" : "Show Overlay",
       click: () => {
-        if (mainWindow) {
-          mainWindow.center();
+        toggleOverlayVisibility();
+      },
+    },
+    {
+      label: "Center Overlay",
+      click: () => {
+        if (overlayWindow && !overlayWindow.isDestroyed()) {
+          overlayWindow.center();
         }
       },
     },
@@ -201,62 +196,176 @@ function buildTrayMenu() {
   tray.setContextMenu(contextMenu);
 }
 
-function setWindowOpacity(opacity) {
-  currentOpacity = opacity;
-  if (mainWindow) {
-    mainWindow.setOpacity(currentOpacity);
+function broadcastStateUpdate() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.webContents.send("settings:updated", state);
+    overlayWindow.webContents.send("users:updated", state.users);
+  }
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.webContents.send("settings:updated", state);
+    settingsWindow.webContents.send("users:updated", state.users);
   }
   buildTrayMenu();
 }
 
+function toggleOverlayVisibility() {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    createOverlayWindow();
+    state.overlayVisible = true;
+  } else if (overlayWindow.isVisible()) {
+    overlayWindow.hide();
+    state.overlayVisible = false;
+  } else {
+    overlayWindow.show();
+    state.overlayVisible = true;
+  }
+  broadcastStateUpdate();
+}
+
 // IPC Handlers
-ipcMain.handle("window:set-opacity", (_event, opacity) => {
-  setWindowOpacity(opacity);
-  return currentOpacity;
+ipcMain.handle("settings:get", () => {
+  return state;
+});
+
+ipcMain.handle("users:get", () => {
+  return state.users;
+});
+
+ipcMain.handle("users:update", (_event, newUsers) => {
+  if (Array.isArray(newUsers)) {
+    state.users = newUsers;
+    updateOverlayBounds();
+    broadcastStateUpdate();
+  }
+  return state.users;
+});
+
+ipcMain.handle("settings:update", (_event, partialSettings) => {
+  if (!partialSettings || typeof partialSettings !== "object") return state;
+
+  if (typeof partialSettings.isAlwaysOnTop === "boolean") {
+    state.isAlwaysOnTop = partialSettings.isAlwaysOnTop;
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.setAlwaysOnTop(state.isAlwaysOnTop);
+    }
+  }
+
+  if (typeof partialSettings.isIgnoringMouseEvents === "boolean") {
+    state.isIgnoringMouseEvents = partialSettings.isIgnoringMouseEvents;
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.setIgnoreMouseEvents(state.isIgnoringMouseEvents, {
+        forward: true,
+      });
+    }
+  }
+
+  if (typeof partialSettings.currentOpacity === "number") {
+    state.currentOpacity = Math.max(
+      0.05,
+      Math.min(1.0, partialSettings.currentOpacity),
+    );
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.setOpacity(state.currentOpacity);
+    }
+  }
+
+  if (typeof partialSettings.overlayVisible === "boolean") {
+    state.overlayVisible = partialSettings.overlayVisible;
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      if (state.overlayVisible) {
+        overlayWindow.show();
+      } else {
+        overlayWindow.hide();
+      }
+    } else if (state.overlayVisible) {
+      createOverlayWindow();
+    }
+  }
+
+  if (Array.isArray(partialSettings.users)) {
+    state.users = partialSettings.users;
+    updateOverlayBounds();
+  }
+
+  broadcastStateUpdate();
+  return state;
+});
+
+ipcMain.handle("settings:open", () => {
+  createSettingsWindow();
+  return true;
+});
+
+ipcMain.handle("window:center-overlay", () => {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.center();
+  }
+  return true;
 });
 
 ipcMain.handle("window:toggle-always-on-top", () => {
-  if (!mainWindow) return isAlwaysOnTop;
-  isAlwaysOnTop = !isAlwaysOnTop;
-  mainWindow.setAlwaysOnTop(isAlwaysOnTop);
-  buildTrayMenu();
-  return isAlwaysOnTop;
+  state.isAlwaysOnTop = !state.isAlwaysOnTop;
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.setAlwaysOnTop(state.isAlwaysOnTop);
+  }
+  broadcastStateUpdate();
+  return state.isAlwaysOnTop;
 });
 
 ipcMain.handle("window:toggle-click-through", () => {
-  if (!mainWindow) return isIgnoringMouseEvents;
-  isIgnoringMouseEvents = !isIgnoringMouseEvents;
-  mainWindow.setIgnoreMouseEvents(isIgnoringMouseEvents, { forward: true });
-  buildTrayMenu();
-  return isIgnoringMouseEvents;
+  state.isIgnoringMouseEvents = !state.isIgnoringMouseEvents;
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.setIgnoreMouseEvents(state.isIgnoringMouseEvents, {
+      forward: true,
+    });
+  }
+  broadcastStateUpdate();
+  return state.isIgnoringMouseEvents;
 });
 
-ipcMain.handle("window:close", () => {
-  if (mainWindow) {
-    mainWindow.close();
+ipcMain.handle("window:set-opacity", (_event, opacity) => {
+  state.currentOpacity = Math.max(0.05, Math.min(1.0, opacity));
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.setOpacity(state.currentOpacity);
+  }
+  broadcastStateUpdate();
+  return state.currentOpacity;
+});
+
+ipcMain.handle("window:close", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) win.close();
+});
+
+ipcMain.handle("window:hide", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win.hide();
+    if (win === overlayWindow) {
+      state.overlayVisible = false;
+    }
+    broadcastStateUpdate();
   }
 });
 
-ipcMain.handle("window:hide", () => {
-  if (mainWindow) {
-    mainWindow.hide();
-    buildTrayMenu();
-  }
+ipcMain.handle("app:quit", () => {
+  app.quit();
 });
 
 // App lifecycle
 app.whenReady().then(() => {
-  createWindow();
+  createOverlayWindow();
+  createSettingsWindow();
   createTray();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      createOverlayWindow();
+      createSettingsWindow();
     }
   });
 });
 
 app.on("window-all-closed", () => {
-  // Keep app active in background if tray exists, standard for tray utilities
-  // If platform is macOS (darwin), staying open is standard too.
+  // Stay active in tray
 });

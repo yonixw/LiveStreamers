@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;" />
+    <title>LiveStreamers Settings</title>
+    <link rel="stylesheet" href="settings.css" />
+</head>
+
+<body>
+    <div class="settings-container">
+        <header class="settings-header">
+            <div class="header-title">
+                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <h1>Overlay & Streamer Settings</h1>
+            </div>
+            <span class="badge">Live</span>
+        </header>
+
+        <main class="settings-content">
+            <!-- Section 1: User / Streamer Names List -->
+            <section class="settings-card">
+                <div class="card-header">
+                    <h2>Streamer / User Names List</h2>
+                    <span class="card-subtitle">Manage names to display as circular avatars on the overlay</span>
+                </div>
+
+                <form id="add-user-form" class="user-input-form">
+                    <input type="text" id="new-user-name" placeholder="Enter streamer or user name..."
+                        autocomplete="off" maxlength="30" />
+                    <button type="submit" class="btn btn-primary" id="btn-add-user">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add
+                    </button>
+                </form>
+
+                <div class="users-list-wrapper">
+                    <div class="users-list-header">
+                        <span id="user-count-label">Users (0)</span>
+                        <button type="button" class="btn-link" id="btn-reset-defaults">Reset Defaults</button>
+                    </div>
+                    <ul id="users-list" class="users-list">
+                        <!-- Dynamic items rendered by settings.js -->
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 2: Window Behavior & Checkboxes -->
+            <section class="settings-card">
+                <div class="card-header">
+                    <h2>Overlay Window Controls</h2>
+                    <span class="card-subtitle">Toggle display behavior and click properties</span>
+                </div>
+
+                <div class="checkbox-group">
+                    <label class="toggle-control">
+                        <input type="checkbox" id="chk-show-overlay" checked />
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        <div class="toggle-label-group">
+                            <span class="toggle-title">Show Overlay Window</span>
+                            <span class="toggle-description">Show or hide the transparent avatar circles on
+                                screen</span>
+                        </div>
+                    </label>
+
+                    <label class="toggle-control">
+                        <input type="checkbox" id="chk-always-on-top" checked />
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        <div class="toggle-label-group">
+                            <span class="toggle-title">Always on Top</span>
+                            <span class="toggle-description">Keep the avatar circles above other application
+                                windows</span>
+                        </div>
+                    </label>
+
+                    <label class="toggle-control">
+                        <input type="checkbox" id="chk-click-through" />
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                        <div class="toggle-label-group">
+                            <span class="toggle-title">Click-Through Mode</span>
+                            <span class="toggle-description">Pass mouse clicks directly through the overlay to windows
+                                underneath</span>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Section 3: Opacity Radio Selection -->
+            <section class="settings-card">
+                <div class="card-header">
+                    <h2>Opacity / Transparency</h2>
+                    <span class="card-subtitle">Choose the transparency level for the avatar overlay</span>
+                </div>
+
+                <div class="radio-grid" id="opacity-radio-group">
+                    <label class="radio-card">
+                        <input type="radio" name="opacity" value="1.0" checked />
+                        <span class="radio-custom"></span>
+                        <span class="radio-label">100% (Solid)</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="opacity" value="0.75" />
+                        <span class="radio-custom"></span>
+                        <span class="radio-label">75%</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="opacity" value="0.5" />
+                        <span class="radio-custom"></span>
+                        <span class="radio-label">50%</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="opacity" value="0.25" />
+                        <span class="radio-custom"></span>
+                        <span class="radio-label">25%</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="opacity" value="0.1" />
+                        <span class="radio-custom"></span>
+                        <span class="radio-label">10%</span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Section 4: Quick Action Buttons -->
+            <section class="settings-card actions-card">
+                <div class="card-header">
+                    <h2>Quick Actions</h2>
+                </div>
+                <div class="action-buttons-row">
+                    <button type="button" class="btn btn-secondary" id="btn-center-overlay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="2" x2="12" y2="6"></line>
+                            <line x1="12" y1="18" x2="12" y2="22"></line>
+                            <line x1="2" y1="12" x2="6" y2="12"></line>
+                            <line x1="18" y1="12" x2="22" y2="12"></line>
+                        </svg>
+                        Center on Screen
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btn-toggle-overlay">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Toggle Overlay
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btn-quit-app">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                            <line x1="12" y1="2" x2="12" y2="12"></line>
+                        </svg>
+                        Quit App
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="settings-footer">
+            <span>LiveStreamers Overlay v1.1 • Changes are saved and applied automatically</span>
+        </footer>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+
+</html>
