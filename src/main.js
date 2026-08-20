@@ -116,10 +116,10 @@ function createSettingsWindow() {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 580,
-    height: 720,
-    minWidth: 460,
-    minHeight: 540,
+    width: 620,
+    height: 780,
+    minWidth: 480,
+    minHeight: 560,
     autoHideMenuBar: true,
     title: "LiveStreamers Settings",
     backgroundColor: "#0f172a",
@@ -293,6 +293,28 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
 
 ipcMain.handle("settings:open", () => {
   createSettingsWindow();
+  return true;
+});
+
+ipcMain.handle("settings:toggle-devtools", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    if (win.webContents.isDevToolsOpened()) {
+      win.webContents.closeDevTools();
+    } else {
+      win.webContents.openDevTools({ mode: "detach" });
+    }
+  }
+  return true;
+});
+
+ipcMain.handle("log:terminal", (_event, { tag, message, isError }) => {
+  const timestamp = new Date().toLocaleTimeString();
+  if (isError) {
+    console.error(`[${timestamp}] [${tag || "LOG"}] ERROR:`, message);
+  } else {
+    console.log(`[${timestamp}] [${tag || "LOG"}]`, message);
+  }
   return true;
 });
 

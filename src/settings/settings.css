@@ -37,7 +37,7 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .settings-header {
@@ -80,7 +80,7 @@ body {
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .settings-card {
@@ -92,7 +92,14 @@ body {
 }
 
 .card-header {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+}
+
+.card-header.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .card-header h2 {
@@ -167,7 +174,7 @@ body {
 
 .users-list {
   list-style: none;
-  max-height: 180px;
+  max-height: 190px;
   overflow-y: auto;
 }
 
@@ -203,6 +210,7 @@ body {
   align-items: center;
   gap: 10px;
   flex: 1;
+  min-width: 0;
 }
 
 .user-avatar-mini {
@@ -224,12 +232,98 @@ body {
   font-size: 0.88rem;
   font-weight: 500;
   color: var(--text-main);
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pet Task Status Indicator (Spinner, Checkmark, Red X) */
+.user-task-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.task-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.task-status-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+  border: 1px solid var(--success);
+  font-size: 0.75rem;
+  font-weight: bold;
+  animation: popIn 0.2s ease forwards;
+}
+
+.task-status-error {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  font-size: 0.75rem;
+  font-weight: bold;
+  animation: popIn 0.2s ease forwards;
 }
 
 .user-item-actions {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-pet {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-pet:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-pet:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-icon-action {
@@ -250,6 +344,67 @@ body {
   background: rgba(239, 68, 68, 0.15);
   color: var(--danger);
   border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Task Activity Logs Panel */
+.log-card {
+  padding: 14px 16px;
+}
+
+.log-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.log-terminal {
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: var(--border-radius-sm);
+  padding: 10px 12px;
+  height: 110px;
+  overflow-y: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.log-time {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.log-msg {
+  color: #cbd5e1;
+}
+
+.log-entry.system-log .log-msg {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.log-entry.log-info .log-msg {
+  color: #67e8f9;
+}
+
+.log-entry.log-success .log-msg {
+  color: #4ade80;
+  font-weight: 500;
+}
+
+.log-entry.log-error .log-msg {
+  color: #f87171;
+  font-weight: 500;
 }
 
 /* Checkboxes & Toggle Controls */
@@ -401,6 +556,11 @@ body {
   transition: all 0.2s;
 }
 
+.btn-sm {
+  padding: 4px 9px;
+  font-size: 0.78rem;
+}
+
 .btn-icon {
   width: 15px;
   height: 15px;
@@ -449,5 +609,16 @@ body {
   text-align: center;
   font-size: 0.72rem;
   color: var(--text-muted);
-  padding-top: 6px;
+  padding-top: 4px;
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

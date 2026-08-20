@@ -19,9 +19,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     return () => ipcRenderer.removeListener("users:updated", handler);
   },
 
-  // Overlay actions
+  // Overlay & System actions
   centerOverlay: () => ipcRenderer.invoke("window:center-overlay"),
   openSettings: () => ipcRenderer.invoke("settings:open"),
+  toggleDevTools: () => ipcRenderer.invoke("settings:toggle-devtools"),
+  logTerminal: (tag, message, isError = false) =>
+    ipcRenderer.invoke("log:terminal", { tag, message, isError }),
   toggleAlwaysOnTop: () => ipcRenderer.invoke("window:toggle-always-on-top"),
   toggleClickThrough: () => ipcRenderer.invoke("window:toggle-click-through"),
   setOpacity: (opacity) => ipcRenderer.invoke("window:set-opacity", opacity),

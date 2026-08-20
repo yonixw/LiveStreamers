@@ -14,8 +14,72 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnCenterOverlay = document.getElementById("btn-center-overlay");
   const btnToggleOverlay = document.getElementById("btn-toggle-overlay");
   const btnQuitApp = document.getElementById("btn-quit-app");
+  const btnOpenDevTools = document.getElementById("btn-open-devtools");
+  const btnClearLogs = document.getElementById("btn-clear-logs");
+  const logTerminal = document.getElementById("log-terminal");
 
   let localUsers = [];
+  // Track task states for each user: null | 'running' | 'success' | 'error'
+  const taskStates = new Map();
+
+  // Logging helper: logs to UI log terminal, browser DevTools console, and Node CLI terminal
+  function appendLog(message, type = "info") {
+    const timestamp = new Date().toLocaleTimeString();
+
+    // 1. Browser DevTools console
+    if (type === "error") {
+      console.error(`[Pet Task ${timestamp}]`, message);
+    } else {
+      console.log(`[Pet Task ${timestamp}]`, message);
+    }
+
+    // 2. Main process Node CLI terminal via IPC
+    if (window.electronAPI && window.electronAPI.logTerminal) {
+      window.electronAPI.logTerminal("PetTask", message, type === "error");
+    }
+
+    // 3. In-app UI log terminal
+    if (logTerminal) {
+      const entry = document.createElement("div");
+      entry.className = `log-entry log-${type}`;
+
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "log-time";
+      timeSpan.textContent = `[${timestamp}]`;
+
+      const msgSpan = document.createElement("span");
+      msgSpan.className = "log-msg";
+      msgSpan.textContent = message;
+
+      entry.appendChild(timeSpan);
+      entry.appendChild(msgSpan);
+      logTerminal.appendChild(entry);
+      logTerminal.scrollTop = logTerminal.scrollHeight;
+    }
+  }
+
+  // Clear log terminal
+  if (btnClearLogs) {
+    btnClearLogs.addEventListener("click", () => {
+      if (logTerminal) {
+        logTerminal.innerHTML = `
+          <div class="log-entry system-log">
+            <span class="log-time">[System]</span>
+            <span class="log-msg">Logs cleared.</span>
+          </div>
+        `;
+      }
+    });
+  }
+
+  // Toggle DevTools
+  if (btnOpenDevTools) {
+    btnOpenDevTools.addEventListener("click", () => {
+      if (window.electronAPI && window.electronAPI.toggleDevTools) {
+        window.electronAPI.toggleDevTools();
+      }
+    });
+  }
 
   // Helper to get initials
   function getInitials(name) {
@@ -25,7 +89,69 @@ document.addEventListener("DOMContentLoaded", async () => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
-  // Render the list of user names
+  // Async Pet Avatar Task Scaffolding
+  async function runPetAvatarTask(userName, index, itemElement) {
+    taskStates.set(userName, "running");
+    updateItemTaskUI(itemElement, userName);
+
+    appendLog(`[${userName}] Start Sleep (2 seconds async task)...`, "info");
+
+    try {
+      // Async 2-second sleep
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // 50% random failure
+      const isFailure = Math.random() < 0.5;
+      if (isFailure) {
+        throw new Error(
+          `Petting task failed on ${userName}: Avatar was grumpy!`,
+        );
+      }
+
+      // Success
+      taskStates.set(userName, "success");
+      updateItemTaskUI(itemElement, userName);
+      appendLog(
+        `[${userName}] End Sleep - Success! Avatar was petted happily.`,
+        "success",
+      );
+    } catch (err) {
+      // Error
+      taskStates.set(userName, "error");
+      updateItemTaskUI(itemElement, userName);
+      appendLog(`[${userName}] Error sleep - ${err.message}`, "error");
+    }
+  }
+
+  // Update status indicator and pet button for a specific item
+  function updateItemTaskUI(itemElement, userName) {
+    if (!itemElement) return;
+
+    const state = taskStates.get(userName);
+    const indicatorEl = itemElement.querySelector(".user-task-indicator");
+    const petBtn = itemElement.querySelector(".btn-pet");
+
+    if (!indicatorEl) return;
+
+    if (state === "running") {
+      indicatorEl.innerHTML =
+        '<span class="task-spinner" title="Pet task running..."></span>';
+      if (petBtn) petBtn.disabled = true;
+    } else if (state === "success") {
+      indicatorEl.innerHTML =
+        '<span class="task-status-success" title="Pet task succeeded! (Green Checkmark)">✓</span>';
+      if (petBtn) petBtn.disabled = false;
+    } else if (state === "error") {
+      indicatorEl.innerHTML =
+        '<span class="task-status-error" title="Pet task failed! (Red X)">✕</span>';
+      if (petBtn) petBtn.disabled = false;
+    } else {
+      indicatorEl.innerHTML = "";
+      if (petBtn) petBtn.disabled = false;
+    }
+  }
+
+  // Render the list of user names with Pet task trigger
   function renderUsersList(users) {
     localUsers = users || [];
     userCountLabel.textContent = `Users (${localUsers.length})`;
@@ -42,7 +168,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       avatarDiv.className = "user-avatar-mini";
       avatarDiv.textContent = getInitials(user);
 
-      // Distinct subtle gradient colors based on name hash
+      // Distinct colors based on name hash
       let hash = 0;
       for (let i = 0; i < user.length; i++) {
         hash = user.charCodeAt(i) + ((hash << 5) - hash);
@@ -55,12 +181,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       nameSpan.className = "user-name-text";
       nameSpan.textContent = user;
 
+      // Status indicator for pet task (spinner / checkmark / red X)
+      const taskIndicator = document.createElement("span");
+      taskIndicator.className = "user-task-indicator";
+
       infoDiv.appendChild(avatarDiv);
       infoDiv.appendChild(nameSpan);
+      infoDiv.appendChild(taskIndicator);
 
       const actionsDiv = document.createElement("div");
       actionsDiv.className = "user-item-actions";
 
+      // Pet Button
+      const petBtn = document.createElement("button");
+      petBtn.type = "button";
+      petBtn.className = "btn-pet";
+      petBtn.title = `Run async pet task for ${user}`;
+      petBtn.innerHTML = `🐾 Pet`;
+
+      petBtn.addEventListener("click", () => {
+        runPetAvatarTask(user, index, li);
+      });
+
+      // Delete Button
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "btn-icon-action";
@@ -76,10 +219,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         removeUser(index);
       });
 
+      actionsDiv.appendChild(petBtn);
       actionsDiv.appendChild(deleteBtn);
       li.appendChild(infoDiv);
       li.appendChild(actionsDiv);
       usersListEl.appendChild(li);
+
+      // Restore existing state if present
+      updateItemTaskUI(li, user);
     });
   }
 
@@ -100,6 +247,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Remove user handler
   function removeUser(index) {
+    const removedName = localUsers[index];
+    taskStates.delete(removedName);
     localUsers.splice(index, 1);
     renderUsersList(localUsers);
 
@@ -116,6 +265,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Nova Gamer",
       "Jordan Pro",
     ];
+    taskStates.clear();
     renderUsersList(defaultUsers);
     if (window.electronAPI && window.electronAPI.updateUsers) {
       window.electronAPI.updateUsers(defaultUsers);
@@ -213,7 +363,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Listen for external updates (e.g., changes from tray or other sources)
+  // Listen for external updates
   if (window.electronAPI && window.electronAPI.onSettingsUpdated) {
     window.electronAPI.onSettingsUpdated((newSettings) => {
       applySettingsToUI(newSettings);

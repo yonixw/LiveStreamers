@@ -26,11 +26,12 @@
         </header>
 
         <main class="settings-content">
-            <!-- Section 1: User / Streamer Names List -->
+            <!-- Section 1: User / Streamer Names List & Pet Avatar Task -->
             <section class="settings-card">
                 <div class="card-header">
-                    <h2>Streamer / User Names List</h2>
-                    <span class="card-subtitle">Manage names to display as circular avatars on the overlay</span>
+                    <h2>Streamer / User Avatars & Tasks</h2>
+                    <span class="card-subtitle">Manage avatars and trigger async Pet Avatar tasks (2s async sleep with
+                        50% outcome)</span>
                 </div>
 
                 <form id="add-user-form" class="user-input-form">
@@ -51,12 +52,41 @@
                         <button type="button" class="btn-link" id="btn-reset-defaults">Reset Defaults</button>
                     </div>
                     <ul id="users-list" class="users-list">
-                        <!-- Dynamic items rendered by settings.js -->
+                        <!-- Dynamic items rendered by settings.js with Pet task trigger, spinner, and status -->
                     </ul>
                 </div>
             </section>
 
-            <!-- Section 2: Window Behavior & Checkboxes -->
+            <!-- Section 2: Task Activity Logs Console -->
+            <section class="settings-card log-card">
+                <div class="card-header flex-between">
+                    <div>
+                        <h2>Task Activity & Console Logs</h2>
+                        <span class="card-subtitle">Real-time log stream (also mirrored to DevTools Console and Node
+                            CLI)</span>
+                    </div>
+                    <div class="log-actions">
+                        <button type="button" class="btn btn-sm btn-secondary" id="btn-open-devtools">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                            DevTools
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="btn-clear-logs">Clear</button>
+                    </div>
+                </div>
+
+                <div id="log-terminal" class="log-terminal">
+                    <div class="log-entry system-log">
+                        <span class="log-time">[System]</span>
+                        <span class="log-msg">Ready. Click "Pet" on any avatar to trigger async sleep task.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Window Behavior & Checkboxes -->
             <section class="settings-card">
                 <div class="card-header">
                     <h2>Overlay Window Controls</h2>
@@ -96,7 +126,7 @@
                 </div>
             </section>
 
-            <!-- Section 3: Opacity Radio Selection -->
+            <!-- Section 4: Opacity Radio Selection -->
             <section class="settings-card">
                 <div class="card-header">
                     <h2>Opacity / Transparency</h2>
@@ -132,7 +162,7 @@
                 </div>
             </section>
 
-            <!-- Section 4: Quick Action Buttons -->
+            <!-- Section 5: Quick Action Buttons -->
             <section class="settings-card actions-card">
                 <div class="card-header">
                     <h2>Quick Actions</h2>
@@ -167,7 +197,7 @@
         </main>
 
         <footer class="settings-footer">
-            <span>LiveStreamers Overlay v1.1 • Changes are saved and applied automatically</span>
+            <span>LiveStreamers Overlay • Async Pet Avatar Task Scaffolding</span>
         </footer>
     </div>
 
