@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;" />
+    <title>Circle Overlay</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div id="circle-container" class="circle-container" title="Drag to move | Right-click for options">
+        <div class="circle-frame">
+            <img id="circle-image" src="../assets/sample-avatar.svg" alt="Circle UI" />
+            <div class="glow-ring"></div>
+            <div class="status-badge" title="Live status indicator"></div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+
+</html>

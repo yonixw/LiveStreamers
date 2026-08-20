@@ -1,0 +1,23 @@
+{
+  "name": "electron-circle-overlay",
+  "version": "1.0.0",
+  "description": "Cross-platform Electron boilerplate with transparent circular UI and system tray",
+  "main": "src/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.2.1"
+  },
+  "keywords": [
+    "electron",
+    "boilerplate",
+    "transparent-window",
+    "overlay",
+    "tray"
+  ],
+  "author": "",
+  "license": "MIT"
+}
