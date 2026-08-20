@@ -8,6 +8,7 @@ A cross-platform Electron boilerplate displaying a transparent, circular UI over
 - **Draggable UI**: Move the circle anywhere across your desktop with drag-and-drop.
 - **System Tray Menu**:
   - Show / Hide Overlay
+  - Opacity / Transparency adjustment (100%, 75%, 50%, 25%, 10%)
   - Toggle Always on Top (Pinning)
   - Toggle Click-Through (Mouse pass-through)
   - Center on Screen

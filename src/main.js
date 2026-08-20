@@ -14,6 +14,7 @@ let mainWindow = null;
 let tray = null;
 let isAlwaysOnTop = true;
 let isIgnoringMouseEvents = false;
+let currentOpacity = 1.0;
 
 function createDefaultTrayIcon() {
   const iconPath = path.join(__dirname, "assets", "tray-icon.png");
@@ -55,6 +56,7 @@ function createWindow() {
     hasShadow: false,
     resizable: false,
     alwaysOnTop: isAlwaysOnTop,
+    opacity: currentOpacity,
     skipTaskbar: false,
     backgroundColor: "#00000000",
     webPreferences: {
@@ -145,6 +147,41 @@ function buildTrayMenu() {
       },
     },
     {
+      label: "Opacity / Transparency",
+      submenu: [
+        {
+          label: "100% (Solid)",
+          type: "radio",
+          checked: currentOpacity === 1.0,
+          click: () => setWindowOpacity(1.0),
+        },
+        {
+          label: "75%",
+          type: "radio",
+          checked: currentOpacity === 0.75,
+          click: () => setWindowOpacity(0.75),
+        },
+        {
+          label: "50%",
+          type: "radio",
+          checked: currentOpacity === 0.5,
+          click: () => setWindowOpacity(0.5),
+        },
+        {
+          label: "25%",
+          type: "radio",
+          checked: currentOpacity === 0.25,
+          click: () => setWindowOpacity(0.25),
+        },
+        {
+          label: "10%",
+          type: "radio",
+          checked: currentOpacity === 0.1,
+          click: () => setWindowOpacity(0.1),
+        },
+      ],
+    },
+    {
       label: "Center on Screen",
       click: () => {
         if (mainWindow) {
@@ -164,7 +201,20 @@ function buildTrayMenu() {
   tray.setContextMenu(contextMenu);
 }
 
+function setWindowOpacity(opacity) {
+  currentOpacity = opacity;
+  if (mainWindow) {
+    mainWindow.setOpacity(currentOpacity);
+  }
+  buildTrayMenu();
+}
+
 // IPC Handlers
+ipcMain.handle("window:set-opacity", (_event, opacity) => {
+  setWindowOpacity(opacity);
+  return currentOpacity;
+});
+
 ipcMain.handle("window:toggle-always-on-top", () => {
   if (!mainWindow) return isAlwaysOnTop;
   isAlwaysOnTop = !isAlwaysOnTop;
