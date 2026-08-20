@@ -1,0 +1,24 @@
+Supposed to work even as fetch/curl "crawler" 
+
+Example UC554eY5jNUfDq3yDOJYirOQ
+
+https://www.youtube.com/feeds/videos.xml?channel_id=UCchBatdUMZoMfJ3rIzgV84g
+    <media:title>
+    <published>2026-08-20T20:17:01+00:00</published>
+        start time of stream 
+    <media:description>Date streamed August 20th, 2026
+    [id]...
+    [game for kick/twitch]
+    
+    Old but live -> can't know if ended
+    If deleted -> assume ended? 
+
+https://www.youtube.com/channel/UC554eY5jNUfDq3yDOJYirOQ/live
+    search for: 
+        "isLive":true,"originalViewCount":"8807"
+
+UC to UU for upload list
+https://www.youtube.com/playlist?list=UU
+
+
+
