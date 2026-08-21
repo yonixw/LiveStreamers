@@ -12,22 +12,65 @@
 
 <body>
     <div id="overlay-root" class="overlay-root">
-        <!-- Floating toolbar / drag handle on hover -->
-        <div class="overlay-toolbar" title="Double-click to toggle pin | Right-click for settings">
-            <span class="toolbar-drag-handle">Live Streamers</span>
-            <button id="btn-open-settings" class="toolbar-btn" title="Open Settings">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                    </path>
+        <!-- Always-Visible Drag & Anchor Header Bar -->
+        <header class="overlay-header" title="Drag to move overlay | Double-click to pin | Right-click for settings">
+            <div class="header-drag-zone">
+                <svg class="drag-grip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="9" cy="6" r="1.5"></circle>
+                    <circle cx="15" cy="6" r="1.5"></circle>
+                    <circle cx="9" cy="12" r="1.5"></circle>
+                    <circle cx="15" cy="12" r="1.5"></circle>
+                    <circle cx="9" cy="18" r="1.5"></circle>
+                    <circle cx="15" cy="18" r="1.5"></circle>
                 </svg>
-            </button>
+                <span class="header-title">LiveStreamers</span>
+                <span id="header-live-badge" class="header-live-badge">0 Live</span>
+            </div>
+
+            <div class="header-actions">
+                <button id="btn-refresh" class="header-action-btn" title="Check Live Status Now">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                    </svg>
+                </button>
+                <button id="btn-open-settings" class="header-action-btn" title="Open Settings">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Shared Live Stream Status Banner (Always visible without clipping) -->
+        <div id="stream-info-banner" class="stream-info-banner">
+            <div id="banner-default-view" class="banner-view active">
+                <span class="banner-icon-hint">ℹ️</span>
+                <span id="banner-default-text" class="banner-hint-text">Hover any avatar to view live details • Click to
+                    open stream</span>
+            </div>
+
+            <div id="banner-hover-view" class="banner-view">
+                <div class="banner-meta-line">
+                    <span id="banner-platform-pill" class="banner-platform-pill">TTV</span>
+                    <span id="banner-streamer-name" class="banner-streamer-name">Streamer</span>
+                    <span id="banner-status-pill" class="banner-status-pill pill-live">🔴 LIVE</span>
+                    <span id="banner-viewers" class="banner-viewers-count"></span>
+                    <span id="banner-game" class="banner-game-tag"></span>
+                    <span id="banner-uptime" class="banner-uptime-text"></span>
+                    <button id="banner-open-btn" class="banner-open-link" title="Open Stream in Browser">Open ↗</button>
+                </div>
+                <div id="banner-title-line" class="banner-title-line">
+                    Stream Title
+                </div>
+            </div>
         </div>
 
         <!-- Avatars List Container -->
         <div id="avatars-container" class="avatars-container">
-            <!-- Dynamic avatar circle cards rendered by renderer.js -->
+            <!-- Dynamic avatar circle cards rendered in-place by renderer.js -->
         </div>
     </div>
 

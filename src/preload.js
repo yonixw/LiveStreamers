@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
 
   // Overlay & System actions
+  openExternal: (url) => ipcRenderer.invoke("app:open-external", url),
   centerOverlay: () => ipcRenderer.invoke("window:center-overlay"),
   openSettings: () => ipcRenderer.invoke("settings:open"),
   toggleDevTools: () => ipcRenderer.invoke("settings:toggle-devtools"),

@@ -6,6 +6,7 @@ const {
   nativeImage,
   ipcMain,
   screen,
+  shell,
 } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -102,8 +103,8 @@ function createDefaultTrayIcon() {
 
 function calculateOverlayDimensions(itemCount) {
   const count = Math.max(1, itemCount || 1);
-  const width = Math.max(280, Math.min(1600, count * 160 + 40));
-  const height = 240;
+  const width = Math.max(380, Math.min(1600, count * 150 + 60));
+  const height = 260;
   return { width, height };
 }
 
@@ -112,12 +113,15 @@ function updateOverlayBounds() {
   const count = state.streamers ? state.streamers.length : state.users.length;
   const { width, height } = calculateOverlayDimensions(count);
   const bounds = overlayWindow.getBounds();
-  overlayWindow.setBounds({
-    x: bounds.x,
-    y: bounds.y,
-    width,
-    height,
-  });
+  // Only resize if dimensions have actually changed to avoid window repaints/flicker
+  if (bounds.width !== width || bounds.height !== height) {
+    overlayWindow.setBounds({
+      x: bounds.x,
+      y: bounds.y,
+      width,
+      height,
+    });
+  }
 }
 
 function createOverlayWindow() {
@@ -424,10 +428,8 @@ ipcMain.handle("users:get", () => {
 
 ipcMain.handle("users:update", (_event, newUsers) => {
   if (Array.isArray(newUsers)) {
-    // If array of strings, sync with streamers
     if (typeof newUsers[0] === "string") {
       state.users = newUsers;
-      // Ensure streamer objects align
       state.streamers = newUsers.map((name, i) => {
         const existing = state.streamers[i];
         if (existing) {
@@ -525,6 +527,20 @@ ipcMain.handle("settings:toggle-devtools", (event) => {
     }
   }
   return true;
+});
+
+// Open external URL safely in user default browser
+ipcMain.handle("app:open-external", async (_event, url) => {
+  if (url && typeof url === "string" && /^https?:\/\//i.test(url)) {
+    try {
+      await shell.openExternal(url);
+      return true;
+    } catch (err) {
+      console.error("Failed to open external URL:", err);
+      return false;
+    }
+  }
+  return false;
 });
 
 // Single Streamer Check Task Execution
