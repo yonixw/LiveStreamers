@@ -11,6 +11,7 @@ Lines group
                 Adds +1 until "read"
 
         Bump when:
+            Bump so even if missed, order preserve my needs
         -> live change
         -> User count > X  (threshold/everytime)
         -> Game change
@@ -19,7 +20,7 @@ Lines group
         -> Live after X hour (and every +Y)
 
 
-Snooze for today/min/hr/days - until {date,time} etc...
+Snooze=RemindME for today/min/hr/days - until {date,time} etc...
 
 --------- V2:
 
