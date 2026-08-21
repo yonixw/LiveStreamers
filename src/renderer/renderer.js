@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const bannerTitleLine = document.getElementById("banner-title-line");
 
   let streamersList = [];
-  let currentHoveredStreamer = null;
+  let currentHoveredStreamerId = null;
 
   // Helper to get initials
   function getInitials(name) {
@@ -115,7 +115,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Show hovered streamer info in the shared top banner
   function showStreamerHoverBanner(streamer) {
-    currentHoveredStreamer = streamer;
+    if (!streamer) return;
+    currentHoveredStreamerId = String(streamer.id || streamer.url);
+
     bannerDefaultView.classList.remove("active");
     bannerHoverView.classList.add("active");
 
@@ -190,7 +192,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Reset top banner to default view
   function hideStreamerHoverBanner() {
-    currentHoveredStreamer = null;
+    currentHoveredStreamerId = null;
     bannerHoverView.classList.remove("active");
     bannerDefaultView.classList.add("active");
     updateDefaultBannerSummary();
@@ -202,11 +204,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateDefaultBannerSummary();
 
     // If currently hovered streamer exists, update hover banner with fresh data
-    if (currentHoveredStreamer) {
+    if (currentHoveredStreamerId) {
       const freshHovered = streamersList.find(
-        (s) =>
-          s.id === currentHoveredStreamer.id ||
-          s.url === currentHoveredStreamer.url,
+        (s) => String(s.id || s.url) === currentHoveredStreamerId,
       );
       if (freshHovered) {
         showStreamerHoverBanner(freshHovered);
@@ -273,9 +273,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         card.appendChild(frame);
         card.appendChild(nameTag);
 
-        // Hover events
+        // Hover events - ALWAYS fetch latest streamer object from card._streamer
         card.addEventListener("mouseenter", () => {
-          showStreamerHoverBanner(streamer);
+          showStreamerHoverBanner(card._streamer || streamer);
         });
 
         card.addEventListener("mouseleave", () => {
@@ -285,17 +285,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Click opens stream URL
         card.addEventListener("click", (e) => {
           e.stopPropagation();
+          const target = card._streamer || streamer;
           if (
-            streamer.url &&
+            target.url &&
             window.electronAPI &&
             window.electronAPI.openExternal
           ) {
-            window.electronAPI.openExternal(streamer.url);
+            window.electronAPI.openExternal(target.url);
           }
         });
 
         avatarsContainer.appendChild(card);
       }
+
+      // Always update card's stored live data reference
+      card._streamer = streamer;
 
       // Update Card In-Place
       const isLive = Boolean(streamer.isLive);
