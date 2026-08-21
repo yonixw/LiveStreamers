@@ -19,5 +19,8 @@
     "tray"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "yt-dlp-wrap-plus": "^2.5.0"
+  }
 }
