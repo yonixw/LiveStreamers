@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const { checkStreamerLiveTask } = require("./stream-checker");
 
 async function petTask({ userName }) {
   const timestamp = new Date().toLocaleTimeString();
@@ -44,4 +45,4 @@ async function petTask({ userName }) {
   }
 }
 
-module.exports = { petTask };
+module.exports = { petTask, checkStreamerLiveTask };

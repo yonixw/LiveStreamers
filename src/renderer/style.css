@@ -7,7 +7,7 @@
 html, body {
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
   background: transparent !important;
   user-select: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -40,7 +40,7 @@ body {
 /* Floating Toolbar */
 .overlay-toolbar {
   position: absolute;
-  top: 4px;
+  top: 2px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -51,8 +51,8 @@ body {
   opacity: 0;
   transform: translateY(-4px);
   transition: opacity 0.2s ease, transform 0.2s ease;
-  z-index: 50;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 100;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .overlay-root:hover .overlay-toolbar {
@@ -96,11 +96,11 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  padding: 10px;
+  gap: 24px;
+  padding: 10px 14px;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 .avatars-container:empty::after {
@@ -123,28 +123,54 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  transition: transform 0.2s ease;
+  position: relative;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
 }
 
 .avatar-card:hover {
-  transform: translateY(-3px) scale(1.03);
+  transform: translateY(-4px) scale(1.04);
+  z-index: 50;
 }
 
 .circle-frame {
   position: relative;
-  width: 110px;
-  height: 110px;
+  width: 105px;
+  height: 105px;
   border-radius: 50%;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5),
               inset 0 2px 2px rgba(255, 255, 255, 0.35),
               inset 0 -2px 3px rgba(0, 0, 0, 0.6);
-  border: 3px solid rgba(255, 255, 255, 0.9);
+  border: 3px solid rgba(255, 255, 255, 0.7);
   background: #18181b;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Glowing Live Frame */
+.circle-frame.live-glow {
+  border-color: #22c55e;
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.6),
+              0 0 32px rgba(34, 197, 94, 0.25),
+              inset 0 2px 2px rgba(255, 255, 255, 0.5),
+              inset 0 -2px 3px rgba(0, 0, 0, 0.6);
+  animation: pulseLiveRing 2s infinite ease-in-out;
+}
+
+@keyframes pulseLiveRing {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.5),
+                0 0 24px rgba(34, 197, 94, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(34, 197, 94, 0.8),
+                0 0 38px rgba(34, 197, 94, 0.4);
+  }
 }
 
 .avatar-inner {
@@ -155,7 +181,7 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 2rem;
+  font-size: 1.9rem;
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.25),
@@ -163,20 +189,85 @@ body {
   pointer-events: none;
 }
 
-.status-badge {
+/* Platform Corner Badge */
+.avatar-platform-corner {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #22c55e;
-  border: 2px solid #0f172a;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4),
-              inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  top: -2px;
+  left: -2px;
+  z-index: 10;
   pointer-events: none;
 }
 
+.platform-mini-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 999px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.02em;
+}
+
+.badge-yt {
+  background: #ff0000;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.badge-ttv {
+  background: #9146ff;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.badge-kc {
+  background: #53fc18;
+  color: #000000;
+  font-weight: 900;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.badge-web {
+  background: #64748b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Status Badge (Bottom Right) */
+.status-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.status-badge-live {
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pulseLiveDot 1.6s infinite ease-in-out;
+}
+
+@keyframes pulseLiveDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+.status-badge-offline {
+  background: #64748b;
+}
+
+/* Streamer Name Tag */
 .user-name-tag {
   background: #0f172a;
   color: #f8fafc;
@@ -193,6 +284,160 @@ body {
   white-space: nowrap;
   text-align: center;
   pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.user-name-tag.tag-live {
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+/* Mouse-Over Rich Popover Card (Cached Info) */
+.stream-hover-card {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  width: 250px;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.6),
+              0 4px 10px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+/* Little triangle pointing down to avatar */
+.stream-hover-card::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(15, 23, 42, 0.96) transparent transparent transparent;
+}
+
+.avatar-card:hover .stream-hover-card {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.hover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 5px;
+}
+
+.hover-streamer-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hover-status-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.pill-live {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.pill-offline {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.hover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hover-stream-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hover-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.hover-meta-item strong {
+  color: #4ade80;
+}
+
+.hover-time-info {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.hover-thumbnail-box {
+  width: 100%;
+  height: 90px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 2px;
+}
+
+.hover-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hover-offline-text {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.hover-footer {
+  font-size: 0.68rem;
+  color: #818cf8;
+  font-weight: 600;
+  text-align: right;
+  padding-top: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 @keyframes popIn {

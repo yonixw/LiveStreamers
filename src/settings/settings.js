@@ -1,11 +1,18 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  // UI Elements
-  const addUserForm = document.getElementById("add-user-form");
-  const newUserNameInput = document.getElementById("new-user-name");
-  const usersListEl = document.getElementById("users-list");
-  const userCountLabel = document.getElementById("user-count-label");
+  // UI Elements - Form & Streamers List
+  const addStreamerForm = document.getElementById("add-streamer-form");
+  const newStreamerUrlInput = document.getElementById("new-streamer-url");
+  const newStreamerNameInput = document.getElementById("new-streamer-name");
+  const newStreamerPlatformSelect = document.getElementById(
+    "new-streamer-platform",
+  );
+  const streamersListEl = document.getElementById("streamers-list");
+  const streamerCountLabel = document.getElementById("streamer-count-label");
   const btnResetDefaults = document.getElementById("btn-reset-defaults");
+  const btnCheckAll = document.getElementById("btn-check-all");
+  const presetButtons = document.querySelectorAll(".btn-preset");
 
+  // UI Elements - Controls
   const chkShowOverlay = document.getElementById("chk-show-overlay");
   const chkAlwaysOnTop = document.getElementById("chk-always-on-top");
   const chkClickThrough = document.getElementById("chk-click-through");
@@ -18,24 +25,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnClearLogs = document.getElementById("btn-clear-logs");
   const logTerminal = document.getElementById("log-terminal");
 
-  let localUsers = [];
-  // Track task states for each user: null | 'running' | 'success' | 'error'
-  const taskStates = new Map();
+  let localStreamers = [];
+  // Track pet task states for each user: null | 'running' | 'success' | 'error'
+  const petTaskStates = new Map();
 
   // Logging helper: logs to UI log terminal, browser DevTools console, and Node CLI terminal
-  function appendLog(message, type = "info") {
+  function appendLog(message, type = "info", tag = "LiveCheck") {
     const timestamp = new Date().toLocaleTimeString();
 
     // 1. Browser DevTools console
     if (type === "error") {
-      console.error(`[Pet Task ${timestamp}]`, message);
+      console.error(`[${tag} ${timestamp}]`, message);
     } else {
-      console.log(`[Pet Task ${timestamp}]`, message);
+      console.log(`[${tag} ${timestamp}]`, message);
     }
 
     // 2. Main process Node CLI terminal via IPC
     if (window.electronAPI && window.electronAPI.logTerminal) {
-      window.electronAPI.logTerminal("PetTask", message, type === "error");
+      window.electronAPI.logTerminal(tag, message, type === "error");
     }
 
     // 3. In-app UI log terminal
@@ -47,11 +54,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       timeSpan.className = "log-time";
       timeSpan.textContent = `[${timestamp}]`;
 
+      const tagSpan = document.createElement("span");
+      tagSpan.className = "log-tag";
+      tagSpan.textContent = `[${tag}]`;
+
       const msgSpan = document.createElement("span");
       msgSpan.className = "log-msg";
       msgSpan.textContent = message;
 
       entry.appendChild(timeSpan);
+      entry.appendChild(tagSpan);
       entry.appendChild(msgSpan);
       logTerminal.appendChild(entry);
       logTerminal.scrollTop = logTerminal.scrollHeight;
@@ -89,14 +101,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
-  // Pet Avatar Task - Executed on Node.js Side for full Node.js API / lib access
-  async function runPetAvatarTask(userName, index, itemElement) {
-    taskStates.set(userName, "running");
-    updateItemTaskUI(itemElement, userName);
+  // Helper to detect platform
+  function detectPlatform(url) {
+    if (!url) return "other";
+    const lower = url.toLowerCase();
+    if (lower.includes("kick.com")) return "kick";
+    if (lower.includes("twitch.tv")) return "twitch";
+    if (lower.includes("youtube.com") || lower.includes("youtu.be"))
+      return "youtube";
+    return "other";
+  }
+
+  // Format number of viewers (e.g. 1.5k)
+  function formatViewerCount(num) {
+    if (num === null || num === undefined) return "";
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    return String(num);
+  }
+
+  // Platform badges styling
+  function getPlatformBadge(platform) {
+    const plat = (platform || "other").toLowerCase();
+    switch (plat) {
+      case "youtube":
+        return `<span class="platform-pill pill-youtube">YouTube</span>`;
+      case "twitch":
+        return `<span class="platform-pill pill-twitch">Twitch</span>`;
+      case "kick":
+        return `<span class="platform-pill pill-kick">Kick</span>`;
+      default:
+        return `<span class="platform-pill pill-other">Web</span>`;
+    }
+  }
+
+  // Pet Avatar Task - Executed on Node.js Side
+  async function runPetAvatarTask(userName, itemElement) {
+    petTaskStates.set(userName, "running");
+    updateItemPetTaskUI(itemElement, userName);
 
     appendLog(
       `[${userName}] Start Sleep - Dispatched to Node.js backend (2s async task)...`,
       "info",
+      "PetTask",
     );
 
     try {
@@ -104,174 +151,373 @@ document.addEventListener("DOMContentLoaded", async () => {
         const result = await window.electronAPI.runPetAvatarTask(userName);
 
         if (result.success) {
-          taskStates.set(userName, "success");
-          updateItemTaskUI(itemElement, userName);
+          petTaskStates.set(userName, "success");
+          updateItemPetTaskUI(itemElement, userName);
           appendLog(
             `[${userName}] End Sleep - Success! [Node.js Crypto Random: ${result.cryptoRandom}]`,
             "success",
+            "PetTask",
           );
         } else {
-          taskStates.set(userName, "error");
-          updateItemTaskUI(itemElement, userName);
+          petTaskStates.set(userName, "error");
+          updateItemPetTaskUI(itemElement, userName);
           appendLog(
             `[${userName}] Error sleep - ${result.error} [Node.js Crypto Random: ${result.cryptoRandom}]`,
             "error",
+            "PetTask",
           );
         }
       }
     } catch (err) {
-      taskStates.set(userName, "error");
-      updateItemTaskUI(itemElement, userName);
-      appendLog(`[${userName}] Error sleep - ${err.message}`, "error");
+      petTaskStates.set(userName, "error");
+      updateItemPetTaskUI(itemElement, userName);
+      appendLog(
+        `[${userName}] Error sleep - ${err.message}`,
+        "error",
+        "PetTask",
+      );
     }
   }
 
-  // Update status indicator and pet button for a specific item
-  function updateItemTaskUI(itemElement, userName) {
+  function updateItemPetTaskUI(itemElement, userName) {
     if (!itemElement) return;
-
-    const state = taskStates.get(userName);
-    const indicatorEl = itemElement.querySelector(".user-task-indicator");
+    const state = petTaskStates.get(userName);
+    const petIndicatorEl = itemElement.querySelector(".pet-task-indicator");
     const petBtn = itemElement.querySelector(".btn-pet");
 
-    if (!indicatorEl) return;
+    if (!petIndicatorEl) return;
 
     if (state === "running") {
-      indicatorEl.innerHTML =
-        '<span class="task-spinner" title="Node.js pet task running..."></span>';
+      petIndicatorEl.innerHTML =
+        '<span class="task-spinner" title="Pet task running..."></span>';
       if (petBtn) petBtn.disabled = true;
     } else if (state === "success") {
-      indicatorEl.innerHTML =
-        '<span class="task-status-success" title="Pet task succeeded! (Green Checkmark)">✓</span>';
+      petIndicatorEl.innerHTML =
+        '<span class="task-status-success" title="Pet task succeeded!">✓</span>';
       if (petBtn) petBtn.disabled = false;
     } else if (state === "error") {
-      indicatorEl.innerHTML =
-        '<span class="task-status-error" title="Pet task failed! (Red X)">✕</span>';
+      petIndicatorEl.innerHTML =
+        '<span class="task-status-error" title="Pet task failed!">✕</span>';
       if (petBtn) petBtn.disabled = false;
     } else {
-      indicatorEl.innerHTML = "";
+      petIndicatorEl.innerHTML = "";
       if (petBtn) petBtn.disabled = false;
     }
   }
 
-  // Render the list of user names with Pet task trigger
-  function renderUsersList(users) {
-    localUsers = users || [];
-    userCountLabel.textContent = `Users (${localUsers.length})`;
-    usersListEl.innerHTML = "";
+  // Check live status for single streamer
+  async function checkStreamerLive(streamer, itemElement) {
+    appendLog(
+      `Checking ${streamer.name || streamer.url} via yt-dlp-utils...`,
+      "info",
+      "LiveCheck",
+    );
 
-    localUsers.forEach((user, index) => {
+    const checkBtn = itemElement
+      ? itemElement.querySelector(".btn-check")
+      : null;
+    if (checkBtn) checkBtn.disabled = true;
+
+    try {
+      if (window.electronAPI && window.electronAPI.checkStreamerLive) {
+        await window.electronAPI.checkStreamerLive(streamer.id);
+      }
+    } catch (err) {
+      appendLog(
+        `Error checking ${streamer.name}: ${err.message}`,
+        "error",
+        "LiveCheck",
+      );
+    } finally {
+      if (checkBtn) checkBtn.disabled = false;
+    }
+  }
+
+  // Render the list of streamers with full controls
+  function renderStreamersList(streamers) {
+    localStreamers = Array.isArray(streamers) ? streamers : [];
+    const liveCount = localStreamers.filter((s) => s.isLive).length;
+    streamerCountLabel.textContent = `Streamers (${localStreamers.length}) • ${liveCount} Live`;
+    streamersListEl.innerHTML = "";
+
+    if (localStreamers.length === 0) {
+      const emptyLi = document.createElement("li");
+      emptyLi.className = "empty-list-message";
+      emptyLi.textContent =
+        "No streamers added yet. Add a Kick, Twitch, or YouTube URL above.";
+      streamersListEl.appendChild(emptyLi);
+      return;
+    }
+
+    localStreamers.forEach((streamer, index) => {
       const li = document.createElement("li");
-      li.className = "user-item";
+      li.className = `streamer-item ${streamer.isLive ? "is-live" : "is-offline"}`;
 
+      // Left Column: Avatar & Details
       const infoDiv = document.createElement("div");
-      infoDiv.className = "user-item-info";
+      infoDiv.className = "streamer-item-info";
 
       const avatarDiv = document.createElement("div");
-      avatarDiv.className = "user-avatar-mini";
-      avatarDiv.textContent = getInitials(user);
+      avatarDiv.className = "streamer-avatar-mini";
+      avatarDiv.textContent = getInitials(streamer.name || streamer.url);
 
-      // Distinct colors based on name hash
+      // Distinct color hash
       let hash = 0;
-      for (let i = 0; i < user.length; i++) {
-        hash = user.charCodeAt(i) + ((hash << 5) - hash);
+      const strToHash = streamer.name || streamer.url || "streamer";
+      for (let i = 0; i < strToHash.length; i++) {
+        hash = strToHash.charCodeAt(i) + ((hash << 5) - hash);
       }
       const hue1 = Math.abs(hash % 360);
       const hue2 = (hue1 + 40) % 360;
       avatarDiv.style.background = `linear-gradient(135deg, hsl(${hue1}, 70%, 55%), hsl(${hue2}, 75%, 45%))`;
 
-      const nameSpan = document.createElement("span");
-      nameSpan.className = "user-name-text";
-      nameSpan.textContent = user;
+      const detailsDiv = document.createElement("div");
+      detailsDiv.className = "streamer-details";
 
-      // Status indicator for pet task (spinner / checkmark / red X)
-      const taskIndicator = document.createElement("span");
-      taskIndicator.className = "user-task-indicator";
+      const titleRow = document.createElement("div");
+      titleRow.className = "streamer-title-row";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "streamer-name-text";
+      nameSpan.textContent = streamer.name || "Streamer";
+
+      const platformBadge = document.createElement("span");
+      platformBadge.innerHTML = getPlatformBadge(streamer.platform);
+
+      titleRow.appendChild(nameSpan);
+      titleRow.appendChild(platformBadge);
+
+      const urlSpan = document.createElement("div");
+      urlSpan.className = "streamer-url-text";
+      urlSpan.title = streamer.url;
+      urlSpan.textContent = streamer.url;
+
+      // Live status info banner (if live or cached)
+      const statusRow = document.createElement("div");
+      statusRow.className = "streamer-status-row";
+
+      let statusBadgeHtml = "";
+      if (streamer.checkStatus === "checking") {
+        statusBadgeHtml = `<span class="status-indicator status-checking"><span class="task-spinner-sm"></span> Checking...</span>`;
+      } else if (streamer.isLive) {
+        const viewers =
+          streamer.cachedInfo && streamer.cachedInfo.viewerCount != null
+            ? ` • 👁️ ${formatViewerCount(streamer.cachedInfo.viewerCount)}`
+            : "";
+        const game =
+          streamer.cachedInfo &&
+          (streamer.cachedInfo.game || streamer.cachedInfo.category)
+            ? ` • 🎮 ${streamer.cachedInfo.game || streamer.cachedInfo.category}`
+            : "";
+        statusBadgeHtml = `<span class="status-indicator status-live">🔴 LIVE${viewers}${game}</span>`;
+      } else {
+        const lastCheckedStr = streamer.lastChecked
+          ? `Last checked: ${new Date(streamer.lastChecked).toLocaleTimeString()}`
+          : "Not checked yet";
+        statusBadgeHtml = `<span class="status-indicator status-offline">⚪ Offline (${lastCheckedStr})</span>`;
+      }
+
+      statusRow.innerHTML = statusBadgeHtml;
+
+      // Optional cached stream title on second line if live
+      if (streamer.isLive && streamer.cachedInfo && streamer.cachedInfo.title) {
+        const streamTitle = document.createElement("div");
+        streamTitle.className = "cached-stream-title";
+        streamTitle.textContent = `"${streamer.cachedInfo.title}"`;
+        statusRow.appendChild(streamTitle);
+      }
+
+      detailsDiv.appendChild(titleRow);
+      detailsDiv.appendChild(urlSpan);
+      detailsDiv.appendChild(statusRow);
 
       infoDiv.appendChild(avatarDiv);
-      infoDiv.appendChild(nameSpan);
-      infoDiv.appendChild(taskIndicator);
+      infoDiv.appendChild(detailsDiv);
 
+      // Right Column: Actions (Check Now, Pet, Remove)
       const actionsDiv = document.createElement("div");
-      actionsDiv.className = "user-item-actions";
+      actionsDiv.className = "streamer-item-actions";
 
-      // Pet Button
+      // Pet indicator
+      const petIndicator = document.createElement("span");
+      petIndicator.className = "pet-task-indicator";
+
+      // Check Live Button
+      const checkBtn = document.createElement("button");
+      checkBtn.type = "button";
+      checkBtn.className = "btn-check";
+      checkBtn.title = `Check live status now for ${streamer.name || streamer.url}`;
+      checkBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+        </svg>
+        Check
+      `;
+      checkBtn.addEventListener("click", () => {
+        checkStreamerLive(streamer, li);
+      });
+
+      // Pet Task Button
       const petBtn = document.createElement("button");
       petBtn.type = "button";
       petBtn.className = "btn-pet";
-      petBtn.title = `Run Node.js async pet task for ${user}`;
+      petBtn.title = `Run Node.js async pet task for ${streamer.name || streamer.url}`;
       petBtn.innerHTML = `🐾 Pet`;
-
       petBtn.addEventListener("click", () => {
-        runPetAvatarTask(user, index, li);
+        runPetAvatarTask(streamer.name || streamer.url, li);
       });
 
       // Delete Button
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "btn-icon-action";
-      deleteBtn.title = `Remove ${user}`;
+      deleteBtn.title = `Remove ${streamer.name || streamer.url}`;
       deleteBtn.innerHTML = `
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       `;
-
       deleteBtn.addEventListener("click", () => {
-        removeUser(index);
+        removeStreamer(streamer.id);
       });
 
+      actionsDiv.appendChild(petIndicator);
+      actionsDiv.appendChild(checkBtn);
       actionsDiv.appendChild(petBtn);
       actionsDiv.appendChild(deleteBtn);
+
       li.appendChild(infoDiv);
       li.appendChild(actionsDiv);
-      usersListEl.appendChild(li);
+      streamersListEl.appendChild(li);
 
-      // Restore existing state if present
-      updateItemTaskUI(li, user);
+      // Restore existing pet task state if present
+      updateItemPetTaskUI(li, streamer.name || streamer.url);
     });
   }
 
-  // Add user handler
-  addUserForm.addEventListener("submit", (e) => {
+  // Add Streamer handler
+  addStreamerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name = newUserNameInput.value.trim();
-    if (!name) return;
+    const url = newStreamerUrlInput.value.trim();
+    if (!url) return;
 
-    localUsers.push(name);
-    newUserNameInput.value = "";
-    renderUsersList(localUsers);
-
-    if (window.electronAPI && window.electronAPI.updateUsers) {
-      window.electronAPI.updateUsers(localUsers);
+    let selectedPlatform = newStreamerPlatformSelect.value;
+    if (selectedPlatform === "auto") {
+      selectedPlatform = detectPlatform(url);
     }
+
+    const name = newStreamerNameInput.value.trim();
+
+    appendLog(
+      `Adding streamer: ${name || url} (${selectedPlatform})...`,
+      "info",
+      "Streamer",
+    );
+
+    if (window.electronAPI && window.electronAPI.addStreamer) {
+      const updatedList = await window.electronAPI.addStreamer({
+        url,
+        name: name || undefined,
+        platform: selectedPlatform,
+      });
+      renderStreamersList(updatedList);
+    }
+
+    newStreamerUrlInput.value = "";
+    newStreamerNameInput.value = "";
+    newStreamerPlatformSelect.value = "auto";
   });
 
-  // Remove user handler
-  function removeUser(index) {
-    const removedName = localUsers[index];
-    taskStates.delete(removedName);
-    localUsers.splice(index, 1);
-    renderUsersList(localUsers);
-
-    if (window.electronAPI && window.electronAPI.updateUsers) {
-      window.electronAPI.updateUsers(localUsers);
+  // Remove Streamer handler
+  async function removeStreamer(streamerId) {
+    if (window.electronAPI && window.electronAPI.removeStreamer) {
+      const updatedList = await window.electronAPI.removeStreamer(streamerId);
+      renderStreamersList(updatedList);
+      appendLog(`Removed streamer ID: ${streamerId}`, "info", "Streamer");
     }
   }
 
+  // Check All Now handler
+  if (btnCheckAll) {
+    btnCheckAll.addEventListener("click", async () => {
+      appendLog(
+        "Triggering manual live check for all streamers...",
+        "info",
+        "LiveCheck",
+      );
+      btnCheckAll.disabled = true;
+      if (window.electronAPI && window.electronAPI.checkStreamerLive) {
+        await window.electronAPI.checkStreamerLive();
+      }
+      setTimeout(() => {
+        btnCheckAll.disabled = false;
+      }, 3000);
+    });
+  }
+
+  // Preset example buttons
+  presetButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const url = btn.getAttribute("data-url");
+      const name = btn.getAttribute("data-name");
+      const platform = btn.getAttribute("data-platform");
+
+      newStreamerUrlInput.value = url;
+      newStreamerNameInput.value = name;
+      newStreamerPlatformSelect.value = platform;
+      newStreamerUrlInput.focus();
+    });
+  });
+
   // Reset to defaults
-  btnResetDefaults.addEventListener("click", () => {
-    const defaultUsers = [
-      "Streamer 1",
-      "Alex Live",
-      "Nova Gamer",
-      "Jordan Pro",
+  btnResetDefaults.addEventListener("click", async () => {
+    const defaultStreamers = [
+      {
+        id: "yt-lofigirl",
+        name: "Lofi Girl",
+        url: "https://www.youtube.com/@LofiGirl/live",
+        platform: "youtube",
+        isLive: false,
+        cachedInfo: null,
+        lastChecked: null,
+        checkStatus: "idle",
+        lastError: null,
+      },
+      {
+        id: "tw-shroud",
+        name: "Shroud",
+        url: "https://www.twitch.tv/shroud",
+        platform: "twitch",
+        isLive: false,
+        cachedInfo: null,
+        lastChecked: null,
+        checkStatus: "idle",
+        lastError: null,
+      },
+      {
+        id: "kc-xqc",
+        name: "xQc",
+        url: "https://kick.com/xqc",
+        platform: "kick",
+        isLive: false,
+        cachedInfo: null,
+        lastChecked: null,
+        checkStatus: "idle",
+        lastError: null,
+      },
     ];
-    taskStates.clear();
-    renderUsersList(defaultUsers);
-    if (window.electronAPI && window.electronAPI.updateUsers) {
-      window.electronAPI.updateUsers(defaultUsers);
+
+    petTaskStates.clear();
+    if (window.electronAPI && window.electronAPI.updateStreamers) {
+      const updated =
+        await window.electronAPI.updateStreamers(defaultStreamers);
+      renderStreamersList(updated);
+      appendLog(
+        "Reset streamers to defaults (YouTube, Twitch, Kick).",
+        "info",
+        "Streamer",
+      );
     }
   });
 
@@ -351,22 +597,34 @@ document.addEventListener("DOMContentLoaded", async () => {
           Math.abs(parseFloat(radio.value) - settings.currentOpacity) < 0.05;
       });
     }
-    if (Array.isArray(settings.users)) {
-      renderUsersList(settings.users);
+    if (Array.isArray(settings.streamers)) {
+      renderStreamersList(settings.streamers);
     }
   }
 
-  // Load initial settings
-  if (window.electronAPI && window.electronAPI.getSettings) {
+  // Load initial streamers and settings
+  if (window.electronAPI) {
     try {
-      const initialSettings = await window.electronAPI.getSettings();
-      applySettingsToUI(initialSettings);
+      if (window.electronAPI.getStreamers) {
+        const streamers = await window.electronAPI.getStreamers();
+        renderStreamersList(streamers);
+      }
+      if (window.electronAPI.getSettings) {
+        const initialSettings = await window.electronAPI.getSettings();
+        applySettingsToUI(initialSettings);
+      }
     } catch (err) {
-      console.error("Failed to load settings:", err);
+      console.error("Failed to load initial settings/streamers:", err);
     }
   }
 
-  // Listen for external updates
+  // Listen for live updates
+  if (window.electronAPI && window.electronAPI.onStreamersUpdated) {
+    window.electronAPI.onStreamersUpdated((updatedStreamers) => {
+      renderStreamersList(updatedStreamers);
+    });
+  }
+
   if (window.electronAPI && window.electronAPI.onSettingsUpdated) {
     window.electronAPI.onSettingsUpdated((newSettings) => {
       applySettingsToUI(newSettings);

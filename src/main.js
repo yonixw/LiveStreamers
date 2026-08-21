@@ -9,15 +9,62 @@ const {
 } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
+const crypto = require("node:crypto");
 const { petTask } = require("./tasks/example");
+const {
+  StreamLiveCheckerService,
+  checkStreamerLiveTask,
+  detectPlatform,
+  extractStreamerName,
+  normalizeUrl,
+} = require("./tasks/stream-checker");
 
 let overlayWindow = null;
 let settingsWindow = null;
 let tray = null;
+let liveCheckerService = null;
+
+// Initial default streamers list (Kick, Twitch, YouTube)
+const defaultStreamers = [
+  {
+    id: "yt-lofigirl",
+    name: "Lofi Girl",
+    url: "https://www.youtube.com/@LofiGirl/live",
+    platform: "youtube",
+    isLive: false,
+    cachedInfo: null,
+    lastChecked: null,
+    checkStatus: "idle",
+    lastError: null,
+  },
+  {
+    id: "tw-shroud",
+    name: "Shroud",
+    url: "https://www.twitch.tv/shroud",
+    platform: "twitch",
+    isLive: false,
+    cachedInfo: null,
+    lastChecked: null,
+    checkStatus: "idle",
+    lastError: null,
+  },
+  {
+    id: "kc-xqc",
+    name: "xQc",
+    url: "https://kick.com/xqc",
+    platform: "kick",
+    isLive: false,
+    cachedInfo: null,
+    lastChecked: null,
+    checkStatus: "idle",
+    lastError: null,
+  },
+];
 
 // Application state
 const state = {
-  users: ["Alex", "Sarah", "Jordan"],
+  streamers: defaultStreamers,
+  users: defaultStreamers.map((s) => s.name),
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
   currentOpacity: 1.0,
@@ -53,16 +100,17 @@ function createDefaultTrayIcon() {
   return nativeImage.createFromBuffer(buffer, { width: size, height: size });
 }
 
-function calculateOverlayDimensions(userCount) {
-  const count = Math.max(1, userCount || 1);
-  const width = Math.max(260, Math.min(1400, count * 150 + 40));
-  const height = 220;
+function calculateOverlayDimensions(itemCount) {
+  const count = Math.max(1, itemCount || 1);
+  const width = Math.max(280, Math.min(1600, count * 160 + 40));
+  const height = 240;
   return { width, height };
 }
 
 function updateOverlayBounds() {
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
-  const { width, height } = calculateOverlayDimensions(state.users.length);
+  const count = state.streamers ? state.streamers.length : state.users.length;
+  const { width, height } = calculateOverlayDimensions(count);
   const bounds = overlayWindow.getBounds();
   overlayWindow.setBounds({
     x: bounds.x,
@@ -73,7 +121,8 @@ function updateOverlayBounds() {
 }
 
 function createOverlayWindow() {
-  const { width, height } = calculateOverlayDimensions(state.users.length);
+  const count = state.streamers ? state.streamers.length : state.users.length;
+  const { width, height } = calculateOverlayDimensions(count);
 
   overlayWindow = new BrowserWindow({
     width,
@@ -117,10 +166,10 @@ function createSettingsWindow() {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 620,
-    height: 780,
-    minWidth: 480,
-    minHeight: 560,
+    width: 680,
+    height: 840,
+    minWidth: 500,
+    minHeight: 600,
     autoHideMenuBar: true,
     title: "LiveStreamers Settings",
     backgroundColor: "#0f172a",
@@ -159,9 +208,15 @@ function buildTrayMenu() {
   const isOverlayOpen =
     overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible();
 
+  const liveCount = state.streamers.filter((s) => s.isLive).length;
+  const statusSummary =
+    state.streamers.length > 0
+      ? `${liveCount}/${state.streamers.length} Live`
+      : "No Streamers";
+
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "LiveStreamers",
+      label: `LiveStreamers (${statusSummary})`,
       enabled: false,
     },
     { type: "separator" },
@@ -169,6 +224,14 @@ function buildTrayMenu() {
       label: "Open Settings...",
       click: () => {
         createSettingsWindow();
+      },
+    },
+    {
+      label: "Check Live Status Now",
+      click: () => {
+        if (liveCheckerService) {
+          liveCheckerService.checkAll();
+        }
       },
     },
     {
@@ -201,10 +264,12 @@ function broadcastStateUpdate() {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.webContents.send("settings:updated", state);
     overlayWindow.webContents.send("users:updated", state.users);
+    overlayWindow.webContents.send("streamers:updated", state.streamers);
   }
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.webContents.send("settings:updated", state);
     settingsWindow.webContents.send("users:updated", state.users);
+    settingsWindow.webContents.send("streamers:updated", state.streamers);
   }
   buildTrayMenu();
 }
@@ -223,9 +288,134 @@ function toggleOverlayVisibility() {
   broadcastStateUpdate();
 }
 
+function logToWindows(tag, message, isError = false) {
+  const timestamp = new Date().toLocaleTimeString();
+  if (isError) {
+    console.error(`[${timestamp}] [${tag}]`, message);
+  } else {
+    console.log(`[${timestamp}] [${tag}]`, message);
+  }
+}
+
+// Background Live Checker Service Initialization
+function initBackgroundChecker() {
+  liveCheckerService = new StreamLiveCheckerService({
+    getStreamers: () => state.streamers,
+    onStatusUpdate: (update) => {
+      const {
+        streamerId,
+        checkStatus,
+        isLive,
+        cachedInfo,
+        lastChecked,
+        lastError,
+      } = update;
+      const index = state.streamers.findIndex(
+        (s) => s.id === streamerId || s.url === streamerId,
+      );
+
+      if (index !== -1) {
+        const current = state.streamers[index];
+        state.streamers[index] = {
+          ...current,
+          checkStatus: checkStatus ?? current.checkStatus,
+          isLive: isLive !== undefined ? isLive : current.isLive,
+          cachedInfo: isLive ? cachedInfo : cachedInfo || current.cachedInfo,
+          lastChecked: lastChecked || current.lastChecked,
+          lastError: lastError !== undefined ? lastError : current.lastError,
+        };
+
+        broadcastStateUpdate();
+      }
+    },
+    onLog: (tag, msg, isError) => {
+      logToWindows(tag, msg, isError);
+    },
+    intervalMs: 60000, // Check once a minute per link
+  });
+
+  liveCheckerService.start();
+}
+
 // IPC Handlers
 ipcMain.handle("settings:get", () => {
   return state;
+});
+
+ipcMain.handle("streamers:get", () => {
+  return state.streamers;
+});
+
+ipcMain.handle("streamers:update", (_event, newStreamers) => {
+  if (Array.isArray(newStreamers)) {
+    state.streamers = newStreamers;
+    state.users = newStreamers.map((s) => s.name || s.url);
+    updateOverlayBounds();
+    broadcastStateUpdate();
+  }
+  return state.streamers;
+});
+
+ipcMain.handle("streamers:add", (_event, streamerData) => {
+  if (!streamerData || !streamerData.url) return state.streamers;
+
+  const url = normalizeUrl(streamerData.url);
+  const platform = streamerData.platform || detectPlatform(url);
+  const name =
+    streamerData.name && streamerData.name.trim()
+      ? streamerData.name.trim()
+      : extractStreamerName(url);
+  const id = `streamer-${Date.now()}-${crypto.randomInt(100, 999)}`;
+
+  const newStreamer = {
+    id,
+    name,
+    url,
+    platform,
+    isLive: false,
+    cachedInfo: null,
+    lastChecked: null,
+    checkStatus: "idle",
+    lastError: null,
+  };
+
+  state.streamers.push(newStreamer);
+  state.users = state.streamers.map((s) => s.name);
+
+  updateOverlayBounds();
+  broadcastStateUpdate();
+
+  // Trigger immediate check in background for newly added streamer
+  if (liveCheckerService) {
+    liveCheckerService.checkSingleStreamer(newStreamer);
+  }
+
+  return state.streamers;
+});
+
+ipcMain.handle("streamers:remove", (_event, streamerId) => {
+  state.streamers = state.streamers.filter(
+    (s) => s.id !== streamerId && s.url !== streamerId,
+  );
+  state.users = state.streamers.map((s) => s.name);
+  updateOverlayBounds();
+  broadcastStateUpdate();
+  return state.streamers;
+});
+
+ipcMain.handle("streamers:check-now", async (_event, streamerId) => {
+  if (streamerId) {
+    const streamer = state.streamers.find(
+      (s) => s.id === streamerId || s.url === streamerId,
+    );
+    if (streamer && liveCheckerService) {
+      return await liveCheckerService.checkSingleStreamer(streamer);
+    }
+  } else if (liveCheckerService) {
+    liveCheckerService.checkAll();
+    return true;
+  }
+  return false;
 });
 
 ipcMain.handle("users:get", () => {
@@ -234,7 +424,31 @@ ipcMain.handle("users:get", () => {
 
 ipcMain.handle("users:update", (_event, newUsers) => {
   if (Array.isArray(newUsers)) {
-    state.users = newUsers;
+    // If array of strings, sync with streamers
+    if (typeof newUsers[0] === "string") {
+      state.users = newUsers;
+      // Ensure streamer objects align
+      state.streamers = newUsers.map((name, i) => {
+        const existing = state.streamers[i];
+        if (existing) {
+          return { ...existing, name };
+        }
+        return {
+          id: `streamer-${Date.now()}-${i}`,
+          name,
+          url: `https://www.youtube.com/@${name}`,
+          platform: "youtube",
+          isLive: false,
+          cachedInfo: null,
+          lastChecked: null,
+          checkStatus: "idle",
+          lastError: null,
+        };
+      });
+    } else if (typeof newUsers[0] === "object") {
+      state.streamers = newUsers;
+      state.users = newUsers.map((s) => s.name || s.url);
+    }
     updateOverlayBounds();
     broadcastStateUpdate();
   }
@@ -283,7 +497,11 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     }
   }
 
-  if (Array.isArray(partialSettings.users)) {
+  if (Array.isArray(partialSettings.streamers)) {
+    state.streamers = partialSettings.streamers;
+    state.users = state.streamers.map((s) => s.name || s.url);
+    updateOverlayBounds();
+  } else if (Array.isArray(partialSettings.users)) {
     state.users = partialSettings.users;
     updateOverlayBounds();
   }
@@ -309,18 +527,18 @@ ipcMain.handle("settings:toggle-devtools", (event) => {
   return true;
 });
 
+// Single Streamer Check Task Execution
+ipcMain.handle("task:run-streamer-check", async (_event, streamer) => {
+  return await checkStreamerLiveTask(streamer);
+});
+
 // Node.js Side Pet Avatar Task Execution
 ipcMain.handle("task:run-pet-avatar", async (_event, userName) => {
   return await petTask({ userName });
 });
 
 ipcMain.handle("log:terminal", (_event, { tag, message, isError }) => {
-  const timestamp = new Date().toLocaleTimeString();
-  if (isError) {
-    console.error(`[${timestamp}] [${tag || "LOG"}] ERROR:`, message);
-  } else {
-    console.log(`[${timestamp}] [${tag || "LOG"}]`, message);
-  }
+  logToWindows(tag, message, isError);
   return true;
 });
 
@@ -377,6 +595,9 @@ ipcMain.handle("window:hide", (event) => {
 });
 
 ipcMain.handle("app:quit", () => {
+  if (liveCheckerService) {
+    liveCheckerService.stop();
+  }
   app.quit();
 });
 
@@ -385,6 +606,7 @@ app.whenReady().then(() => {
   createOverlayWindow();
   createSettingsWindow();
   createTray();
+  initBackgroundChecker();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

@@ -15,55 +15,105 @@
         <header class="settings-header">
             <div class="header-title">
                 <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                    </path>
+                    <path d="M23 7l-7 5 7 5V7z"></path>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
                 </svg>
-                <h1>Overlay & Streamer Settings</h1>
+                <h1>LiveStreamers Settings</h1>
             </div>
-            <span class="badge">Live</span>
+            <div class="header-badge-group">
+                <span class="badge badge-pulse" id="auto-check-badge">Auto-Check: 1m</span>
+            </div>
         </header>
 
         <main class="settings-content">
-            <!-- Section 1: User / Streamer Names List & Pet Avatar Task -->
+            <!-- Section 1: Streamer URL Configuration & Management -->
             <section class="settings-card">
-                <div class="card-header">
-                    <h2>Streamer / User Avatars & Tasks</h2>
-                    <span class="card-subtitle">Manage avatars and trigger async Pet Avatar tasks (2s async sleep with
-                        50% outcome)</span>
+                <div class="card-header flex-between">
+                    <div>
+                        <h2>Tracked Streamers (Kick, Twitch, YouTube)</h2>
+                        <span class="card-subtitle">Add streamer URLs to monitor live status every minute in
+                            background</span>
+                    </div>
                 </div>
 
-                <form id="add-user-form" class="user-input-form">
-                    <input type="text" id="new-user-name" placeholder="Enter streamer or user name..."
-                        autocomplete="off" maxlength="30" />
-                    <button type="submit" class="btn btn-primary" id="btn-add-user">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Add
-                    </button>
+                <form id="add-streamer-form" class="streamer-input-form">
+                    <div class="form-inputs-row">
+                        <div class="input-with-icon">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                            <input type="text" id="new-streamer-url"
+                                placeholder="Streamer URL (e.g. https://twitch.tv/shroud, kick.com/xqc, youtube.com/@LofiGirl)"
+                                autocomplete="off" required />
+                        </div>
+                    </div>
+                    <div class="form-inputs-subrow">
+                        <input type="text" id="new-streamer-name" placeholder="Display Name (optional)"
+                            autocomplete="off" maxlength="40" />
+                        <select id="new-streamer-platform" class="select-platform">
+                            <option value="auto">Auto Platform</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="twitch">Twitch</option>
+                            <option value="kick">Kick</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary" id="btn-add-streamer">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                class="btn-icon">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add Streamer
+                        </button>
+                    </div>
                 </form>
 
+                <!-- Quick Preset Streamers -->
+                <div class="presets-row">
+                    <span class="presets-label">Quick Examples:</span>
+                    <button type="button" class="btn-preset" data-url="https://www.youtube.com/@LofiGirl/live"
+                        data-name="Lofi Girl" data-platform="youtube">
+                        <span class="platform-dot dot-youtube"></span> + YouTube Lofi
+                    </button>
+                    <button type="button" class="btn-preset" data-url="https://www.twitch.tv/shroud" data-name="Shroud"
+                        data-platform="twitch">
+                        <span class="platform-dot dot-twitch"></span> + Twitch Shroud
+                    </button>
+                    <button type="button" class="btn-preset" data-url="https://kick.com/xqc" data-name="xQc"
+                        data-platform="kick">
+                        <span class="platform-dot dot-kick"></span> + Kick xQc
+                    </button>
+                </div>
+
+                <!-- Streamers List -->
                 <div class="users-list-wrapper">
                     <div class="users-list-header">
-                        <span id="user-count-label">Users (0)</span>
-                        <button type="button" class="btn-link" id="btn-reset-defaults">Reset Defaults</button>
+                        <span id="streamer-count-label">Streamers (0)</span>
+                        <div class="list-header-actions">
+                            <button type="button" class="btn-sm-action" id="btn-check-all">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                                </svg>
+                                Check All Now
+                            </button>
+                            <button type="button" class="btn-link" id="btn-reset-defaults">Reset Defaults</button>
+                        </div>
                     </div>
-                    <ul id="users-list" class="users-list">
-                        <!-- Dynamic items rendered by settings.js with Pet task trigger, spinner, and status -->
+                    <ul id="streamers-list" class="streamers-list">
+                        <!-- Dynamic items rendered by settings.js with platform tags, live status, check & pet buttons -->
                     </ul>
                 </div>
             </section>
 
-            <!-- Section 2: Task Activity Logs Console -->
+            <!-- Section 2: Task Activity & Live Checker Logs Console -->
             <section class="settings-card log-card">
                 <div class="card-header flex-between">
                     <div>
-                        <h2>Task Activity & Console Logs</h2>
-                        <span class="card-subtitle">Real-time log stream (also mirrored to DevTools Console and Node
-                            CLI)</span>
+                        <h2>Live Status & Background Task Logs</h2>
+                        <span class="card-subtitle">Real-time background crawler outputs from yt-dlp-utils & async
+                            tasks</span>
                     </div>
                     <div class="log-actions">
                         <button type="button" class="btn btn-sm btn-secondary" id="btn-open-devtools">
@@ -81,7 +131,7 @@
                 <div id="log-terminal" class="log-terminal">
                     <div class="log-entry system-log">
                         <span class="log-time">[System]</span>
-                        <span class="log-msg">Ready. Click "Pet" on any avatar to trigger async sleep task.</span>
+                        <span class="log-msg">Ready. Monitoring streamer links once a minute via yt-dlp-utils.</span>
                     </div>
                 </div>
             </section>
@@ -197,7 +247,7 @@
         </main>
 
         <footer class="settings-footer">
-            <span>LiveStreamers Overlay • Async Pet Avatar Task Scaffolding</span>
+            <span>LiveStreamers Overlay • Kick, Twitch, YouTube Live Tracking via yt-dlp-utils</span>
         </footer>
     </div>
 
