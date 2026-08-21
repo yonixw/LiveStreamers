@@ -1,0 +1,40 @@
+Rate limit: It is best to space out checks (e.g., polling every 60–120 seconds).
+
+you choose avatat ... channel is almost not used
+
+Lines group
+    Behaviour group
+        Group by links 
+            (so yt/kick/twitch - alt twitch etc.)
+                Bumps to front with status
+            New video (like smosh)
+                Adds +1 until "read"
+
+        Bump when:
+        -> live change
+        -> User count > X  (threshold/everytime)
+        -> Game change
+        -> Title change
+        -> Title contain... 
+        -> Live after X hour (and every +Y)
+
+
+Snooze for today/min/hr/days - until {date,time} etc...
+
+--------- V2:
+
+Chat triggers
+    Kick / Twitch / YT / Destiny
+        Websocket for common trigger?
+        Rate
+        Rate of word - emote
+            +1 ? until "read"
+        word mentioned
+            +1 ? until "read"
+
+Get screenshot from live?
+    Video - from random timestamps?
+
+    YT-DLP?
+
+
