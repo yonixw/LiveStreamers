@@ -625,7 +625,7 @@ body {
 
 .streamers-list {
   list-style: none;
-  max-height: 320px;
+  max-height: 380px;
   overflow-y: auto;
 }
 
@@ -639,12 +639,12 @@ body {
 
 .streamer-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   transition: background-color 0.15s;
-  gap: 10px;
+  gap: 12px;
 }
 
 .streamer-item:last-child {
@@ -663,18 +663,18 @@ body {
 .streamer-item-info {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
 }
 
 .streamer-avatar-mini {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1, #a855f7);
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -694,7 +694,7 @@ body {
 .streamer-details {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
@@ -707,7 +707,7 @@ body {
 }
 
 .streamer-name-text {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--text-main);
 }
@@ -738,7 +738,7 @@ body {
 .streamer-status-row {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   margin-top: 2px;
 }
 
@@ -763,19 +763,84 @@ body {
   color: #fbbf24;
 }
 
-.trigger-event-badge {
+/* Detailed Trigger Debug Box in Settings */
+.streamer-trigger-debug-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(250, 204, 21, 0.08);
+  border: 1px solid rgba(250, 204, 21, 0.25);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+}
+
+.trigger-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.trigger-debug-title {
+  color: #facc15;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.trigger-debug-time {
+  color: #94a3b8;
+  font-size: 0.66rem;
+  font-family: 'Consolas', monospace;
+}
+
+.trigger-debug-message {
+  color: #e2e8f0;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.trigger-debug-diff {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.68rem;
-  color: #facc15;
-  background: rgba(250, 204, 21, 0.12);
-  border: 1px solid rgba(250, 204, 21, 0.3);
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-weight: 600;
   margin-top: 2px;
-  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.trigger-diff-from {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-decoration: line-through;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trigger-diff-arrow {
+  color: #94a3b8;
+  font-weight: bold;
+}
+
+.trigger-diff-to {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Actions */

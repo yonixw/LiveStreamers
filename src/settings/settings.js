@@ -165,7 +165,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         !imgPath.startsWith("data:") &&
         !imgPath.startsWith("file://")
       ) {
-        // Local path
         imgPath = `file:///${imgPath.replace(/\\/g, "/")}`;
       }
       avatarPreviewImg.src = imgPath;
@@ -396,7 +395,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const editingId = editStreamerIdInput.value;
 
     if (editingId) {
-      // Update in place
       const updatedList = localStreamers.map((s) => {
         if (s.id === editingId) {
           return {
@@ -420,7 +418,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderStreamersList(result);
       }
     } else {
-      // Add new
       appendLog(
         `Adding new streamer "${name}" with ${urls.length} check URLs...`,
         "info",
@@ -554,7 +551,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Render Streamers List
+  // Render Streamers List with detailed Trigger Debugging
   function renderStreamersList(streamers) {
     localStreamers = Array.isArray(streamers) ? streamers : [];
     const liveCount = localStreamers.filter((s) => s.isLive).length;
@@ -656,13 +653,37 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       statusRow.innerHTML = statusBadgeHtml;
 
-      // Trigger Badge (if fired recently)
+      // Detailed Trigger Debug Box
       if (streamer.lastTrigger) {
-        const trigBadge = document.createElement("div");
-        trigBadge.className = "trigger-event-badge";
-        trigBadge.title = `Triggered at ${new Date(streamer.lastTrigger.timestamp).toLocaleTimeString()}`;
-        trigBadge.innerHTML = `⚡ ${streamer.lastTrigger.label || "Trigger"}: ${streamer.lastTrigger.message || ""}`;
-        statusRow.appendChild(trigBadge);
+        const trig = streamer.lastTrigger;
+        const triggerDebugBox = document.createElement("div");
+        triggerDebugBox.className = "streamer-trigger-debug-box";
+
+        const trigTimeStr = trig.timestamp
+          ? new Date(trig.timestamp).toLocaleTimeString()
+          : "";
+
+        let diffHtml = "";
+        if (trig.diff && trig.diff.from && trig.diff.to) {
+          diffHtml = `
+            <div class="trigger-debug-diff">
+              <span class="trigger-diff-from" title="${trig.diff.from}">${trig.diff.from}</span>
+              <span class="trigger-diff-arrow">➔</span>
+              <span class="trigger-diff-to" title="${trig.diff.to}">${trig.diff.to}</span>
+            </div>
+          `;
+        }
+
+        triggerDebugBox.innerHTML = `
+          <div class="trigger-debug-header">
+            <span class="trigger-debug-title">⚡ ${trig.label || "Trigger Fired"}</span>
+            <span class="trigger-debug-time">${trigTimeStr}</span>
+          </div>
+          <div class="trigger-debug-message">${trig.message || ""}</div>
+          ${diffHtml}
+        `;
+
+        statusRow.appendChild(triggerDebugBox);
       }
 
       detailsDiv.appendChild(titleRow);

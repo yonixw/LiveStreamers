@@ -80,17 +80,6 @@ body {
   text-transform: uppercase;
 }
 
-.header-sort-badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  text-transform: capitalize;
-}
-
 .header-live-badge {
   font-size: 0.68rem;
   font-weight: 700;
@@ -114,6 +103,46 @@ body {
   align-items: center;
   gap: 6px;
   -webkit-app-region: no-drag;
+}
+
+/* Quick Sort Icon Buttons on Drag Anchor Header */
+.header-sort-buttons {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 1px 3px;
+  gap: 2px;
+}
+
+.header-sort-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.72rem;
+  padding: 2px 5px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #94a3b8;
+  opacity: 0.65;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.header-sort-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.header-sort-btn.active {
+  opacity: 1;
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.6);
 }
 
 .header-action-btn {
@@ -368,7 +397,6 @@ body {
   gap: 6px;
   position: relative;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   -webkit-app-region: no-drag;
   cursor: pointer;
 }
@@ -438,6 +466,7 @@ body {
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+  display: block;
 }
 
 /* Platform Corner Badge */
@@ -456,39 +485,6 @@ body {
   border-radius: 999px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.02em;
-}
-
-/* Trigger Corner Badge (Top Right) */
-.avatar-trigger-corner {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  z-index: 12;
-  pointer-events: none;
-}
-
-.trigger-mini-badge {
-  font-size: 0.72rem;
-  font-weight: 900;
-  background: #facc15;
-  color: #000;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 8px #facc15;
-  animation: pulseTrigger 1.5s infinite ease-in-out;
-}
-
-@keyframes pulseTrigger {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
 }
 
 /* Status Badge (Bottom Right) */
@@ -559,16 +555,5 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes popIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
   }
 }

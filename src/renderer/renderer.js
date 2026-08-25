@@ -5,7 +5,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnOpenSettings = document.getElementById("btn-open-settings");
   const btnRefresh = document.getElementById("btn-refresh");
   const headerLiveBadge = document.getElementById("header-live-badge");
-  const headerSortBadge = document.getElementById("header-sort-badge");
+
+  // Sort buttons on header
+  const btnSortTriggered = document.getElementById("btn-sort-triggered");
+  const btnSortLive = document.getElementById("btn-sort-live");
+  const btnSortAz = document.getElementById("btn-sort-az");
+  const sortButtons = [btnSortTriggered, btnSortLive, btnSortAz].filter(
+    Boolean,
+  );
 
   // Banner elements
   const streamInfoBanner = document.getElementById("stream-info-banner");
@@ -47,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `linear-gradient(135deg, hsl(${hue1}, 75%, 52%), hsl(${hue2}, 80%, 42%))`;
   }
 
-  // Format viewer count (e.g. 14.5K)
+  // Format viewer count
   function formatViewers(num) {
     if (num === null || num === undefined) return null;
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
@@ -55,7 +62,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return Number(num).toLocaleString();
   }
 
-  // Format relative time (e.g. "45m ago", "2h ago")
+  // Format relative time
   function formatRelativeTime(isoString) {
     if (!isoString) return null;
     try {
@@ -79,7 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Get platform icon / badge markup
+  // Get platform badge data
   function getPlatformBadgeData(platform) {
     const plat = (platform || "other").toLowerCase();
     switch (plat) {
@@ -94,48 +101,68 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Update Sort Mode Badge
-  function updateSortBadge(sortBy) {
-    currentSortBy = sortBy || "last-triggered";
-    if (!headerSortBadge) return;
-
-    switch (currentSortBy) {
-      case "last-triggered":
-        headerSortBadge.textContent = "⚡ Triggered";
-        headerSortBadge.title = "Sorted by Last Triggered / Live events";
-        break;
-      case "longest-live":
-        headerSortBadge.textContent = "⏱️ Longest Live";
-        headerSortBadge.title = "Sorted by Longest Active Live Uptime";
-        break;
-      case "last-started":
-        headerSortBadge.textContent = "🆕 Last Started";
-        headerSortBadge.title = "Sorted by Most Recently Started Live";
-        break;
-      case "name":
-        headerSortBadge.textContent = "🔤 A-Z";
-        headerSortBadge.title = "Sorted Alphabetically by Nickname";
-        break;
-      case "manual":
-      default:
-        headerSortBadge.textContent = "📋 Custom";
-        headerSortBadge.title = "Sorted by Manual List Order";
-        break;
+  // Format image URL or file path for <img> src
+  function formatImageSrc(pathOrUrl) {
+    if (!pathOrUrl || typeof pathOrUrl !== "string") return null;
+    const trimmed = pathOrUrl.trim();
+    if (!trimmed) return null;
+    if (
+      /^https?:\/\//i.test(trimmed) ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("file://")
+    ) {
+      return trimmed;
     }
+    return `file:///${trimmed.replace(/\\/g, "/")}`;
   }
+
+  // Update Sort Button Active States
+  function updateSortButtonsUI(sortBy) {
+    currentSortBy = sortBy || "last-triggered";
+    sortButtons.forEach((btn) => {
+      const sortMode = btn.getAttribute("data-sort");
+      if (
+        sortMode === currentSortBy ||
+        (sortMode === "longest-live" &&
+          (currentSortBy === "longest-live" ||
+            currentSortBy === "last-started"))
+      ) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  }
+
+  // Header quick sort button click handlers
+  sortButtons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const newSort = btn.getAttribute("data-sort");
+      updateSortButtonsUI(newSort);
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({ sortBy: newSort });
+      }
+    });
+  });
 
   // Update Top Banner Summary
   function updateDefaultBannerSummary() {
     if (!streamersList || streamersList.length === 0) {
-      headerLiveBadge.textContent = "0 Live";
-      headerLiveBadge.className = "header-live-badge";
+      if (headerLiveBadge.textContent !== "0 Live") {
+        headerLiveBadge.textContent = "0 Live";
+        headerLiveBadge.className = "header-live-badge";
+      }
       bannerDefaultText.textContent =
         "No streamers configured. Click ⚙️ to add.";
       return;
     }
 
     const liveCount = streamersList.filter((s) => s.isLive).length;
-    headerLiveBadge.textContent = `${liveCount}/${streamersList.length} Live`;
+    const badgeText = `${liveCount}/${streamersList.length} Live`;
+    if (headerLiveBadge.textContent !== badgeText) {
+      headerLiveBadge.textContent = badgeText;
+    }
 
     if (liveCount > 0) {
       headerLiveBadge.className = "header-live-badge badge-active";
@@ -146,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Show hovered streamer info in the top banner
+  // Show hovered streamer info in top banner
   function showStreamerHoverBanner(streamer) {
     if (!streamer) return;
     currentHoveredStreamerId = String(streamer.id);
@@ -216,7 +243,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       bannerTitleLine.className = "banner-title-line title-offline";
     }
 
-    // Trigger info tag in banner
     if (streamer.lastTrigger) {
       bannerTriggerTag.style.display = "inline-flex";
       bannerTriggerTag.textContent = `⚡ ${streamer.lastTrigger.label || "Trigger"}`;
@@ -225,7 +251,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       bannerTriggerTag.style.display = "none";
     }
 
-    // Open stream in browser
     const targetUrl =
       streamer.activeUrl || (streamer.urls && streamer.urls[0]) || streamer.url;
     bannerOpenBtn.onclick = (e) => {
@@ -244,28 +269,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateDefaultBannerSummary();
   }
 
-  // Format image URL or file path for <img> src
-  function formatImageSrc(pathOrUrl) {
-    if (!pathOrUrl || typeof pathOrUrl !== "string") return null;
-    const trimmed = pathOrUrl.trim();
-    if (!trimmed) return null;
-    if (
-      /^https?:\/\//i.test(trimmed) ||
-      trimmed.startsWith("data:") ||
-      trimmed.startsWith("file://")
-    ) {
-      return trimmed;
-    }
-    // Local absolute path
-    return `file:///${trimmed.replace(/\\/g, "/")}`;
-  }
-
-  // Render Avatars in Exact Sorted Order
+  // Fine-grained Non-Flashing In-Place Reconciliation
   function renderAvatarsInPlace(streamers) {
     streamersList = Array.isArray(streamers) ? streamers : [];
     updateDefaultBannerSummary();
 
-    // If currently hovered streamer exists, refresh hover banner
     if (currentHoveredStreamerId) {
       const freshHovered = streamersList.find(
         (s) => String(s.id) === currentHoveredStreamerId,
@@ -275,24 +283,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
-    const existingCards = Array.from(
-      avatarsContainer.querySelectorAll(".avatar-card"),
-    );
+    const existingChildren = Array.from(avatarsContainer.children);
     const existingMap = new Map();
-    existingCards.forEach((card) => {
+    existingChildren.forEach((card) => {
       const id = card.getAttribute("data-id");
       if (id) existingMap.set(id, card);
     });
 
-    const newIds = new Set();
+    const newIds = streamersList.map((s, idx) =>
+      String(s.id || `streamer-${idx}`),
+    );
+    const newIdSet = new Set(newIds);
 
+    // 1. Remove obsolete cards
+    existingChildren.forEach((card) => {
+      const id = card.getAttribute("data-id");
+      if (!newIdSet.has(id)) {
+        card.remove();
+      }
+    });
+
+    // 2. Update or create cards
     streamersList.forEach((streamer, index) => {
-      const streamerId = String(streamer.id || `streamer-${index}`);
-      newIds.add(streamerId);
-
+      const streamerId = newIds[index];
       let card = existingMap.get(streamerId);
+      const isNew = !card;
 
-      if (!card) {
+      if (isNew) {
         card = document.createElement("div");
         card.className = "avatar-card";
         card.setAttribute("data-id", streamerId);
@@ -307,15 +324,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         const platformBadge = document.createElement("div");
         platformBadge.className = "avatar-platform-corner";
 
-        const triggerBadge = document.createElement("div");
-        triggerBadge.className = "avatar-trigger-corner";
-
         const statusBadge = document.createElement("div");
         statusBadge.className = "status-badge";
 
         frame.appendChild(inner);
         frame.appendChild(platformBadge);
-        frame.appendChild(triggerBadge);
         frame.appendChild(statusBadge);
 
         const nameTag = document.createElement("div");
@@ -324,7 +337,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         card.appendChild(frame);
         card.appendChild(nameTag);
 
-        // Hover & Click events
         card.addEventListener("mouseenter", () => {
           showStreamerHoverBanner(card._streamer || streamer);
         });
@@ -346,82 +358,96 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.electronAPI.openExternal(urlToOpen);
           }
         });
-
-        avatarsContainer.appendChild(card);
-      } else {
-        // Ensure DOM ordering matches the current sorted list position
-        avatarsContainer.appendChild(card);
       }
 
-      // Store fresh reference
+      // Check DOM position: only insert/move if position in parent is different
+      const currentChildAtIndex = avatarsContainer.children[index];
+      if (currentChildAtIndex !== card) {
+        avatarsContainer.insertBefore(card, currentChildAtIndex || null);
+      }
+
       card._streamer = streamer;
 
+      // Update Card Live Class
       const isLive = Boolean(streamer.isLive);
-      card.className = `avatar-card ${isLive ? "card-live" : "card-offline"}`;
-      card.title = `${streamer.name || "Streamer"} - Click to open (${isLive ? `LIVE on ${(streamer.activePlatform || "stream").toUpperCase()}` : "Offline"})`;
+      const desiredCardClass = `avatar-card ${isLive ? "card-live" : "card-offline"}`;
+      if (card.className !== desiredCardClass) {
+        card.className = desiredCardClass;
+      }
 
       const frame = card.querySelector(".circle-frame");
       if (frame) {
-        frame.className = `circle-frame ${isLive ? "live-glow" : ""}`;
+        const desiredFrameClass = `circle-frame ${isLive ? "live-glow" : ""}`;
+        if (frame.className !== desiredFrameClass) {
+          frame.className = desiredFrameClass;
+        }
       }
 
+      // Update Avatar Image / Initials without flash
       const inner = card.querySelector(".avatar-inner");
       if (inner) {
         const imgSrc = formatImageSrc(streamer.avatarImage);
         if (imgSrc) {
-          inner.style.background = "#18181b";
-          inner.innerHTML = `<img src="${imgSrc}" alt="${streamer.name}" />`;
-          const imgEl = inner.querySelector("img");
-          if (imgEl) {
-            imgEl.onerror = () => {
+          let existingImg = inner.querySelector("img");
+          if (!existingImg) {
+            inner.textContent = "";
+            inner.style.background = "#18181b";
+            existingImg = document.createElement("img");
+            existingImg.alt = streamer.name || "Streamer";
+            existingImg.src = imgSrc;
+            existingImg.onerror = () => {
+              existingImg.remove();
               inner.style.background = getAvatarGradient(streamer.name);
               inner.textContent = getInitials(streamer.name);
             };
+            inner.appendChild(existingImg);
+          } else if (existingImg.getAttribute("src") !== imgSrc) {
+            existingImg.src = imgSrc;
           }
         } else {
-          inner.style.background = getAvatarGradient(streamer.name);
-          inner.textContent = getInitials(streamer.name);
+          const initials = getInitials(streamer.name);
+          const hasImg = inner.querySelector("img");
+          if (hasImg || inner.textContent !== initials) {
+            inner.innerHTML = "";
+            inner.style.background = getAvatarGradient(streamer.name);
+            inner.textContent = initials;
+          }
         }
       }
 
+      // Update Platform Corner Badge
       const platformBadge = card.querySelector(".avatar-platform-corner");
       if (platformBadge) {
         const plat =
           streamer.activePlatform ||
           (streamer.urls && streamer.urls[0] ? streamer.platform : "other");
         const platData = getPlatformBadgeData(plat);
-        platformBadge.innerHTML = `<span class="platform-mini-badge ${platData.className}">${platData.text}</span>`;
-      }
-
-      const triggerBadge = card.querySelector(".avatar-trigger-corner");
-      if (triggerBadge) {
-        if (streamer.lastTrigger) {
-          triggerBadge.innerHTML = `<span class="trigger-mini-badge" title="${streamer.lastTrigger.label}: ${streamer.lastTrigger.message}">⚡</span>`;
-          triggerBadge.style.display = "block";
-        } else {
-          triggerBadge.innerHTML = "";
-          triggerBadge.style.display = "none";
+        const desiredBadgeHtml = `<span class="platform-mini-badge ${platData.className}">${platData.text}</span>`;
+        if (platformBadge.innerHTML !== desiredBadgeHtml) {
+          platformBadge.innerHTML = desiredBadgeHtml;
         }
       }
 
+      // Update Status Badge Dot
       const statusBadge = card.querySelector(".status-badge");
       if (statusBadge) {
-        statusBadge.className = `status-badge ${isLive ? "status-badge-live" : "status-badge-offline"}`;
-        statusBadge.title = isLive ? "Live now" : "Offline";
+        const desiredStatusClass = `status-badge ${isLive ? "status-badge-live" : "status-badge-offline"}`;
+        if (statusBadge.className !== desiredStatusClass) {
+          statusBadge.className = desiredStatusClass;
+        }
       }
 
+      // Update Name Tag
       const nameTag = card.querySelector(".user-name-tag");
       if (nameTag) {
-        nameTag.className = `user-name-tag ${isLive ? "tag-live" : ""}`;
-        nameTag.textContent = streamer.name || "Streamer";
-      }
-    });
-
-    // Remove deleted cards
-    existingCards.forEach((card) => {
-      const id = card.getAttribute("data-id");
-      if (!newIds.has(id)) {
-        card.remove();
+        const desiredTagClass = `user-name-tag ${isLive ? "tag-live" : ""}`;
+        if (nameTag.className !== desiredTagClass) {
+          nameTag.className = desiredTagClass;
+        }
+        const nameText = streamer.name || "Streamer";
+        if (nameTag.textContent !== nameText) {
+          nameTag.textContent = nameText;
+        }
       }
     });
   }
@@ -476,7 +502,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (window.electronAPI.getSettings) {
         const initialSettings = await window.electronAPI.getSettings();
         if (initialSettings.sortBy) {
-          updateSortBadge(initialSettings.sortBy);
+          updateSortButtonsUI(initialSettings.sortBy);
         }
       }
       if (window.electronAPI.getStreamers) {
@@ -498,7 +524,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.electronAPI && window.electronAPI.onSettingsUpdated) {
     window.electronAPI.onSettingsUpdated((newSettings) => {
       if (newSettings && newSettings.sortBy) {
-        updateSortBadge(newSettings.sortBy);
+        updateSortButtonsUI(newSettings.sortBy);
       }
     });
   }

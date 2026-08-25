@@ -149,12 +149,7 @@ async function checkSingleUrlLive(url, streamerName = "Streamer") {
 }
 
 /**
- * Evaluates trigger rules against previous status and detects triggers.
- * Triggers supported:
- * 1. Going Live (offline -> live)
- * 2. Stream Title Change (live -> new title)
- * 3. Viewer count above X (and bigger than last status)
- * 4. Category/Game change
+ * Evaluates trigger rules against previous status and detects triggers with detailed "from X to Y" messages.
  *
  * @param {object} streamer - Streamer config with triggers
  * @param {object} current - Current check result
@@ -171,10 +166,15 @@ function evaluateTriggers(streamer, current, previous = null) {
   // 1. Going Live Trigger
   if (triggers.goingLive !== false) {
     if (!prev.isLive && current.isLive) {
+      const platStr = (current.activePlatform || "web").toUpperCase();
       return {
         type: "going_live",
         label: "Going Live",
-        message: `${streamer.name || "Streamer"} went live on ${current.activePlatform.toUpperCase()}!`,
+        message: `Went Live on ${platStr} (changed from Offline)`,
+        diff: {
+          from: "Offline",
+          to: `Live on ${platStr}`,
+        },
         timestamp: nowIso,
       };
     }
@@ -190,7 +190,11 @@ function evaluateTriggers(streamer, current, previous = null) {
         return {
           type: "title_change",
           label: "Title Changed",
-          message: `Title: "${currTitle}"`,
+          message: `Title changed from "${prevTitle}" to "${currTitle}"`,
+          diff: {
+            from: prevTitle,
+            to: currTitle,
+          },
           timestamp: nowIso,
         };
       }
@@ -208,7 +212,11 @@ function evaluateTriggers(streamer, current, previous = null) {
         return {
           type: "category_change",
           label: "Category Changed",
-          message: `Switched to: ${currCat}`,
+          message: `Category changed from "${prevCat}" to "${currCat}"`,
+          diff: {
+            from: prevCat,
+            to: currCat,
+          },
           timestamp: nowIso,
         };
       }
@@ -224,7 +232,11 @@ function evaluateTriggers(streamer, current, previous = null) {
         return {
           type: "viewer_spike",
           label: "Viewer Spike",
-          message: `Viewers surged to ${currViewers.toLocaleString()} (+${(currViewers - prevViewers).toLocaleString()})`,
+          message: `Viewers surged from ${prevViewers.toLocaleString()} to ${currViewers.toLocaleString()} (Threshold: > ${threshold.toLocaleString()})`,
+          diff: {
+            from: `${prevViewers.toLocaleString()} viewers`,
+            to: `${currViewers.toLocaleString()} viewers`,
+          },
           timestamp: nowIso,
         };
       }

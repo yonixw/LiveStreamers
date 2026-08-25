@@ -24,12 +24,25 @@
                     <circle cx="15" cy="18" r="1.5"></circle>
                 </svg>
                 <span class="header-title">LiveStreamers</span>
-                <span id="header-sort-badge" class="header-sort-badge" title="Current avatar sorting mode">⚡
-                    Triggered</span>
                 <span id="header-live-badge" class="header-live-badge">0 Live</span>
             </div>
 
             <div class="header-actions">
+                <!-- Quick Sort Action Buttons on Drag Anchor Bar -->
+                <div class="header-sort-buttons" title="Avatar Sort Order">
+                    <button id="btn-sort-triggered" class="header-sort-btn active" data-sort="last-triggered"
+                        title="Sort by Last Triggered / Live Events">
+                        ⚡
+                    </button>
+                    <button id="btn-sort-live" class="header-sort-btn" data-sort="longest-live"
+                        title="Sort by Longest Live / Last Live">
+                        ⏱️
+                    </button>
+                    <button id="btn-sort-az" class="header-sort-btn" data-sort="name" title="Sort Alphabetically (A-Z)">
+                        🔤
+                    </button>
+                </div>
+
                 <button id="btn-refresh" class="header-action-btn" title="Check Live Status Now">
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
