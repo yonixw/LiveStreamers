@@ -61,6 +61,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("log:terminal", { tag, message, isError }),
   toggleAlwaysOnTop: () => ipcRenderer.invoke("window:toggle-always-on-top"),
   toggleClickThrough: () => ipcRenderer.invoke("window:toggle-click-through"),
+  setIgnoreMouseEvents: (ignore, options) =>
+    ipcRenderer.invoke("window:set-ignore-mouse-events", ignore, options),
+  rotateWindowState: () => ipcRenderer.invoke("window:rotate-state"),
+  setWindowStateIndex: (index) =>
+    ipcRenderer.invoke("window:set-state-index", index),
   setOpacity: (opacity) => ipcRenderer.invoke("window:set-opacity", opacity),
   closeWindow: () => ipcRenderer.invoke("window:close"),
   hideWindow: () => ipcRenderer.invoke("window:hide"),

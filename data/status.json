@@ -9,7 +9,7 @@
       "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
       "game": "Just Chatting",
       "category": "Just Chatting",
-      "viewerCount": 5806,
+      "viewerCount": 5060,
       "startTime": "2026-08-25T17:34:41.000Z",
       "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -18,57 +18,57 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T20:21:00.675Z"
+      "cachedAt": "2026-08-25T22:38:46.171Z"
     },
-    "lastChecked": "2026-08-25T20:21:52.799Z",
+    "lastChecked": "2026-08-25T22:38:46.172Z",
     "lastError": null,
     "lastTrigger": {
-      "type": "category_change",
-      "label": "Category Changed",
-      "message": "Category changed from \"Special Events\" to \"Just Chatting\"",
+      "type": "title_change",
+      "label": "Title Changed",
+      "message": "Title changed from \"#ad 🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒\" to \"🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒\"",
       "diff": {
-        "from": "Special Events",
-        "to": "Just Chatting"
+        "from": "#ad 🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
+        "to": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒"
       },
-      "timestamp": "2026-08-25T20:10:47.191Z"
+      "timestamp": "2026-08-25T22:30:29.710Z"
     },
-    "lastTriggeredAt": "2026-08-25T20:10:47.191Z",
+    "lastTriggeredAt": "2026-08-25T22:30:29.710Z",
     "checkedUrlsCount": 1
   },
   "streamer-1787680783492-330": {
     "streamerId": "streamer-1787680783492-330",
-    "isLive": true,
+    "isLive": false,
     "activeUrl": "https://www.twitch.tv/sennyk4",
     "activePlatform": "twitch",
-    "checkStatus": "live",
+    "checkStatus": "offline",
     "cachedInfo": {
-      "title": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM",
+      "title": "[237/365]🌎ASDASDASDASDASD🌎🔱KAEYFOUR.COM",
       "game": "Just Chatting",
       "category": "Just Chatting",
-      "viewerCount": 295,
+      "viewerCount": 290,
       "startTime": "2026-08-25T17:26:54.000Z",
       "liveTime": "2026-08-25T17:26:54.000Z",
-      "description": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM",
+      "description": "[237/365]🌎ASDASDASDASDASD🌎🔱KAEYFOUR.COM",
       "thumbnail": "https://static-cdn.jtvnw.net/previews-ttv/live_user_sennyk4-0x0.jpg",
       "channel": "sennyk4",
       "channelUrl": "https://www.twitch.tv/sennyk4",
       "url": "https://www.twitch.tv/sennyk4",
       "platform": "twitch",
-      "cachedAt": "2026-08-25T20:20:53.680Z"
+      "cachedAt": "2026-08-25T22:30:22.834Z"
     },
-    "lastChecked": "2026-08-25T20:20:53.680Z",
+    "lastChecked": "2026-08-25T22:38:39.061Z",
     "lastError": null,
     "lastTrigger": {
-      "type": "category_change",
-      "label": "Category Changed",
-      "message": "Category changed from \"Special Events\" to \"Just Chatting\"",
+      "type": "title_change",
+      "label": "Title Changed",
+      "message": "Title changed from \"[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM\" to \"[237/365]🌎ASDASDASDASDASD🌎🔱KAEYFOUR.COM\"",
       "diff": {
-        "from": "Special Events",
-        "to": "Just Chatting"
+        "from": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM",
+        "to": "[237/365]🌎ASDASDASDASDASD🌎🔱KAEYFOUR.COM"
       },
-      "timestamp": "2026-08-25T20:05:40.373Z"
+      "timestamp": "2026-08-25T22:10:11.153Z"
     },
-    "lastTriggeredAt": "2026-08-25T20:05:40.373Z",
+    "lastTriggeredAt": "2026-08-25T22:10:11.153Z",
     "checkedUrlsCount": 1
   },
   "tw-shroud": {
@@ -82,5 +82,41 @@
     "lastTrigger": null,
     "lastTriggeredAt": null,
     "checkedUrlsCount": 2
+  },
+  "streamer-1787697589918-253": {
+    "streamerId": "streamer-1787697589918-253",
+    "isLive": true,
+    "activeUrl": "https://kick.com/destiny",
+    "activePlatform": "kick",
+    "checkStatus": "live",
+    "cachedInfo": {
+      "title": "memein' and streamin' and buildin' my dreamin'",
+      "game": "Factorio",
+      "category": "Factorio",
+      "viewerCount": 4216,
+      "startTime": "2026-08-25T20:00:40.000Z",
+      "liveTime": "2026-08-25T20:00:40.000Z",
+      "description": "The premier Internet POLITICS streamer, exploring philosophy, policy analysis, drama farmer and center of the extended orbiter universe.",
+      "thumbnail": "https://stream.kick.com/thumbnails/livestream/124044689/thumb0/video_thumbnail/thumb0.jpg",
+      "channel": "destiny",
+      "channelUrl": "https://kick.com/destiny",
+      "url": "https://kick.com/destiny",
+      "platform": "kick",
+      "cachedAt": "2026-08-25T22:39:51.705Z"
+    },
+    "lastChecked": "2026-08-25T22:39:51.705Z",
+    "lastError": null,
+    "lastTrigger": {
+      "type": "going_live",
+      "label": "Going Live",
+      "message": "Went Live on KICK (changed from Offline)",
+      "diff": {
+        "from": "Offline",
+        "to": "Live on KICK"
+      },
+      "timestamp": "2026-08-25T22:39:51.705Z"
+    },
+    "lastTriggeredAt": "2026-08-25T22:39:51.705Z",
+    "checkedUrlsCount": 1
   }
 }

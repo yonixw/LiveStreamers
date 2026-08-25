@@ -81,6 +81,17 @@ const defaultSettings = {
   showNicknameTag: false,
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
+  smartClickThrough: false,
+  windowStatesCount: 1,
+  currentWindowStateIndex: 0,
+  windowStates: [
+    {
+      x: null,
+      y: null,
+      width: 280,
+      height: 460,
+    },
+  ],
   currentOpacity: 1.0,
   overlayVisible: true,
   overlayBounds: {
@@ -202,10 +213,42 @@ function loadSettings() {
         ? data.streamers.map((s, idx) => normalizeStreamerConfig(s, idx))
         : defaultStreamers;
 
+      const windowStatesCount = Math.max(
+        1,
+        parseInt(data.windowStatesCount, 10) || 1,
+      );
+      let windowStates = Array.isArray(data.windowStates)
+        ? data.windowStates
+        : [];
+      if (windowStates.length === 0) {
+        windowStates = [data.overlayBounds || defaultSettings.overlayBounds];
+      }
+      while (windowStates.length < windowStatesCount) {
+        windowStates.push(
+          windowStates[0]
+            ? { ...windowStates[0] }
+            : { ...defaultSettings.overlayBounds },
+        );
+      }
+      const currentWindowStateIndex = Math.max(
+        0,
+        Math.min(
+          windowStatesCount - 1,
+          parseInt(data.currentWindowStateIndex, 10) || 0,
+        ),
+      );
+
       return {
         ...defaultSettings,
         ...data,
-        overlayBounds: data.overlayBounds || defaultSettings.overlayBounds,
+        smartClickThrough: Boolean(data.smartClickThrough),
+        windowStatesCount,
+        currentWindowStateIndex,
+        windowStates,
+        overlayBounds:
+          windowStates[currentWindowStateIndex] ||
+          data.overlayBounds ||
+          defaultSettings.overlayBounds,
         streamers: normalizedStreamers,
       };
     }
@@ -248,6 +291,20 @@ function saveSettings(settings) {
       showNicknameTag: settings.showNicknameTag ?? false,
       isAlwaysOnTop: settings.isAlwaysOnTop ?? true,
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,
+      smartClickThrough: settings.smartClickThrough ?? false,
+      windowStatesCount: Math.max(
+        1,
+        parseInt(settings.windowStatesCount, 10) || 1,
+      ),
+      currentWindowStateIndex: Math.max(
+        0,
+        parseInt(settings.currentWindowStateIndex, 10) || 0,
+      ),
+      windowStates: Array.isArray(settings.windowStates)
+        ? settings.windowStates
+        : settings.overlayBounds
+          ? [settings.overlayBounds]
+          : defaultSettings.windowStates,
       currentOpacity: settings.currentOpacity ?? 1.0,
       overlayVisible: settings.overlayVisible ?? true,
       overlayBounds: settings.overlayBounds || null,

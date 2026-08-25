@@ -5,6 +5,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let streamersList = [];
   let isNicknameTagEnabled = false;
+  let isSmartClickThroughEnabled = false;
+  let isStaticClickThroughEnabled = false;
+  let isHoveringInteractive = false;
+  const headerDragZone = document.getElementById("header-drag-zone");
+  const headerStateIndicator = document.getElementById(
+    "header-state-indicator",
+  );
 
   // Helper to get initials
   function getInitials(name) {
@@ -131,6 +138,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
       }
     }
+
+    if (typeof settings.smartClickThrough === "boolean") {
+      isSmartClickThroughEnabled = settings.smartClickThrough;
+    }
+
+    if (typeof settings.isIgnoringMouseEvents === "boolean") {
+      isStaticClickThroughEnabled = settings.isIgnoringMouseEvents;
+    }
+
+    // Update window state indicator badge in header
+    if (headerStateIndicator) {
+      const stateCount = Math.max(
+        1,
+        parseInt(settings.windowStatesCount, 10) || 1,
+      );
+      const currentIdx = Math.max(
+        0,
+        parseInt(settings.currentWindowStateIndex, 10) || 0,
+      );
+      if (stateCount > 1) {
+        headerStateIndicator.textContent = `${currentIdx + 1}/${stateCount}`;
+        headerStateIndicator.style.display = "inline-block";
+      } else {
+        headerStateIndicator.textContent = "";
+        headerStateIndicator.style.display = "none";
+      }
+    }
   }
 
   // Extract clean URL list from streamer object
@@ -175,7 +209,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderAvatarsInPlace(streamers) {
     streamersList = Array.isArray(streamers) ? streamers : [];
 
-    const existingChildren = Array.from(avatarsContainer.children);
+    const existingChildren = Array.from(avatarsContainer.children).slice(1);
     const existingMap = new Map();
     existingChildren.forEach((card) => {
       const id = card.getAttribute("data-id");
@@ -257,7 +291,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       // Check DOM position in vertical container: only move if index changed
-      const currentChildAtIndex = avatarsContainer.children[index];
+      const currentChildAtIndex = avatarsContainer.children[index + 1];
       if (currentChildAtIndex !== card) {
         avatarsContainer.insertBefore(card, currentChildAtIndex || null);
       }
@@ -426,9 +460,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Smart Click-Through mouse tracking (detects avatar circle/image and drag anchor)
+  function handleSmartClickThrough(e) {
+    if (!isSmartClickThroughEnabled || isStaticClickThroughEnabled) return;
+
+    // Selected interactive elements: avatar circle/image (.circle-frame) and the drag anchor (.overlay-header / #header-drag-zone)
+    const isOver = Boolean(
+      e.target &&
+      e.target.closest &&
+      e.target.closest(".circle-frame, .overlay-header"),
+    );
+
+    if (isOver !== isHoveringInteractive) {
+      isHoveringInteractive = isOver;
+      const ignore = !isOver;
+      if (window.electronAPI && window.electronAPI.setIgnoreMouseEvents) {
+        window.electronAPI.setIgnoreMouseEvents(ignore, { forward: true });
+      }
+    }
+  }
+
+  window.addEventListener("mousemove", handleSmartClickThrough, {
+    passive: true,
+  });
+
+  window.addEventListener("mouseleave", () => {
+    if (!isSmartClickThroughEnabled || isStaticClickThroughEnabled) return;
+    if (isHoveringInteractive) {
+      isHoveringInteractive = false;
+      if (window.electronAPI && window.electronAPI.setIgnoreMouseEvents) {
+        window.electronAPI.setIgnoreMouseEvents(true, { forward: true });
+      }
+    }
+  });
+
+  // Click on drag anchor rotates window state
+  if (headerDragZone) {
+    headerDragZone.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (window.electronAPI && window.electronAPI.rotateWindowState) {
+        window.electronAPI.rotateWindowState();
+      }
+    });
+  }
+
   // Double-click header toggles always on top
   overlayRoot.addEventListener("dblclick", async (e) => {
-    if (e.target.closest("button") || e.target.closest(".avatar-card")) return;
+    if (
+      e.target.closest("button") ||
+      e.target.closest(".avatar-card") ||
+      e.target.closest("#header-drag-zone")
+    )
+      return;
     if (window.electronAPI && window.electronAPI.toggleAlwaysOnTop) {
       const isPinned = await window.electronAPI.toggleAlwaysOnTop();
       overlayRoot.style.transform = isPinned ? "scale(1.02)" : "scale(1)";

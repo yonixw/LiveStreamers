@@ -12,24 +12,28 @@
 
 <body>
     <div id="overlay-root" class="overlay-root">
-        <!-- Always-Visible Drag & Anchor Header Bar (Clean "LS") -->
-        <header class="overlay-header" title="Drag to move overlay | Double-click to pin | Right-click for settings">
-            <div class="header-drag-zone">
-                <svg class="drag-grip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <circle cx="9" cy="6" r="1.5"></circle>
-                    <circle cx="15" cy="6" r="1.5"></circle>
-                    <circle cx="9" cy="12" r="1.5"></circle>
-                    <circle cx="15" cy="12" r="1.5"></circle>
-                    <circle cx="9" cy="18" r="1.5"></circle>
-                    <circle cx="15" cy="18" r="1.5"></circle>
-                </svg>
-                <!-- <span class="header-title"></span> -->
-            </div>
-        </header>
 
         <!-- Vertical Avatars List Container -->
         <div id="avatars-container" class="avatars-container align-left">
             <!-- Dynamic avatar circle cards rendered in vertical order by renderer.js -->
+
+            <!-- Always-Visible Drag & Anchor Header Bar (Clean "LS") -->
+            <header class="overlay-header"
+                title="Drag to move overlay | Click grip to switch window state | Double-click to pin | Right-click for settings">
+                <div class="header-drag-zone" id="header-drag-zone" title="Click to rotate window state">
+                    <svg class="drag-grip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <circle cx="9" cy="6" r="1.5"></circle>
+                        <circle cx="15" cy="6" r="1.5"></circle>
+                        <circle cx="9" cy="12" r="1.5"></circle>
+                        <circle cx="15" cy="12" r="1.5"></circle>
+                        <circle cx="9" cy="18" r="1.5"></circle>
+                        <circle cx="15" cy="18" r="1.5"></circle>
+                    </svg>
+                    <span class="header-title" id="header-state-indicator" style="display: none;"></span>
+                </div>
+            </header>
+
         </div>
     </div>
 

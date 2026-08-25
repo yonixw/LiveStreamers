@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-08-25
+
+### Added
+- **Smart Click-Through Mode**:
+  - Implemented dynamic cursor tracking in [`src/renderer/renderer.js`](src/renderer/renderer.js:430) detecting mouse movement over interactive targets (`.circle-frame` avatar circles and `.overlay-header` / `#header-drag-zone` drag anchor) vs transparent overlay regions.
+  - Automatically activates transparent click-through via [`window.electronAPI.setIgnoreMouseEvents(true, { forward: true })`](src/preload.js:63) when cursor leaves interactive elements, and restores full mouse interactivity on hover.
+  - Added single-line console logging on Smart Click-Through mode switches in [`src/main.js`](src/main.js:1040).
+  - Added `smartClickThrough` toggle in Settings UI ([`src/settings/settings.html`](src/settings/settings.html:420), [`src/settings/settings.js`](src/settings/settings.js:1213)) and persistent storage schema in [`src/tasks/storage.js`](src/tasks/storage.js:84).
+- **Multiple Window States (Form Position & Sizing)**:
+  - Added `windowStatesCount`, `currentWindowStateIndex`, and `windowStates` array schema to [`src/tasks/storage.js`](src/tasks/storage.js:85) and [`src/main.js`](src/main.js:150).
+  - Added configurable number of states (`> 0` integer) with active state badge and state preset selector buttons in Settings ([`src/settings/settings.html`](src/settings/settings.html:435), [`src/settings/settings.js`](src/settings/settings.js:1235)).
+  - Enabled single-click rotation on the drag anchor grip ([`src/renderer/renderer.js`](src/renderer/renderer.js:456)) cycling through saved window states with dynamic header badge indicator (`1/2`, `1/3`, etc.).
+  - Moving or resizing the window on screen automatically updates and saves coordinates and dimensions for the currently active state.
+
 ## [1.6.0] - 2026-08-25
 
 ### Added

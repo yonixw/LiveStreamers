@@ -36,8 +36,8 @@ body {
 
 /* Always-Visible Top Drag & Anchor Header (Only "LS v1.0") */
 .overlay-header {
-  width: 100%;
-  max-width: 100%;
+  width: min-content;
+  /* max-width: 100px; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,13 +66,27 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  pointer-events: none;
+  pointer-events: auto;
+  
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 999px;
+  transition: none;
+}
+
+.header-title {
+-webkit-app-region: no-drag; 
+}
+
+.header-drag-zone:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .drag-grip-icon {
   width: 12px;
   height: 12px;
   color: #94a3b8;
+  pointer-events: none;
 }
 
 .header-title {
@@ -81,6 +95,7 @@ body {
   color: #f8fafc;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  pointer-events: none;
 }
 
 /* Avatars Container (Scrollbar hidden, supporting Column / Row & Reversals) */
@@ -456,3 +471,36 @@ body {
   display: none;
 }
 
+
+
+
+/* Base styles for all corner shapes */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  pointer-events: none; /* Prevents the invisible center box from blocking clicks */
+}
+
+/* Top-Left and Bottom-Right Corners */
+body::before {
+  top: 0px;
+  left: 0px;
+  border: 2px solid #3498db;
+
+  /* sum of all of the above px +- ??px */
+  filter: drop-shadow(calc(100vw - 4px) calc(100vh - 4px) 0 #3498db);
+}
+
+/* Top-Right and Bottom-Left Corners */
+body::after {
+  top: 0px;
+  right: 0px;
+  border: 2px solid #3498db;
+
+  /* sum of all of the above px +- ??px */
+  filter: drop-shadow(calc(-100vw + 4px) calc(100vh - 4px) 0 #3498db);
+
+}

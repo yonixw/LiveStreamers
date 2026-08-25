@@ -147,6 +147,21 @@ const state = {
   showNicknameTag: persistedSettings.showNicknameTag ?? false,
   isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
+  smartClickThrough: persistedSettings.smartClickThrough ?? false,
+  windowStatesCount: persistedSettings.windowStatesCount || 1,
+  currentWindowStateIndex: persistedSettings.currentWindowStateIndex || 0,
+  windowStates:
+    Array.isArray(persistedSettings.windowStates) &&
+    persistedSettings.windowStates.length > 0
+      ? persistedSettings.windowStates
+      : [
+          persistedSettings.overlayBounds || {
+            x: null,
+            y: null,
+            width: 280,
+            height: 460,
+          },
+        ],
   currentOpacity: persistedSettings.currentOpacity ?? 1.0,
   overlayVisible: persistedSettings.overlayVisible ?? true,
   overlayBounds: persistedSettings.overlayBounds || null,
@@ -215,9 +230,76 @@ function debounceSaveOverlayBounds() {
         width: bounds.width,
         height: bounds.height,
       };
+
+      if (!Array.isArray(state.windowStates)) {
+        state.windowStates = [];
+      }
+      const idx = Math.max(
+        0,
+        Math.min(
+          state.windowStatesCount - 1,
+          state.currentWindowStateIndex || 0,
+        ),
+      );
+      state.windowStates[idx] = { ...state.overlayBounds };
+
       saveSettings(state);
+      broadcastStateUpdate();
     }
   }, 400);
+}
+
+function setWindowStateIndex(index) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return false;
+  const count = Math.max(1, parseInt(state.windowStatesCount, 10) || 1);
+  const targetIdx = Math.max(0, Math.min(count - 1, parseInt(index, 10) || 0));
+
+  if (!Array.isArray(state.windowStates)) {
+    state.windowStates = [];
+  }
+  while (state.windowStates.length < count) {
+    state.windowStates.push(
+      state.overlayBounds
+        ? { ...state.overlayBounds }
+        : { x: null, y: null, width: 280, height: 460 },
+    );
+  }
+
+  state.currentWindowStateIndex = targetIdx;
+  const targetBounds = state.windowStates[targetIdx];
+
+  if (targetBounds) {
+    if (
+      typeof targetBounds.x === "number" &&
+      typeof targetBounds.y === "number" &&
+      typeof targetBounds.width === "number" &&
+      typeof targetBounds.height === "number"
+    ) {
+      overlayWindow.setBounds(targetBounds);
+    } else if (
+      typeof targetBounds.width === "number" &&
+      typeof targetBounds.height === "number"
+    ) {
+      overlayWindow.setSize(targetBounds.width, targetBounds.height);
+      overlayWindow.center();
+      state.windowStates[targetIdx] = overlayWindow.getBounds();
+    }
+    state.overlayBounds = { ...overlayWindow.getBounds() };
+  }
+
+  console.log(
+    `[WindowState] Switched to State ${state.currentWindowStateIndex + 1}/${count} (Width: ${state.overlayBounds.width}px, Height: ${state.overlayBounds.height}px)`,
+  );
+  saveSettings(state);
+  broadcastStateUpdate();
+  return state.currentWindowStateIndex;
+}
+
+function rotateWindowState() {
+  const count = Math.max(1, parseInt(state.windowStatesCount, 10) || 1);
+  if (count <= 1) return 0;
+  const nextIdx = ((state.currentWindowStateIndex || 0) + 1) % count;
+  return setWindowStateIndex(nextIdx);
 }
 
 let savePopupBoundsTimeout = null;
@@ -433,7 +515,7 @@ function createOverlayWindow() {
 
   overlayWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
 
-  if (state.isIgnoringMouseEvents) {
+  if (state.isIgnoringMouseEvents || state.smartClickThrough) {
     overlayWindow.setIgnoreMouseEvents(true, { forward: true });
   }
 
@@ -851,10 +933,58 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
   if (typeof partialSettings.isIgnoringMouseEvents === "boolean") {
     state.isIgnoringMouseEvents = partialSettings.isIgnoringMouseEvents;
     if (overlayWindow && !overlayWindow.isDestroyed()) {
-      overlayWindow.setIgnoreMouseEvents(state.isIgnoringMouseEvents, {
-        forward: true,
-      });
+      if (state.isIgnoringMouseEvents) {
+        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      } else if (state.smartClickThrough) {
+        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      } else {
+        overlayWindow.setIgnoreMouseEvents(false);
+      }
     }
+  }
+
+  if (typeof partialSettings.smartClickThrough === "boolean") {
+    state.smartClickThrough = partialSettings.smartClickThrough;
+    if (
+      overlayWindow &&
+      !overlayWindow.isDestroyed() &&
+      !state.isIgnoringMouseEvents
+    ) {
+      if (state.smartClickThrough) {
+        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      } else {
+        overlayWindow.setIgnoreMouseEvents(false);
+      }
+    }
+    console.log(
+      `[SmartClickThrough] Setting updated to: ${state.smartClickThrough ? "Enabled" : "Disabled"}`,
+    );
+  }
+
+  if (
+    typeof partialSettings.windowStatesCount === "number" ||
+    typeof partialSettings.windowStatesCount === "string"
+  ) {
+    const cnt = Math.max(
+      1,
+      parseInt(partialSettings.windowStatesCount, 10) || 1,
+    );
+    state.windowStatesCount = cnt;
+    if (!Array.isArray(state.windowStates)) state.windowStates = [];
+    while (state.windowStates.length < cnt) {
+      state.windowStates.push(
+        state.overlayBounds
+          ? { ...state.overlayBounds }
+          : { x: null, y: null, width: 280, height: 460 },
+      );
+    }
+    if (state.currentWindowStateIndex >= cnt) {
+      state.currentWindowStateIndex = 0;
+    }
+  }
+
+  if (typeof partialSettings.currentWindowStateIndex === "number") {
+    setWindowStateIndex(partialSettings.currentWindowStateIndex);
   }
 
   if (typeof partialSettings.currentOpacity === "number") {
@@ -1028,13 +1158,42 @@ ipcMain.handle("window:toggle-always-on-top", () => {
 ipcMain.handle("window:toggle-click-through", () => {
   state.isIgnoringMouseEvents = !state.isIgnoringMouseEvents;
   if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.setIgnoreMouseEvents(state.isIgnoringMouseEvents, {
-      forward: true,
-    });
+    if (state.isIgnoringMouseEvents || state.smartClickThrough) {
+      overlayWindow.setIgnoreMouseEvents(true, {
+        forward: true,
+      });
+    } else {
+      overlayWindow.setIgnoreMouseEvents(false);
+    }
   }
   saveSettings(state);
   broadcastStateUpdate();
   return state.isIgnoringMouseEvents;
+});
+
+ipcMain.handle("window:set-ignore-mouse-events", (_event, ignore, options) => {
+  if (
+    overlayWindow &&
+    !overlayWindow.isDestroyed() &&
+    !state.isIgnoringMouseEvents
+  ) {
+    overlayWindow.setIgnoreMouseEvents(
+      Boolean(ignore),
+      options || { forward: true },
+    );
+    console.log(
+      `[SmartClickThrough] Mode changed: ${ignore ? "Click-Through enabled (transparent region)" : "Interactive enabled (hovering element)"}`,
+    );
+  }
+  return true;
+});
+
+ipcMain.handle("window:rotate-state", () => {
+  return rotateWindowState();
+});
+
+ipcMain.handle("window:set-state-index", (_event, index) => {
+  return setWindowStateIndex(index);
 });
 
 ipcMain.handle("window:set-opacity", (_event, opacity) => {

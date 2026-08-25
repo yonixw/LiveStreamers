@@ -3,18 +3,35 @@
   "avatarSize": 70,
   "avatarAlignment": "left",
   "fontSize": 12,
-  "layoutOrientation": "horizontal",
+  "layoutOrientation": "vertical",
   "layoutReversed": false,
   "showNicknameTag": true,
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
+  "smartClickThrough": true,
+  "windowStatesCount": 2,
+  "currentWindowStateIndex": 0,
+  "windowStates": [
+    {
+      "x": -133,
+      "y": 10,
+      "width": 710,
+      "height": 484
+    },
+    {
+      "x": 66,
+      "y": 502,
+      "width": 486,
+      "height": 334
+    }
+  ],
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 2227,
-    "y": 639,
-    "width": 318,
-    "height": 186
+    "x": -133,
+    "y": 10,
+    "width": 710,
+    "height": 484
   },
   "popupBounds": {
     "x": 1506,
@@ -73,6 +90,30 @@
         "titleContainsText": "",
         "viewerCountEnabled": true,
         "viewerCountThreshold": 20000,
+        "runtimeMinutesEnabled": false,
+        "runtimeMinutesThreshold": 30,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    },
+    {
+      "id": "streamer-1787697589918-253",
+      "name": "destiny",
+      "avatarImage": "",
+      "customTag": "",
+      "snoozedUntil": null,
+      "urls": [
+        {
+          "url": "https://kick.com/destiny",
+          "freqMinutes": 40
+        }
+      ],
+      "triggers": {
+        "titleChange": true,
+        "titleContainsEnabled": false,
+        "titleContainsText": "",
+        "viewerCountEnabled": false,
+        "viewerCountThreshold": 5000,
         "runtimeMinutesEnabled": false,
         "runtimeMinutesThreshold": 30,
         "goingLive": true,

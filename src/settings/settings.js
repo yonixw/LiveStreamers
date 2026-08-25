@@ -64,7 +64,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const chkShowNicknameTag = document.getElementById("chk-show-nickname-tag");
   const chkShowOverlay = document.getElementById("chk-show-overlay");
   const chkAlwaysOnTop = document.getElementById("chk-always-on-top");
+  const chkSmartClickThrough = document.getElementById(
+    "chk-smart-click-through",
+  );
   const chkClickThrough = document.getElementById("chk-click-through");
+  const inputWindowStatesCount = document.getElementById(
+    "input-window-states-count",
+  );
+  const windowStatesButtons = document.getElementById("window-states-buttons");
+  const windowStateBadge = document.getElementById("window-state-badge");
   const opacityRadios = document.querySelectorAll('input[name="opacity"]');
 
   const btnCenterOverlay = document.getElementById("btn-center-overlay");
@@ -1210,6 +1218,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  if (chkSmartClickThrough) {
+    chkSmartClickThrough.addEventListener("change", () => {
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          smartClickThrough: chkSmartClickThrough.checked,
+        });
+        appendLog(
+          `Smart Click-Through set to: ${chkSmartClickThrough.checked ? "Enabled" : "Disabled"}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  }
+
   chkClickThrough.addEventListener("change", () => {
     if (window.electronAPI && window.electronAPI.updateSettings) {
       window.electronAPI.updateSettings({
@@ -1217,6 +1240,57 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
   });
+
+  // Multiple Window States Handlers
+  function renderWindowStatesUI(count, activeIndex) {
+    const total = Math.max(1, parseInt(count, 10) || 1);
+    const active = Math.max(
+      0,
+      Math.min(total - 1, parseInt(activeIndex, 10) || 0),
+    );
+
+    if (inputWindowStatesCount) {
+      inputWindowStatesCount.value = String(total);
+    }
+
+    if (windowStateBadge) {
+      windowStateBadge.textContent = `State ${active + 1} of ${total}`;
+    }
+
+    if (windowStatesButtons) {
+      windowStatesButtons.innerHTML = "";
+      for (let i = 0; i < total; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `btn-size-preset ${i === active ? "active" : ""}`;
+        btn.textContent = `State ${i + 1}`;
+        btn.setAttribute("data-state-index", String(i));
+        btn.addEventListener("click", () => {
+          if (window.electronAPI && window.electronAPI.setWindowStateIndex) {
+            window.electronAPI.setWindowStateIndex(i);
+          }
+        });
+        windowStatesButtons.appendChild(btn);
+      }
+    }
+  }
+
+  if (inputWindowStatesCount) {
+    inputWindowStatesCount.addEventListener("change", (e) => {
+      const val = Math.max(1, Math.min(10, parseInt(e.target.value, 10) || 1));
+      e.target.value = String(val);
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          windowStatesCount: val,
+        });
+        appendLog(
+          `Multiple Window States count set to: ${val}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  }
 
   // Opacity radios
   opacityRadios.forEach((radio) => {
@@ -1293,9 +1367,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (typeof settings.isAlwaysOnTop === "boolean") {
       chkAlwaysOnTop.checked = settings.isAlwaysOnTop;
     }
+    if (
+      typeof settings.smartClickThrough === "boolean" &&
+      chkSmartClickThrough
+    ) {
+      chkSmartClickThrough.checked = settings.smartClickThrough;
+    }
     if (typeof settings.isIgnoringMouseEvents === "boolean") {
       chkClickThrough.checked = settings.isIgnoringMouseEvents;
     }
+    renderWindowStatesUI(
+      settings.windowStatesCount || 1,
+      settings.currentWindowStateIndex || 0,
+    );
     if (typeof settings.currentOpacity === "number") {
       opacityRadios.forEach((radio) => {
         radio.checked =
