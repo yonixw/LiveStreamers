@@ -9,7 +9,6 @@ nicer ui
         make min 5?
     replace text shadow with 1px border - more readable
     ALT_TEXT -> add game so: ${nick} / ${domain} / ${game} / ${full title}
-    package.json name+version in setting page top ( + title of window?)
 
 Triggers 
     trigger -> +X (like +100) viewers 

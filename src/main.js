@@ -14,6 +14,8 @@ const fs = require("node:fs");
 const crypto = require("node:crypto");
 const util = require("node:util");
 
+const pkg = require("../package.json");
+
 // Centralized log capture & history
 const logHistory = [];
 const MAX_LOG_HISTORY = 500;
@@ -470,7 +472,7 @@ function createSettingsWindow() {
     minWidth: 540,
     minHeight: 650,
     autoHideMenuBar: true,
-    title: "LiveStreamers Settings",
+    title: `Settings - ${pkg.name} - ${pkg.version}`,
     backgroundColor: "#0f172a",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
