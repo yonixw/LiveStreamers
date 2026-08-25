@@ -11,7 +11,7 @@
   "smartClickThrough": false,
   "showBoundaryCorners": false,
   "windowStatesCount": 2,
-  "currentWindowStateIndex": 0,
+  "currentWindowStateIndex": 1,
   "windowStates": [
     {
       "x": 153,
@@ -20,19 +20,19 @@
       "height": 484
     },
     {
-      "x": 66,
-      "y": 502,
+      "x": 143,
+      "y": 369,
       "width": 486,
-      "height": 334
+      "height": 467
     }
   ],
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 153,
-    "y": 383,
-    "width": 125,
-    "height": 484
+    "x": 143,
+    "y": 369,
+    "width": 486,
+    "height": 467
   },
   "popupBounds": {
     "x": 1506,
@@ -41,30 +41,6 @@
     "height": 487
   },
   "streamers": [
-    {
-      "id": "streamer-1787680783492-330",
-      "name": "senny",
-      "avatarImage": "",
-      "customTag": "",
-      "snoozedUntil": null,
-      "urls": [
-        {
-          "url": "https://www.twitch.tv/sennyk4",
-          "freqMinutes": 5
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "titleContainsEnabled": false,
-        "titleContainsText": "",
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
-        "runtimeMinutesEnabled": false,
-        "runtimeMinutesThreshold": 30,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
     {
       "id": "kc-xqc",
       "name": "xQc",
@@ -107,6 +83,34 @@
         {
           "url": "https://kick.com/destiny",
           "freqMinutes": 40
+        },
+        {
+          "url": "!https://www.destiny.gg/bigscreen#kick/destiny",
+          "freqMinutes": 25
+        }
+      ],
+      "triggers": {
+        "titleChange": true,
+        "titleContainsEnabled": false,
+        "titleContainsText": "",
+        "viewerCountEnabled": false,
+        "viewerCountThreshold": 5000,
+        "runtimeMinutesEnabled": false,
+        "runtimeMinutesThreshold": 30,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    },
+    {
+      "id": "streamer-1787680783492-330",
+      "name": "senny",
+      "avatarImage": "",
+      "customTag": "",
+      "snoozedUntil": null,
+      "urls": [
+        {
+          "url": "https://www.twitch.tv/sennyk4",
+          "freqMinutes": 5
         }
       ],
       "triggers": {

@@ -192,23 +192,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Handle avatar click logic: direct open if 1 link, dedicated popup window if multiple links
   function handleAvatarClick(streamer) {
     if (!streamer) return;
-    const urls = getStreamerUrlsList(streamer);
 
-    if (urls.length <= 1) {
-      const targetUrl =
-        streamer.activeUrl ||
-        (urls[0]
-          ? typeof urls[0] === "string"
-            ? urls[0]
-            : urls[0].url
-          : streamer.url);
-      if (targetUrl && window.electronAPI && window.electronAPI.openExternal) {
-        window.electronAPI.openExternal(targetUrl);
-      }
-    } else {
-      if (window.electronAPI && window.electronAPI.openStreamerLinksPopup) {
-        window.electronAPI.openStreamerLinksPopup(streamer.id);
-      }
+    // Open popup always, even on 1 link, to allow snooze etc.
+    if (window.electronAPI && window.electronAPI.openStreamerLinksPopup) {
+      window.electronAPI.openStreamerLinksPopup(streamer.id);
     }
   }
 

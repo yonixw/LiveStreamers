@@ -168,8 +168,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     urls.forEach((entry, idx) => {
-      const urlStr = typeof entry === "string" ? entry : entry?.url || "";
+      let urlStr = typeof entry === "string" ? entry : entry?.url || "";
       if (!urlStr) return;
+      if (urlStr.startsWith("!")) urlStr = urlStr.slice(1);
 
       const plat = detectPlatform(urlStr);
       const isLiveLink = isLive && activeUrl === urlStr;

@@ -478,6 +478,13 @@ async function checkStreamerLiveTask(
   for (let i = 0; i < linksToCheck.length; i++) {
     const linkObj = linksToCheck[i];
     checkedCount++;
+
+    if (linkObj.url && linkObj.url.startsWith("!")) {
+      // This is for popup only, skip.
+      // Like links that are 3rd party embeds etc.
+      continue;
+    }
+
     const plat = detectPlatform(linkObj.url);
     console.log(
       `[${timestamp}] [Background Live Check] [${streamerName}] [Link ${i + 1}/${linksToCheck.length}] Checking ${plat.toUpperCase()} (freq: ${linkObj.freqMinutes}m): ${linkObj.url}...`,

@@ -1,24 +1,14 @@
-clickthrough only for transparent parts?
-    not clickable -> hover drag -> become active -> click -> not clickable with 2sec cooldown... 
-
-    let 2 config "open" + "close" that will open on mouse over....
-        like top 3 half showing to top 10 showing all 
-
-Triggers 
-    trigger -> +X (like +100) viewers 
-
-    trigger find text -> in game/categ also -> forsen game 
+trigger find text -> in game/categ also -> forsen game 
         search trigger allow "," for split for multi search
-
-warning image -> custom "live" image -> alarama etc... for old account becoming live 
 
 Settings:
     add time-> follower time -> so entry id = date+uuid
-    make "offline" remember last live and show it (local storage...)
     notes feild - how the hell did i find this channel (dgg, otk streamer show etc.)
+    make "offline" remember last live and show it (local storage...)
 
-links to ignore start with "!" -> so i can put option to bigscreen#kick/xqc
-    show me links all the time (even if 1) so i can know platform and snooze if i want 
+warning image -> custom "live" image -> alarama etc... for old account becoming live 
+
+
 
 let me hide offline from list 
     offline with no time || last_on_time > 30d

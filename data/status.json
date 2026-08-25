@@ -7,9 +7,9 @@
     "checkStatus": "live",
     "cachedInfo": {
       "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
-      "game": "Just Chatting",
-      "category": "Just Chatting",
-      "viewerCount": 5314,
+      "game": "Roblox",
+      "category": "Roblox",
+      "viewerCount": 5706,
       "startTime": "2026-08-25T17:34:41.000Z",
       "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -18,21 +18,21 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T22:44:59.322Z"
+      "cachedAt": "2026-08-25T23:01:53.659Z"
     },
-    "lastChecked": "2026-08-25T22:44:59.322Z",
+    "lastChecked": "2026-08-25T23:01:53.660Z",
     "lastError": null,
     "lastTrigger": {
-      "type": "title_change",
-      "label": "Title Changed",
-      "message": "Title changed from \"#ad 🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒\" to \"🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒\"",
+      "type": "category_change",
+      "label": "Category Changed",
+      "message": "Category changed from \"Just Chatting\" to \"Roblox\"",
       "diff": {
-        "from": "#ad 🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
-        "to": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒"
+        "from": "Just Chatting",
+        "to": "Roblox"
       },
-      "timestamp": "2026-08-25T22:30:29.710Z"
+      "timestamp": "2026-08-25T22:58:51.376Z"
     },
-    "lastTriggeredAt": "2026-08-25T22:30:29.710Z",
+    "lastTriggeredAt": "2026-08-25T22:58:51.376Z",
     "checkedUrlsCount": 1
   },
   "streamer-1787680783492-330": {
@@ -56,7 +56,7 @@
       "platform": "twitch",
       "cachedAt": "2026-08-25T22:30:22.834Z"
     },
-    "lastChecked": "2026-08-25T22:44:52.116Z",
+    "lastChecked": "2026-08-25T23:02:18.927Z",
     "lastError": null,
     "lastTrigger": {
       "type": "title_change",
@@ -93,7 +93,7 @@
       "title": "memein' and streamin' and buildin' my dreamin'",
       "game": "Factorio",
       "category": "Factorio",
-      "viewerCount": 4258,
+      "viewerCount": 4317,
       "startTime": "2026-08-25T20:00:40.000Z",
       "liveTime": "2026-08-25T20:00:40.000Z",
       "description": "The premier Internet POLITICS streamer, exploring philosophy, policy analysis, drama farmer and center of the extended orbiter universe.",
@@ -102,9 +102,9 @@
       "channelUrl": "https://kick.com/destiny",
       "url": "https://kick.com/destiny",
       "platform": "kick",
-      "cachedAt": "2026-08-25T22:45:06.173Z"
+      "cachedAt": "2026-08-25T23:02:06.500Z"
     },
-    "lastChecked": "2026-08-25T22:45:06.173Z",
+    "lastChecked": "2026-08-25T23:02:06.500Z",
     "lastError": null,
     "lastTrigger": {
       "type": "going_live",
