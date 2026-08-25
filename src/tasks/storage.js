@@ -76,6 +76,8 @@ const defaultSettings = {
   avatarSize: 80,
   avatarAlignment: "left",
   fontSize: 12,
+  layoutOrientation: "vertical",
+  layoutReversed: false,
   showNicknameTag: false,
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
@@ -240,6 +242,9 @@ function saveSettings(settings) {
         typeof settings.fontSize === "number"
           ? settings.fontSize
           : parseInt(settings.fontSize, 10) || 12,
+      layoutOrientation:
+        settings.layoutOrientation === "horizontal" ? "horizontal" : "vertical",
+      layoutReversed: Boolean(settings.layoutReversed),
       showNicknameTag: settings.showNicknameTag ?? false,
       isAlwaysOnTop: settings.isAlwaysOnTop ?? true,
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,

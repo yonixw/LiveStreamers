@@ -142,6 +142,8 @@ const state = {
   avatarSize: persistedSettings.avatarSize || 80,
   avatarAlignment: persistedSettings.avatarAlignment || "left",
   fontSize: persistedSettings.fontSize || 12,
+  layoutOrientation: persistedSettings.layoutOrientation || "vertical",
+  layoutReversed: persistedSettings.layoutReversed ?? false,
   showNicknameTag: persistedSettings.showNicknameTag ?? false,
   isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
@@ -821,6 +823,18 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     if (!isNaN(fsize) && fsize >= 8 && fsize <= 32) {
       state.fontSize = fsize;
     }
+  }
+
+  if (typeof partialSettings.layoutOrientation === "string") {
+    if (
+      ["vertical", "horizontal"].includes(partialSettings.layoutOrientation)
+    ) {
+      state.layoutOrientation = partialSettings.layoutOrientation;
+    }
+  }
+
+  if (typeof partialSettings.layoutReversed === "boolean") {
+    state.layoutReversed = partialSettings.layoutReversed;
   }
 
   if (typeof partialSettings.showNicknameTag === "boolean") {

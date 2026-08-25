@@ -83,7 +83,7 @@ body {
   text-transform: uppercase;
 }
 
-/* Vertical Avatars Container (Scrollbar hidden) */
+/* Avatars Container (Scrollbar hidden, supporting Column / Row & Reversals) */
 .avatars-container {
   display: flex;
   flex-direction: column;
@@ -93,6 +93,7 @@ body {
   width: 100%;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-app-region: no-drag;
@@ -100,6 +101,33 @@ body {
   /* Hide scrollbar across all browsers */
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+/* Layout Orientation Variants */
+.avatars-container.layout-vertical {
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.avatars-container.layout-vertical-reverse {
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.avatars-container.layout-horizontal {
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: flex-start;
+}
+
+.avatars-container.layout-horizontal-reverse {
+  flex-direction: row-reverse;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: flex-start;
 }
 
 .avatars-container::-webkit-scrollbar {

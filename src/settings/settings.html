@@ -149,6 +149,35 @@
                     </div>
 
                     <div class="appearance-group full-width-group">
+                        <div class="appearance-header">
+                            <span class="appearance-label">Streamer List Orientation:</span>
+                        </div>
+                        <div class="orientation-controls-row">
+                            <div class="orientation-radios-group">
+                                <label class="orientation-radio-label">
+                                    <input type="radio" name="layout-orientation" value="vertical" checked />
+                                    <span class="radio-custom"></span>
+                                    <span>↕ Vertical (Column)</span>
+                                </label>
+                                <label class="orientation-radio-label">
+                                    <input type="radio" name="layout-orientation" value="horizontal" />
+                                    <span class="radio-custom"></span>
+                                    <span>↔ Horizontal (Row)</span>
+                                </label>
+                            </div>
+                            <label class="toggle-control reverse-toggle">
+                                <input type="checkbox" id="chk-layout-reversed" />
+                                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                <div class="toggle-label-group">
+                                    <span class="toggle-title">Reverse Order</span>
+                                    <span class="toggle-description">Inverts list direction (Bottom-to-Top or
+                                        Right-to-Left)</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="appearance-group full-width-group">
                         <label class="toggle-control">
                             <input type="checkbox" id="chk-show-nickname-tag" />
                             <span class="toggle-track"><span class="toggle-thumb"></span></span>
@@ -434,7 +463,45 @@
                 </div>
             </section>
 
-            <!-- Section 6: Quick Action Buttons -->
+            <!-- Section 6: Avatar Emote Sources & Community Links -->
+            <section class="settings-card links-card">
+                <div class="card-header">
+                    <h2>Avatar Sources & Useful Links</h2>
+                    <span class="card-subtitle">Get animated GIF, WebP, or PNG streamer avatars and emotes from these
+                        community platforms (click to open in browser)</span>
+                </div>
+                <div class="links-grid">
+                    <a href="#" class="external-link-card" data-url="https://7tv.app/emotes">
+                        <div class="link-card-header">
+                            <span class="link-brand-title">7TV Emotes</span>
+                            <span class="link-external-icon">↗</span>
+                        </div>
+                        <span class="link-card-url">https://7tv.app/emotes</span>
+                        <span class="link-card-desc">Thousands of animated WebP, AVIF, and custom streamer
+                            emotes.</span>
+                    </a>
+
+                    <a href="#" class="external-link-card" data-url="https://betterttv.com/emotes/popular">
+                        <div class="link-card-header">
+                            <span class="link-brand-title">BetterTTV (BTTV)</span>
+                            <span class="link-external-icon">↗</span>
+                        </div>
+                        <span class="link-card-url">https://betterttv.com/emotes/popular</span>
+                        <span class="link-card-desc">Popular Twitch & YouTube animated GIF and PNG emotes.</span>
+                    </a>
+
+                    <a href="#" class="external-link-card" data-url="https://www.frankerfacez.com/emoticons/">
+                        <div class="link-card-header">
+                            <span class="link-brand-title">FrankerFaceZ (FFZ)</span>
+                            <span class="link-external-icon">↗</span>
+                        </div>
+                        <span class="link-card-url">https://www.frankerfacez.com/emoticons/</span>
+                        <span class="link-card-desc">Extensive library of community streamer icons and emotes.</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Section 7: Quick Action Buttons -->
             <section class="settings-card actions-card">
                 <div class="card-header">
                     <h2>Quick Actions</h2>

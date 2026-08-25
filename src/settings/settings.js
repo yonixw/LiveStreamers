@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const fontPresetButtons = document.querySelectorAll(".btn-font-preset");
   const btnAlignLeft = document.getElementById("btn-align-left");
   const btnAlignRight = document.getElementById("btn-align-right");
+  const orientationRadios = document.querySelectorAll(
+    'input[name="layout-orientation"]',
+  );
+  const chkLayoutReversed = document.getElementById("chk-layout-reversed");
+  const externalLinkCards = document.querySelectorAll(".external-link-card");
 
   // Streamer Form Elements
   const streamerForm = document.getElementById("streamer-form");
@@ -1142,6 +1147,52 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Orientation controls
+  orientationRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (
+        radio.checked &&
+        window.electronAPI &&
+        window.electronAPI.updateSettings
+      ) {
+        window.electronAPI.updateSettings({
+          layoutOrientation: radio.value,
+        });
+        appendLog(
+          `Layout orientation set to: ${radio.value}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  });
+
+  if (chkLayoutReversed) {
+    chkLayoutReversed.addEventListener("change", () => {
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          layoutReversed: chkLayoutReversed.checked,
+        });
+        appendLog(
+          `Layout reversed set to: ${chkLayoutReversed.checked ? "Enabled" : "Disabled"}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  }
+
+  // External Community Links
+  externalLinkCards.forEach((card) => {
+    card.addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = card.getAttribute("data-url");
+      if (url && window.electronAPI && window.electronAPI.openExternal) {
+        window.electronAPI.openExternal(url);
+      }
+    });
+  });
+
   // Checkbox handlers
   chkShowOverlay.addEventListener("change", () => {
     if (window.electronAPI && window.electronAPI.updateSettings) {
@@ -1220,6 +1271,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (settings.avatarAlignment) {
       updateAlignmentUI(settings.avatarAlignment);
+    }
+
+    if (settings.layoutOrientation) {
+      orientationRadios.forEach((radio) => {
+        radio.checked = radio.value === settings.layoutOrientation;
+      });
+    }
+
+    if (typeof settings.layoutReversed === "boolean" && chkLayoutReversed) {
+      chkLayoutReversed.checked = settings.layoutReversed;
     }
 
     if (typeof settings.showNicknameTag === "boolean" && chkShowNicknameTag) {

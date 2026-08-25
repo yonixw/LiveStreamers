@@ -3,16 +3,18 @@
   "avatarSize": 70,
   "avatarAlignment": "left",
   "fontSize": 12,
+  "layoutOrientation": "horizontal",
+  "layoutReversed": false,
   "showNicknameTag": true,
-  "isAlwaysOnTop": true,
+  "isAlwaysOnTop": false,
   "isIgnoringMouseEvents": false,
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 543,
-    "y": 691,
-    "width": 200,
-    "height": 688
+    "x": 1645,
+    "y": 531,
+    "width": 443,
+    "height": 464
   },
   "popupBounds": {
     "x": 1506,
@@ -30,7 +32,7 @@
       "urls": [
         {
           "url": "https://www.twitch.tv/sennyk4",
-          "freqMinutes": 2
+          "freqMinutes": 5
         }
       ],
       "triggers": {
@@ -58,7 +60,7 @@
         },
         {
           "url": "https://www.twitch.tv/xqcow",
-          "freqMinutes": 5
+          "freqMinutes": 6
         },
         {
           "url": "https://www.youtube.com/@xQcOW/live",

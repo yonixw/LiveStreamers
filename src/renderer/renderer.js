@@ -106,6 +106,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         avatarsContainer.classList.add("align-left");
       }
     }
+
+    if (
+      settings.layoutOrientation ||
+      typeof settings.layoutReversed === "boolean"
+    ) {
+      const orientation = settings.layoutOrientation || "vertical";
+      const reversed = Boolean(settings.layoutReversed);
+
+      avatarsContainer.classList.remove(
+        "layout-vertical",
+        "layout-vertical-reverse",
+        "layout-horizontal",
+        "layout-horizontal-reverse",
+      );
+
+      if (orientation === "horizontal") {
+        avatarsContainer.classList.add(
+          reversed ? "layout-horizontal-reverse" : "layout-horizontal",
+        );
+      } else {
+        avatarsContainer.classList.add(
+          reversed ? "layout-vertical-reverse" : "layout-vertical",
+        );
+      }
+    }
   }
 
   // Extract clean URL list from streamer object

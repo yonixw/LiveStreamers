@@ -12,19 +12,16 @@ Triggers
 
 warning image -> custom "live" image -> alarama etc... for old account becoming live 
 
-What is "Reset Default" on setting page above list? 
-
-add time-> follower time -> so entry id = date+uuid
-
-make "offline" remember last live and show it (local storage...)
+Settings:
+    add time-> follower time -> so entry id = date+uuid
+    make "offline" remember last live and show it (local storage...)
+    notes feild - how the hell did i find this channel (dgg, otk streamer show etc.)
 
 links to ignore start with "!" -> so i can put option to bigscreen#kick/xqc
     show me links all the time (even if 1) so i can know platform and snooze if i want 
 
 let me hide offline from list 
     offline with no time || last_on_time > 30d
-
-notes feild - how the hell did i find this channel (dgg, otk streamer show etc.)
 
 "checking" yellow tag -> icon and status gets stuck... why?
 
@@ -33,8 +30,6 @@ streamer list -> search by nick name -> filter
         WHICH will also allow selection of text
     
 ---------
-    
-on new streamer -> bug - reset dimentions of main + popup 
     
 gtm or posthog ping with disable in setting 
     start 
@@ -46,14 +41,6 @@ gtm or posthog ping with disable in setting
 
 ReadME + image
     -> say gifs supported
-    
-(reverse) + Horizontal support? literally flex direction
-    text still with only 3: left, right, center
-    
-Links
-    https://7tv.app/emotes
-    https://betterttv.com/emotes/popular
-    https://www.frankerfacez.com/emoticons/
     
 
 

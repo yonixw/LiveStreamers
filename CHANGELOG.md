@@ -5,9 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.6.0] - 2026-08-25
+
+### Added
+- **Global Console Logging Hook & DevTools Console Streaming**:
+  - Intercepted global [`console.log()`](src/main.js:90), [`console.warn()`](src/main.js:92), and [`console.error()`](src/main.js:91) calls in the main process ([`src/main.js`](src/main.js:1)), capturing backend crawler, yt-dlp, and task output into an in-memory 500-entry ring buffer.
+  - Streamed live and historical logs over IPC to the Settings window renderer, mirroring all output directly to the page's DevTools console ([`src/settings/settings.js`](src/settings/settings.js:76)).
+  - Compacted the Settings UI log terminal ([`src/settings/settings.html`](src/settings/settings.html:334)) to display only the single latest activity line.
+- **Streamer List Orientation & Reversal Controls**:
+  - Added layout orientation options (`↕ Vertical` vs `↔ Horizontal`) and a `Reverse Order` toggle in [`src/settings/settings.html`](src/settings/settings.html:150) and [`src/settings/settings.js`](src/settings/settings.js:1145).
+  - Implemented dynamic layout flex directions (`.layout-vertical`, `.layout-vertical-reverse`, `.layout-horizontal`, `.layout-horizontal-reverse`) in [`src/renderer/style.css`](src/renderer/style.css:98) and [`src/renderer/renderer.js`](src/renderer/renderer.js:110).
+  - Persisted `layoutOrientation` and `layoutReversed` properties in [`src/tasks/storage.js`](src/tasks/storage.js:79) and [`src/main.js`](src/main.js:145).
+- **Avatar Sources & Community Links Section**:
+  - Added a dedicated resources card in [`src/settings/settings.html`](src/settings/settings.html:438) with interactive external link cards for 7TV (`https://7tv.app/emotes`), BetterTTV (`https://betterttv.com/emotes/popular`), and FrankerFaceZ (`https://www.frankerfacez.com/emoticons/`).
+  - Wired link clicks in [`src/settings/settings.js`](src/settings/settings.js:1175) to launch the user's default browser via [`window.electronAPI.openExternal()`](src/preload.js:55).
+- **Randomized Default Link Check Frequency (21–40m) & Minimum 5m Limit**:
+  - Added [`getRandomDefaultFreq()`](src/settings/settings.js:262) in [`src/settings/settings.js`](src/settings/settings.js:262) setting new URL check intervals to `20 + Math.floor(Math.random() * 20) + 1` minutes.
+  - Enforced `min="5"` minutes check interval across URL inputs and storage normalization.
 
 ### Fixed
+- **Stream Checking Frequency Multiplier & Short-Circuiting**:
+  - Fixed link scheduling in [`src/tasks/stream-checker.js`](src/tasks/stream-checker.js:447) so links are checked strictly when `minuteCounter % freqMinutes === 0`, eliminating an issue where live 5m links were being re-checked every 1 minute.
+  - Short-circuited remaining link checks for a streamer immediately upon discovering a live link, advancing to the next streamer in the FIFO queue.
+  - Preserved active status without unnecessary network crawler requests when a streamer's links are not due in the current minute.
+- **Overlay Window Sizing Preservation on Streamer Updates**:
+  - Removed automatic dimension recalculations in [`updateOverlayBounds()`](src/main.js:197) in [`src/main.js`](src/main.js:197) that were resetting the user's custom window size on streamer additions, edits, and deletions.
+- **Main Overlay High-Contrast Readability & Tooltip Format**:
+  - Replaced blurry `text-shadow` across main overlay text elements with crisp `-webkit-text-stroke: 1px #000000; paint-order: stroke fill;` and 1px borders in [`src/renderer/style.css`](src/renderer/style.css:204) for sharp contrast on white/bright backgrounds.
+  - Updated avatar hover tooltip and image `alt` attributes in [`src/renderer/renderer.js`](src/renderer/renderer.js:260) to `${username nick} / ${domain} / ${game} / ${full title}`.
 - **Twitch Stream Metadata Normalization & Extraction**:
   - Fixed Twitch stream title and description extraction in [`extractStreamMetadata()`](src/tasks/yt-dlp-utils.js:186) by mapping the broadcast status from `description` to `title` instead of the generic `<user> (live)` placeholder.
   - Added [`fetchTwitchLiveDetails()`](src/tasks/yt-dlp-utils.js:412) in [`src/tasks/yt-dlp-utils.js`](src/tasks/yt-dlp-utils.js:1) as a lightweight fallback using Node.js built-in `fetch` to retrieve Twitch live viewer count, game/category, and stream status when omitted by yt-dlp.
