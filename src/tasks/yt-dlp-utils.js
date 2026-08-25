@@ -210,15 +210,34 @@ function extractStreamMetadata(info) {
       ? info.entries[0]
       : info;
 
-  // Clean dynamic timestamp from title
-  const rawTitle = item.title ?? item.fulltitle ?? null;
-  const title = cleanStreamTitle(rawTitle);
+  const isTwitch =
+    item.extractor === "twitch:stream" ||
+    item.extractor_key === "TwitchStream" ||
+    (typeof item.webpage_url_domain === "string" &&
+      item.webpage_url_domain.includes("twitch.tv")) ||
+    (typeof item.webpage_url === "string" &&
+      item.webpage_url.includes("twitch.tv")) ||
+    (typeof item.url === "string" && item.url.includes("twitch.tv"));
+
+  // Description
+  const rawDescription = item.description ?? null;
+  const description =
+    typeof rawDescription === "string" && rawDescription.trim().length > 0
+      ? rawDescription.trim()
+      : null;
+
+  // Title extraction:
+  // For Twitch streams, yt-dlp produces a placeholder title like "user (live) 2026-08-25 21:01",
+  // while the actual stream broadcast title is provided in item.description.
+  let rawTitle = item.title ?? item.fulltitle ?? null;
+  if (isTwitch && description) {
+    rawTitle = description;
+  }
+  const title =
+    cleanStreamTitle(rawTitle) || description || cleanStreamTitle(item.title);
 
   // Video ID
   const videoId = item.id ?? null;
-
-  // Description
-  const description = item.description ?? null;
 
   // Start Time / Live Time
   const rawStartTime =
@@ -231,40 +250,89 @@ function extractStreamMetadata(info) {
   const startTime = formatIsoTime(rawStartTime);
   const liveTime = startTime;
 
-  // Game / Category
-  const game = item.game ?? null;
+  // Game / Category extraction
+  let game = item.game ?? item.game_name ?? null;
   let category = null;
   if (Array.isArray(item.categories) && item.categories.length > 0) {
     category = item.categories[0];
-  } else if (typeof item.category === "string" && item.category) {
-    category = item.category;
+  } else if (typeof item.category === "string" && item.category.trim()) {
+    category = item.category.trim();
+  } else if (Array.isArray(item.tags) && item.tags.length > 0) {
+    category = item.tags[0];
   } else if (game) {
     category = game;
   }
 
-  // Viewer Count
+  // Check manifest_url token for Twitch if game not directly populated
+  if (!game || !category) {
+    const manifestUrl =
+      item.manifest_url ||
+      (Array.isArray(item.formats) &&
+        item.formats.find((f) => f && f.manifest_url)?.manifest_url);
+    if (manifestUrl && typeof manifestUrl === "string") {
+      const tokenMatch = manifestUrl.match(/token=([^&]+)/);
+      if (tokenMatch) {
+        try {
+          const tokenObj = JSON.parse(decodeURIComponent(tokenMatch[1]));
+          if (
+            tokenObj &&
+            typeof tokenObj.game === "string" &&
+            tokenObj.game.trim()
+          ) {
+            const tokenGame = tokenObj.game.trim();
+            if (!game) game = tokenGame;
+            if (!category) category = tokenGame;
+          }
+        } catch {
+          // Ignore JSON parse error in token
+        }
+      }
+    }
+  }
+
+  if (!category && game) {
+    category = game;
+  }
+  if (!game && category) {
+    game = category;
+  }
+
+  // Viewer Count extraction across all known yt-dlp platform keys
   let viewerCount = null;
-  if (
-    item.concurrent_view_count !== undefined &&
-    item.concurrent_view_count !== null
-  ) {
-    viewerCount = Number(item.concurrent_view_count);
-  } else if (item.live_viewers !== undefined && item.live_viewers !== null) {
-    viewerCount = Number(item.live_viewers);
-  } else if (
-    item.view_count !== undefined &&
-    item.view_count !== null &&
-    (item.is_live || item.live_status === "is_live")
-  ) {
-    viewerCount = Number(item.view_count);
+  const potentialViewerCounts = [
+    item.concurrent_view_count,
+    item.live_viewers,
+    item.viewer_count,
+    item.viewers,
+    item.live_viewer_count,
+    item.view_count,
+  ];
+
+  for (const countVal of potentialViewerCounts) {
+    if (countVal !== undefined && countVal !== null && countVal !== "") {
+      const num = Number(countVal);
+      if (!isNaN(num) && num >= 0) {
+        viewerCount = num;
+        break;
+      }
+    }
   }
 
   // Live status
-  const isLive = item.is_live === true || item.live_status === "is_live";
+  const isLive =
+    item.is_live === true ||
+    item.live_status === "is_live" ||
+    (viewerCount !== null && viewerCount > 0) ||
+    (isTwitch && Boolean(item.id || item.timestamp));
   const liveStatus = item.live_status ?? (isLive ? "is_live" : null);
 
   // Channel details
-  const channel = item.channel ?? item.uploader ?? item.channel_id ?? null;
+  const channel =
+    item.channel ??
+    item.uploader ??
+    item.channel_id ??
+    item.uploader_id ??
+    null;
   const channelId = item.channel_id ?? item.uploader_id ?? null;
   const channelUrl = item.channel_url ?? item.uploader_url ?? null;
 
@@ -350,7 +418,35 @@ async function getRawStreamInfo(targetUrl, options = {}) {
  */
 async function getStreamMetadata(targetUrl, options = {}) {
   const rawInfo = await getRawStreamInfo(targetUrl, options);
-  return extractStreamMetadata(rawInfo);
+  const metadata = extractStreamMetadata(rawInfo);
+
+  // Print structured metadata JSON (the schema saved in status.json) for debugging
+  console.log(
+    `[yt-dlp-utils] Stream metadata for ${targetUrl}:`,
+    JSON.stringify(
+      {
+        title: metadata.title,
+        startTime: metadata.startTime,
+        liveTime: metadata.liveTime,
+        description: metadata.description,
+        videoId: metadata.videoId,
+        game: metadata.game,
+        category: metadata.category,
+        viewerCount: metadata.viewerCount,
+        isLive: metadata.isLive,
+        liveStatus: metadata.liveStatus,
+        channel: metadata.channel,
+        channelId: metadata.channelId,
+        channelUrl: metadata.channelUrl,
+        thumbnail: metadata.thumbnail,
+        url: metadata.url,
+      },
+      null,
+      2,
+    ),
+  );
+
+  return metadata;
 }
 
 module.exports = {
