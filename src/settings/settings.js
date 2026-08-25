@@ -40,6 +40,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const trigCategoryChange = document.getElementById("trig-category-change");
   const trigViewerEnabled = document.getElementById("trig-viewer-enabled");
   const trigViewerThreshold = document.getElementById("trig-viewer-threshold");
+  const trigRuntimeEnabled = document.getElementById("trig-runtime-enabled");
+  const trigRuntimeThreshold = document.getElementById(
+    "trig-runtime-threshold",
+  );
 
   // Streamers List Elements
   const streamersListEl = document.getElementById("streamers-list");
@@ -49,6 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const presetButtons = document.querySelectorAll(".btn-preset");
 
   // Window Controls
+  const chkShowNicknameTag = document.getElementById("chk-show-nickname-tag");
   const chkShowOverlay = document.getElementById("chk-show-overlay");
   const chkAlwaysOnTop = document.getElementById("chk-always-on-top");
   const chkClickThrough = document.getElementById("chk-click-through");
@@ -392,6 +397,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     trigCategoryChange.checked = true;
     trigViewerEnabled.checked = false;
     trigViewerThreshold.value = "5000";
+    if (trigRuntimeEnabled) trigRuntimeEnabled.checked = false;
+    if (trigRuntimeThreshold) trigRuntimeThreshold.value = "30";
 
     updateAvatarPreview();
   }
@@ -420,6 +427,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     trigCategoryChange.checked = trig.categoryChange !== false;
     trigViewerEnabled.checked = Boolean(trig.viewerCountEnabled);
     trigViewerThreshold.value = String(trig.viewerCountThreshold || 5000);
+    if (trigRuntimeEnabled) {
+      trigRuntimeEnabled.checked = Boolean(trig.runtimeMinutesEnabled);
+    }
+    if (trigRuntimeThreshold) {
+      trigRuntimeThreshold.value = String(trig.runtimeMinutesThreshold || 30);
+    }
 
     updateAvatarPreview();
     streamerForm.scrollIntoView({ behavior: "smooth" });
@@ -456,6 +469,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       categoryChange: trigCategoryChange.checked,
       viewerCountEnabled: trigViewerEnabled.checked,
       viewerCountThreshold: Number(trigViewerThreshold.value) || 5000,
+      runtimeMinutesEnabled: trigRuntimeEnabled
+        ? trigRuntimeEnabled.checked
+        : false,
+      runtimeMinutesThreshold: trigRuntimeThreshold
+        ? Number(trigRuntimeThreshold.value) || 30
+        : 30,
     };
 
     const editingId = editStreamerIdInput.value;
@@ -1058,6 +1077,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     btnAlignRight.addEventListener("click", () => saveAlignment("right"));
   }
 
+  // Show Nickname as Tag Handler
+  if (chkShowNicknameTag) {
+    chkShowNicknameTag.addEventListener("change", () => {
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          showNicknameTag: chkShowNicknameTag.checked,
+        });
+        appendLog(
+          `Nickname tag visibility set to: ${chkShowNicknameTag.checked ? "Enabled" : "Disabled"}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  }
+
   // Checkbox handlers
   chkShowOverlay.addEventListener("change", () => {
     if (window.electronAPI && window.electronAPI.updateSettings) {
@@ -1132,6 +1167,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (settings.avatarAlignment) {
       updateAlignmentUI(settings.avatarAlignment);
+    }
+
+    if (typeof settings.showNicknameTag === "boolean" && chkShowNicknameTag) {
+      chkShowNicknameTag.checked = settings.showNicknameTag;
     }
 
     if (typeof settings.overlayVisible === "boolean") {

@@ -130,6 +130,18 @@
                             </button>
                         </div>
                     </div>
+
+                    <div class="appearance-group full-width-group">
+                        <label class="toggle-control">
+                            <input type="checkbox" id="chk-show-nickname-tag" />
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <div class="toggle-label-group">
+                                <span class="toggle-title">Show Nickname as Tag</span>
+                                <span class="toggle-description">Displays white nickname tag on 50% transparent black
+                                    badge above viewer count</span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
             </section>
 
@@ -239,6 +251,17 @@
                                 <input type="number" id="trig-viewer-threshold" min="0" step="1" value="5000"
                                     class="input-threshold" />
                                 <span class="trigger-hint">(and increased)</span>
+                            </div>
+
+                            <div class="trigger-runtime-row">
+                                <label class="trigger-checkbox">
+                                    <input type="checkbox" id="trig-runtime-enabled" />
+                                    <span class="trigger-custom-check"></span>
+                                    <span class="trigger-label">⏱️ Live ></span>
+                                </label>
+                                <input type="number" id="trig-runtime-threshold" min="1" step="1" value="30"
+                                    class="input-threshold" />
+                                <span class="trigger-hint">mins</span>
                             </div>
                         </div>
                     </div>
@@ -402,13 +425,10 @@
                 <div class="action-buttons-row">
                     <button type="button" class="btn btn-secondary" id="btn-center-overlay">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="2" x2="12" y2="6"></line>
-                            <line x1="12" y1="18" x2="12" y2="22"></line>
-                            <line x1="2" y1="12" x2="6" y2="12"></line>
-                            <line x1="18" y1="12" x2="22" y2="12"></line>
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
                         </svg>
-                        Center on Screen
+                        Reset UI
                     </button>
                     <button type="button" class="btn btn-secondary" id="btn-toggle-overlay">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">

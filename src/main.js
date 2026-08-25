@@ -47,6 +47,7 @@ const state = {
   sortBy: persistedSettings.sortBy || "last-triggered",
   avatarSize: persistedSettings.avatarSize || 80,
   avatarAlignment: persistedSettings.avatarAlignment || "left",
+  showNicknameTag: persistedSettings.showNicknameTag ?? false,
   isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
   currentOpacity: persistedSettings.currentOpacity ?? 1.0,
@@ -130,6 +131,20 @@ function debounceSaveOverlayBounds() {
       saveSettings(state);
     }
   }, 400);
+}
+
+function resetOverlayUI() {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    createOverlayWindow();
+    return true;
+  }
+  const count = state.streamers ? state.streamers.length : 1;
+  const { width, height } = calculateOverlayDimensions(count);
+  state.overlayBounds = { x: null, y: null, width, height };
+  overlayWindow.setSize(width, height);
+  overlayWindow.center();
+  saveSettings(state);
+  return true;
 }
 
 /**
@@ -422,12 +437,9 @@ function buildTrayMenu() {
       },
     },
     {
-      label: "Center Overlay",
+      label: "Reset UI",
       click: () => {
-        if (overlayWindow && !overlayWindow.isDestroyed()) {
-          overlayWindow.center();
-          debounceSaveOverlayBounds();
-        }
+        resetOverlayUI();
       },
     },
     { type: "separator" },
@@ -643,6 +655,10 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     if (["left", "right", "center"].includes(partialSettings.avatarAlignment)) {
       state.avatarAlignment = partialSettings.avatarAlignment;
     }
+  }
+
+  if (typeof partialSettings.showNicknameTag === "boolean") {
+    state.showNicknameTag = partialSettings.showNicknameTag;
   }
 
   if (typeof partialSettings.isAlwaysOnTop === "boolean") {

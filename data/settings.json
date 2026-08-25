@@ -1,22 +1,24 @@
 {
   "sortBy": "last-triggered",
-  "avatarSize": 60,
-  "avatarAlignment": "right",
+  "avatarSize": 70,
+  "avatarAlignment": "left",
+  "showNicknameTag": true,
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": -9,
-    "y": 0,
-    "width": 98,
-    "height": 366
+    "x": -66,
+    "y": 1086,
+    "width": 67,
+    "height": 398
   },
   "streamers": [
     {
       "id": "yt-lofigirl",
       "name": "Lofi Girl",
       "avatarImage": "",
+      "customTag": "",
       "urls": [
         {
           "url": "https://www.youtube.com/@LofiGirl/live",
@@ -29,6 +31,8 @@
         "titleContainsText": "",
         "viewerCountEnabled": false,
         "viewerCountThreshold": 5000,
+        "runtimeMinutesEnabled": false,
+        "runtimeMinutesThreshold": 30,
         "goingLive": true,
         "categoryChange": true
       }
@@ -37,6 +41,7 @@
       "id": "tw-shroud",
       "name": "Shroud",
       "avatarImage": "",
+      "customTag": "",
       "urls": [
         {
           "url": "https://www.twitch.tv/shroud",
@@ -53,6 +58,8 @@
         "titleContainsText": "",
         "viewerCountEnabled": false,
         "viewerCountThreshold": 10000,
+        "runtimeMinutesEnabled": false,
+        "runtimeMinutesThreshold": 30,
         "goingLive": true,
         "categoryChange": true
       }
@@ -61,6 +68,7 @@
       "id": "kc-xqc",
       "name": "xQc",
       "avatarImage": "",
+      "customTag": "",
       "urls": [
         {
           "url": "https://kick.com/xqc",
@@ -81,6 +89,8 @@
         "titleContainsText": "",
         "viewerCountEnabled": true,
         "viewerCountThreshold": 20000,
+        "runtimeMinutesEnabled": false,
+        "runtimeMinutesThreshold": 30,
         "goingLive": true,
         "categoryChange": true
       }

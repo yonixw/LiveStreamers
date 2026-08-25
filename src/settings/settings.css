@@ -203,6 +203,11 @@ body {
   gap: 8px;
 }
 
+.appearance-group.full-width-group {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
 .appearance-header {
   display: flex;
   align-items: center;
@@ -587,7 +592,8 @@ body {
 }
 
 .trigger-title-contains-row,
-.trigger-viewer-row {
+.trigger-viewer-row,
+.trigger-runtime-row {
   display: flex;
   align-items: center;
   gap: 6px;

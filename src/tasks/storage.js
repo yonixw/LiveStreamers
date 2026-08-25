@@ -75,6 +75,7 @@ const defaultSettings = {
   sortBy: "last-triggered",
   avatarSize: 80,
   avatarAlignment: "left",
+  showNicknameTag: false,
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
   currentOpacity: 1.0,
@@ -155,9 +156,15 @@ function normalizeStreamerConfig(streamer, index = 0) {
         : "",
     viewerCountEnabled: streamer.triggers?.viewerCountEnabled ?? false,
     viewerCountThreshold: streamer.triggers?.viewerCountThreshold ?? 5000,
+    runtimeMinutesEnabled: streamer.triggers?.runtimeMinutesEnabled ?? false,
+    runtimeMinutesThreshold:
+      Number(streamer.triggers?.runtimeMinutesThreshold) || 30,
     goingLive: streamer.triggers?.goingLive ?? true,
     categoryChange: streamer.triggers?.categoryChange ?? true,
   };
+
+  const customTag =
+    typeof streamer.customTag === "string" ? streamer.customTag.trim() : "";
 
   return {
     id: streamer.id || `streamer-${Date.now()}-${index}`,
@@ -167,6 +174,7 @@ function normalizeStreamerConfig(streamer, index = 0) {
       typeof streamer.avatarImage === "string"
         ? streamer.avatarImage.trim()
         : "",
+    customTag,
     urls,
     triggers,
   };
@@ -221,6 +229,7 @@ function saveSettings(settings) {
           : settings.avatarAlignment === "center"
             ? "center"
             : "left",
+      showNicknameTag: settings.showNicknameTag ?? false,
       isAlwaysOnTop: settings.isAlwaysOnTop ?? true,
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,
       currentOpacity: settings.currentOpacity ?? 1.0,

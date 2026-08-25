@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const avatarsContainer = document.getElementById("avatars-container");
 
   let streamersList = [];
+  let isNicknameTagEnabled = false;
 
   // Helper to get initials
   function getInitials(name) {
@@ -69,13 +70,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `file:///${trimmed.replace(/\\/g, "/")}`;
   }
 
-  // Apply layout settings (avatar size, alignment)
+  // Apply layout settings (avatar size, alignment, nickname tag)
   function applyLayoutSettings(settings) {
     if (!settings) return;
 
     if (settings.avatarSize) {
       const size = parseInt(settings.avatarSize, 10) || 80;
       document.documentElement.style.setProperty("--avatar-size", `${size}px`);
+    }
+
+    if (typeof settings.showNicknameTag === "boolean") {
+      isNicknameTagEnabled = settings.showNicknameTag;
     }
 
     if (settings.avatarAlignment) {
@@ -175,10 +180,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         const inner = document.createElement("div");
         inner.className = "avatar-inner";
 
+        const nicknameTag = document.createElement("div");
+        nicknameTag.className = "avatar-nickname-tag";
+
         const viewerTag = document.createElement("div");
         viewerTag.className = "avatar-viewer-tag";
 
         frame.appendChild(inner);
+        frame.appendChild(nicknameTag);
         frame.appendChild(viewerTag);
 
         // 2 info lines under avatar (Line 1: Category, Line 2: Live time / run time)
@@ -290,6 +299,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             inner.textContent = initials;
           }
         }
+      }
+
+      // Nickname Tag on Avatar Circle (white text on 50% transparent black tag)
+      const nicknameTag = card.querySelector(".avatar-nickname-tag");
+      if (nicknameTag) {
+        const tagText = streamer.customTag || streamer.name || "Streamer";
+        if (nicknameTag.textContent !== tagText) {
+          nicknameTag.textContent = tagText;
+        }
+        const shouldShowTag =
+          isNicknameTagEnabled || Boolean(streamer.customTag);
+        nicknameTag.style.display = shouldShowTag ? "block" : "none";
       }
 
       // Viewer Count Tag on Avatar Circle

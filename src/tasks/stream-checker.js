@@ -275,6 +275,43 @@ function evaluateTriggers(streamer, current, previous = null) {
         };
       }
     }
+
+    // 3. Runtime Duration (X minutes live) Trigger
+    if (triggers.runtimeMinutesEnabled) {
+      const thresholdMins = Number(triggers.runtimeMinutesThreshold) || 30;
+      const startTimeStr = currInfo.startTime || currInfo.liveTime;
+      if (startTimeStr) {
+        const startMs = new Date(startTimeStr).getTime();
+        const currentRuntimeMins = Math.floor((Date.now() - startMs) / 60000);
+
+        let prevRuntimeMins = 0;
+        if (prev.isLive && (prevInfo.startTime || prevInfo.liveTime)) {
+          const prevStartMs = new Date(
+            prevInfo.startTime || prevInfo.liveTime,
+          ).getTime();
+          const prevCheckedMs = prev.lastChecked
+            ? new Date(prev.lastChecked).getTime()
+            : Date.now() - 60000;
+          prevRuntimeMins = Math.floor((prevCheckedMs - prevStartMs) / 60000);
+        }
+
+        if (
+          currentRuntimeMins >= thresholdMins &&
+          prevRuntimeMins < thresholdMins
+        ) {
+          return {
+            type: "runtime_reached",
+            label: `Live ${thresholdMins}m+`,
+            message: `Streamer has been live for ${currentRuntimeMins} minutes (Threshold: ${thresholdMins}m)`,
+            diff: {
+              from: `${prevRuntimeMins}m live`,
+              to: `${currentRuntimeMins}m live`,
+            },
+            timestamp: nowIso,
+          };
+        }
+      }
+    }
   }
 
   // If both current and previous were live, check in-stream changes
