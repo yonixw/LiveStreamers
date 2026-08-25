@@ -117,7 +117,6 @@ html, body {
   cursor: pointer;
   font-size: 0.75rem;
   line-height: 1;
-  transition: all 0.15s;
   -webkit-app-region: no-drag;
 }
 
@@ -155,14 +154,12 @@ html, body {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
   gap: 10px;
 }
 
 .link-card:hover {
   background: var(--bg-card-hover);
   border-color: var(--accent);
-  transform: translateX(3px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -258,12 +255,10 @@ html, body {
 .link-open-arrow {
   font-size: 0.85rem;
   color: var(--text-muted);
-  transition: transform 0.15s;
 }
 
 .link-card:hover .link-open-arrow {
   color: #fff;
-  transform: translateX(2px);
 }
 
 /* Snooze Section */
@@ -311,7 +306,6 @@ html, body {
   font-size: 0.74rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
   text-align: center;
 }
 
@@ -330,7 +324,6 @@ html, body {
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
 }
 
 .btn-unsnooze-option:hover {

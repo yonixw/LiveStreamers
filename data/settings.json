@@ -9,8 +9,8 @@
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": -70,
-    "y": 796,
+    "x": -72,
+    "y": 802,
     "width": 74,
     "height": 688
   },
@@ -46,6 +46,38 @@
       }
     },
     {
+      "id": "kc-xqc",
+      "name": "xQc",
+      "avatarImage": "",
+      "customTag": "",
+      "snoozedUntil": null,
+      "urls": [
+        {
+          "url": "https://kick.com/xqc",
+          "freqMinutes": 1
+        },
+        {
+          "url": "https://www.twitch.tv/xqcow",
+          "freqMinutes": 1
+        },
+        {
+          "url": "https://www.youtube.com/@xQcOW/live",
+          "freqMinutes": 3
+        }
+      ],
+      "triggers": {
+        "titleChange": true,
+        "titleContainsEnabled": false,
+        "titleContainsText": "",
+        "viewerCountEnabled": true,
+        "viewerCountThreshold": 20000,
+        "runtimeMinutesEnabled": false,
+        "runtimeMinutesThreshold": 30,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    },
+    {
       "id": "tw-shroud",
       "name": "Shroud",
       "avatarImage": "",
@@ -67,38 +99,6 @@
         "titleContainsText": "",
         "viewerCountEnabled": false,
         "viewerCountThreshold": 10000,
-        "runtimeMinutesEnabled": false,
-        "runtimeMinutesThreshold": 30,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
-      "id": "kc-xqc",
-      "name": "xQc",
-      "avatarImage": "",
-      "customTag": "",
-      "snoozedUntil": "2026-08-25T04:48:37.829Z",
-      "urls": [
-        {
-          "url": "https://kick.com/xqc",
-          "freqMinutes": 1
-        },
-        {
-          "url": "https://www.twitch.tv/xqcow",
-          "freqMinutes": 1
-        },
-        {
-          "url": "https://www.youtube.com/@xQcOW/live",
-          "freqMinutes": 3
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "titleContainsEnabled": false,
-        "titleContainsText": "",
-        "viewerCountEnabled": true,
-        "viewerCountThreshold": 20000,
         "runtimeMinutesEnabled": false,
         "runtimeMinutesThreshold": 30,
         "goingLive": true,
