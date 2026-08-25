@@ -340,7 +340,7 @@ body {
   text-align: center;
 }
 
-/* Line 1: Category or "(no game)" */
+/* Line 1: Category or "(---)" */
 .streamer-line-1 {
   display: flex;
   align-items: baseline;

@@ -336,16 +336,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Line 1: Category or "(no game)"
+      // Line 1: Category or "(---)"
       const categorySpan = card.querySelector(".streamer-category");
       if (categorySpan) {
-        let categoryText = "(no game)";
+        let categoryText = "(---)";
         if (isLive) {
           const game = cached ? cached.game || cached.category : null;
-          categoryText = game && game.trim() ? game.trim() : "(no game)";
+          categoryText = game && game.trim() ? game.trim() : "(---)";
         } else {
           const game = cached ? cached.game || cached.category : null;
-          categoryText = game && game.trim() ? game.trim() : "(no game)";
+          categoryText = game && game.trim() ? game.trim() : "(---)";
         }
 
         if (categorySpan.textContent !== categoryText) {

@@ -1,3 +1,82 @@
+checks and yt-dlp update not in devtool/setting console
+    print status result in console?
+    print triggers in console
+
+twitch no game/viewcount/desc
+    YT/KICK works
+
+clickthrough only for transparent parts?
+    not clickable -> hover drag -> become active -> click -> not clickable with 2sec cooldown... 
+
+    let 2 config "open" + "close" that will open on mouse over....
+        like top 3 half showing to top 10 showing all 
+
+add streamer priority
+    (and show in another list - Priority 0+ -> Streamers[]) 
+        will affect only trigger sort, and only after the top X... 
+            (like top 10 lastly triggered, in setting too)
+
+licence MIT
+
+nicer ui 
+    default freq - should be 20 minutes + 1-20 *rand
+        make min 5?
+    replace text shadow with 1px border - more readable
+    ALT_TEXT -> add game so: ${nick} / ${domain} / ${game} / ${full title}
+
+package.json name+version in setting page top ( + title of window?)
+
+trigger -> +X (like +100) viewers 
+
+warning image -> custom "live" image -> alarama etc... for old account becoming live 
+
+What is "Reset Default" on setting page above list? 
+
+trigger find text -> in game/categ also -> forsen game 
+    search trigger allow "," for split for multi search
+
+add time-> follower time -> so entry id = date+uuid
+
+make "offline" remember last live and show it (local storage...)
+
+links to ignore start with "!" -> so i can put option to bigscreen#kick/xqc
+    show me links all the time (even if 1) so i can know platform and snooze if i want 
+
+let me hide offline from list 
+    offline with no time || last_on_time > 30d
+
+notes feild - how the hell did i find this channel (dgg, otk streamer show etc.)
+
+"checking" yellow tag -> icon and status gets stuck... why?
+
+streamer list -> search by nick name -> filter
+    or allow ctrl+f
+        WHICH will also allow selection of text
+    
+---------
+    
+on new streamer -> bug - reset dimentions of main + popup 
+    
+gtm or posthog ping with disable in setting 
+    start 
+    quit
+    beacon every 10m 
+        channel count + min/max links per channel 
+        which setting key in json? 
+    setting save = setting change 
+
+ReadME + image
+    -> say gifs supported
+    
+(reverse) + Horizontal support? literally flex direction
+    text still with only 3: left, right, center
+    
+Links
+    https://7tv.app/emotes
+    https://betterttv.com/emotes/popular
+    https://www.frankerfacez.com/emoticons/
+    
+
 
 --------- V2:
 

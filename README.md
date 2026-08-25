@@ -6,13 +6,9 @@ A cross-platform Electron boilerplate displaying a transparent, circular UI over
 
 ## Features
 
-- **Transparent Frameless Window**: Only the circular element and its glow/drop-shadow are visible.
-- **Draggable UI**: Move the circle anywhere across your desktop with drag-and-drop.
-- **System Tray Menu**
-- **Cross-Platform**: Windows, macOS, and Linux support.
-- **Secure Architecture**: Context isolation enabled, preload script with safe IPC bridge.
+* See [Change log](./CHANGELOG.md)
 
-## Getting Started
+## Dev - Getting Started
 
 ### 1. Install Dependencies
 
