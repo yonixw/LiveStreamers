@@ -1,14 +1,16 @@
 {
   "sortBy": "last-triggered",
+  "avatarSize": 60,
+  "avatarAlignment": "left",
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
-  "currentOpacity": 1,
+  "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 228,
-    "y": 153,
-    "width": 310,
-    "height": 1121
+    "x": 1,
+    "y": 21,
+    "width": 200,
+    "height": 475
   },
   "streamers": [
     {
@@ -157,6 +159,24 @@
         {
           "url": "https://kick.com/xqc3",
           "freqMinutes": 1
+        }
+      ],
+      "triggers": {
+        "titleChange": true,
+        "viewerCountEnabled": false,
+        "viewerCountThreshold": 5000,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    },
+    {
+      "id": "streamer-1787624908521-619",
+      "name": "PR",
+      "avatarImage": "",
+      "urls": [
+        {
+          "url": "https://kick.com/prsek",
+          "freqMinutes": 5
         }
       ],
       "triggers": {

@@ -14,26 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     Boolean,
   );
 
-  // Banner elements
-  const streamInfoBanner = document.getElementById("stream-info-banner");
-  const bannerDefaultView = document.getElementById("banner-default-view");
-  const bannerDefaultHeader = document.getElementById("banner-default-header");
-  const bannerDefaultStatus = document.getElementById("banner-default-status");
-  const bannerDefaultText = document.getElementById("banner-default-text");
-  const bannerHoverView = document.getElementById("banner-hover-view");
-
-  const bannerPlatformPill = document.getElementById("banner-platform-pill");
-  const bannerStreamerName = document.getElementById("banner-streamer-name");
-  const bannerStatusPill = document.getElementById("banner-status-pill");
-  const bannerViewers = document.getElementById("banner-viewers");
-  const bannerGame = document.getElementById("banner-game");
-  const bannerUptime = document.getElementById("banner-uptime");
-  const bannerTriggerTag = document.getElementById("banner-trigger-tag");
-  const bannerOpenBtn = document.getElementById("banner-open-btn");
-  const bannerTitleLine = document.getElementById("banner-title-line");
-
   let streamersList = [];
-  let currentHoveredStreamerId = null;
   let currentSortBy = "last-triggered";
 
   // Helper to get initials
@@ -64,42 +45,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     return Number(num).toLocaleString();
   }
 
-  // Format relative time
-  function formatRelativeTime(isoString) {
-    if (!isoString) return null;
+  // Format live duration / uptime
+  function formatLiveDuration(isoString) {
+    if (!isoString) return "";
     try {
-      const date = new Date(isoString);
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      if (diffMs < 0)
-        return date.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+      const start = new Date(isoString).getTime();
+      const now = Date.now();
+      const diffMs = now - start;
+      if (diffMs < 0 || isNaN(diffMs)) return "";
 
-      const diffMins = Math.floor(diffMs / 60000);
-      if (diffMins < 1) return "just now";
-      if (diffMins < 60) return `${diffMins}m ago`;
-      const diffHours = Math.floor(diffMins / 60);
-      if (diffHours < 24) return `${diffHours}h ${diffMins % 60}m ago`;
-      return date.toLocaleDateString();
+      const totalMins = Math.floor(diffMs / 60000);
+      const hours = Math.floor(totalMins / 60);
+      const mins = totalMins % 60;
+      if (hours > 0) {
+        return `${hours}h ${mins}m`;
+      }
+      return `${Math.max(1, mins)}m`;
     } catch {
-      return null;
-    }
-  }
-
-  // Get platform badge data
-  function getPlatformBadgeData(platform) {
-    const plat = (platform || "other").toLowerCase();
-    switch (plat) {
-      case "youtube":
-        return { text: "YT", className: "badge-yt" };
-      case "twitch":
-        return { text: "TTV", className: "badge-ttv" };
-      case "kick":
-        return { text: "KICK", className: "badge-kc" };
-      default:
-        return { text: "WEB", className: "badge-web" };
+      return "";
     }
   }
 
@@ -116,6 +79,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       return trimmed;
     }
     return `file:///${trimmed.replace(/\\/g, "/")}`;
+  }
+
+  // Apply layout settings (avatar size, alignment)
+  function applyLayoutSettings(settings) {
+    if (!settings) return;
+
+    if (settings.avatarSize) {
+      const size = parseInt(settings.avatarSize, 10) || 80;
+      document.documentElement.style.setProperty("--avatar-size", `${size}px`);
+    }
+
+    if (settings.avatarAlignment) {
+      const align = settings.avatarAlignment;
+      avatarsContainer.classList.remove(
+        "align-left",
+        "align-right",
+        "align-center",
+      );
+      if (align === "right") {
+        avatarsContainer.classList.add("align-right");
+      } else if (align === "center") {
+        avatarsContainer.classList.add("align-center");
+      } else {
+        avatarsContainer.classList.add("align-left");
+      }
+    }
   }
 
   // Update Sort Button Active States
@@ -148,22 +137,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // Update Top Banner Summary (Always 2 Lines)
-  function updateDefaultBannerSummary() {
+  // Update Header Live Badge
+  function updateHeaderBadge() {
     if (!streamersList || streamersList.length === 0) {
       if (headerLiveBadge.textContent !== "0 Live") {
         headerLiveBadge.textContent = "0 Live";
         headerLiveBadge.className = "header-live-badge";
       }
-      if (bannerDefaultHeader)
-        bannerDefaultHeader.textContent = "LiveStreamers";
-      if (bannerDefaultStatus) {
-        bannerDefaultStatus.textContent = "Empty";
-        bannerDefaultStatus.className = "banner-status-pill pill-offline";
-      }
-      if (bannerDefaultText)
-        bannerDefaultText.textContent =
-          "No streamers added. Click ⚙️ to configure.";
       return;
     }
 
@@ -175,138 +155,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (liveCount > 0) {
       headerLiveBadge.className = "header-live-badge badge-active";
-      if (bannerDefaultHeader)
-        bannerDefaultHeader.textContent = `${liveCount} Live`;
-      if (bannerDefaultStatus) {
-        bannerDefaultStatus.textContent = "Streaming";
-        bannerDefaultStatus.className = "banner-status-pill pill-live";
-      }
-      if (bannerDefaultText)
-        bannerDefaultText.textContent =
-          "Hover any avatar for details • Click to open";
     } else {
       headerLiveBadge.className = "header-live-badge";
-      if (bannerDefaultHeader)
-        bannerDefaultHeader.textContent = "LiveStreamers";
-      if (bannerDefaultStatus) {
-        bannerDefaultStatus.textContent = "Offline";
-        bannerDefaultStatus.className = "banner-status-pill pill-offline";
-      }
-      if (bannerDefaultText)
-        bannerDefaultText.textContent =
-          "All streamers offline • Hover avatar for details";
     }
-  }
-
-  // Show hovered streamer info in top banner
-  function showStreamerHoverBanner(streamer) {
-    if (!streamer) return;
-    currentHoveredStreamerId = String(streamer.id);
-
-    bannerDefaultView.classList.remove("active");
-    bannerHoverView.classList.add("active");
-
-    const plat =
-      streamer.activePlatform ||
-      (streamer.urls && streamer.urls[0] ? streamer.platform : "other");
-    const platData = getPlatformBadgeData(plat);
-    bannerPlatformPill.textContent = platData.text;
-    bannerPlatformPill.className = `banner-platform-pill ${platData.className}`;
-
-    bannerStreamerName.textContent = streamer.name || "Streamer";
-
-    const isLive = Boolean(streamer.isLive);
-    const cached = streamer.cachedInfo || null;
-
-    if (isLive) {
-      bannerStatusPill.textContent = "🔴 LIVE";
-      bannerStatusPill.className = "banner-status-pill pill-live";
-
-      if (cached && cached.viewerCount != null) {
-        bannerViewers.style.display = "inline-flex";
-        bannerViewers.innerHTML = `👁️ ${formatViewers(cached.viewerCount)}`;
-      } else {
-        bannerViewers.style.display = "none";
-      }
-
-      const game = cached ? cached.game || cached.category : null;
-      if (game) {
-        bannerGame.style.display = "inline-flex";
-        bannerGame.textContent = `🎮 ${game}`;
-      } else {
-        bannerGame.style.display = "none";
-      }
-
-      const startTime = cached ? cached.startTime || cached.liveTime : null;
-      if (startTime) {
-        bannerUptime.style.display = "inline-flex";
-        bannerUptime.textContent = `⏱️ ${formatRelativeTime(startTime)}`;
-      } else {
-        bannerUptime.style.display = "none";
-      }
-
-      if (cached && cached.title) {
-        bannerTitleLine.textContent = `"${cached.title}"`;
-        bannerTitleLine.className = "banner-title-line title-live";
-      } else {
-        bannerTitleLine.textContent = `${streamer.name || "Streamer"} is streaming live on ${plat.toUpperCase()}!`;
-        bannerTitleLine.className = "banner-title-line title-live";
-      }
-    } else {
-      bannerStatusPill.textContent = "⚪ OFFLINE";
-      bannerStatusPill.className = "banner-status-pill pill-offline";
-      bannerViewers.style.display = "none";
-      bannerGame.style.display = "none";
-      bannerUptime.style.display = "none";
-
-      const lastCheckedStr = streamer.lastChecked
-        ? `Last checked: ${new Date(streamer.lastChecked).toLocaleTimeString()}`
-        : "Not checked yet";
-      const primaryUrl =
-        (streamer.urls && streamer.urls[0]) || streamer.url || "N/A";
-      bannerTitleLine.textContent = `${lastCheckedStr} • Primary: ${primaryUrl}`;
-      bannerTitleLine.className = "banner-title-line title-offline";
-    }
-
-    if (streamer.lastTrigger) {
-      bannerTriggerTag.style.display = "inline-flex";
-      bannerTriggerTag.textContent = `⚡ ${streamer.lastTrigger.label || "Trigger"}`;
-      bannerTriggerTag.title = `${streamer.lastTrigger.message || ""} (${new Date(streamer.lastTrigger.timestamp).toLocaleTimeString()})`;
-    } else {
-      bannerTriggerTag.style.display = "none";
-    }
-
-    const targetUrl =
-      streamer.activeUrl || (streamer.urls && streamer.urls[0]) || streamer.url;
-    bannerOpenBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (targetUrl && window.electronAPI && window.electronAPI.openExternal) {
-        window.electronAPI.openExternal(targetUrl);
-      }
-    };
-  }
-
-  // Reset top banner to default view
-  function hideStreamerHoverBanner() {
-    currentHoveredStreamerId = null;
-    bannerHoverView.classList.remove("active");
-    bannerDefaultView.classList.add("active");
-    updateDefaultBannerSummary();
   }
 
   // Fine-grained Non-Flashing In-Place Reconciliation (Vertical Stack)
   function renderAvatarsInPlace(streamers) {
     streamersList = Array.isArray(streamers) ? streamers : [];
-    updateDefaultBannerSummary();
-
-    if (currentHoveredStreamerId) {
-      const freshHovered = streamersList.find(
-        (s) => String(s.id) === currentHoveredStreamerId,
-      );
-      if (freshHovered) {
-        showStreamerHoverBanner(freshHovered);
-      }
-    }
+    updateHeaderBadge();
 
     const existingChildren = Array.from(avatarsContainer.children);
     const existingMap = new Map();
@@ -346,29 +203,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         const inner = document.createElement("div");
         inner.className = "avatar-inner";
 
-        const platformBadge = document.createElement("div");
-        platformBadge.className = "avatar-platform-corner";
-
-        const statusBadge = document.createElement("div");
-        statusBadge.className = "status-badge";
+        const viewerTag = document.createElement("div");
+        viewerTag.className = "avatar-viewer-tag";
 
         frame.appendChild(inner);
-        frame.appendChild(platformBadge);
-        frame.appendChild(statusBadge);
+        frame.appendChild(viewerTag);
 
-        const nameTag = document.createElement("div");
-        nameTag.className = "user-name-tag";
+        // 2 info lines under avatar
+        const infoLines = document.createElement("div");
+        infoLines.className = "streamer-info-lines";
+
+        const line1 = document.createElement("div");
+        line1.className = "streamer-line-1";
+
+        const nicknameSpan = document.createElement("span");
+        nicknameSpan.className = "streamer-nickname";
+
+        const runtimeSpan = document.createElement("span");
+        runtimeSpan.className = "streamer-runtime";
+
+        line1.appendChild(nicknameSpan);
+        line1.appendChild(runtimeSpan);
+
+        const line2 = document.createElement("div");
+        line2.className = "streamer-line-2";
+
+        const categorySpan = document.createElement("span");
+        categorySpan.className = "streamer-category";
+
+        line2.appendChild(categorySpan);
+
+        infoLines.appendChild(line1);
+        infoLines.appendChild(line2);
 
         card.appendChild(frame);
-        card.appendChild(nameTag);
-
-        card.addEventListener("mouseenter", () => {
-          showStreamerHoverBanner(card._streamer || streamer);
-        });
-
-        card.addEventListener("mouseleave", () => {
-          hideStreamerHoverBanner();
-        });
+        card.appendChild(infoLines);
 
         card.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -393,8 +262,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       card._streamer = streamer;
 
-      // Update Card Live Class
       const isLive = Boolean(streamer.isLive);
+      const cached = streamer.cachedInfo || null;
+
+      // Update Card Live/Offline Class
       const desiredCardClass = `avatar-card ${isLive ? "card-live" : "card-offline"}`;
       if (card.className !== desiredCardClass) {
         card.className = desiredCardClass;
@@ -408,6 +279,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
+      // Stream Title for Tooltip and alt
+      const streamTitle =
+        cached && cached.title ? cached.title : streamer.name || "Streamer";
+      const fullTooltip = isLive
+        ? cached && cached.title
+          ? `${streamer.name}: ${cached.title}`
+          : `${streamer.name} (Live)`
+        : `${streamer.name || "Streamer"} (Offline)`;
+
+      card.setAttribute("title", fullTooltip);
+      if (frame) frame.setAttribute("title", fullTooltip);
+
       // Update Avatar Image / Initials without flash
       const inner = card.querySelector(".avatar-inner");
       if (inner) {
@@ -418,7 +301,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             inner.textContent = "";
             inner.style.background = "#18181b";
             existingImg = document.createElement("img");
-            existingImg.alt = streamer.name || "Streamer";
+            existingImg.alt = streamTitle;
+            existingImg.title = fullTooltip;
             existingImg.src = imgSrc;
             existingImg.onerror = () => {
               existingImg.remove();
@@ -426,8 +310,16 @@ document.addEventListener("DOMContentLoaded", async () => {
               inner.textContent = getInitials(streamer.name);
             };
             inner.appendChild(existingImg);
-          } else if (existingImg.getAttribute("src") !== imgSrc) {
-            existingImg.src = imgSrc;
+          } else {
+            if (existingImg.getAttribute("src") !== imgSrc) {
+              existingImg.src = imgSrc;
+            }
+            if (existingImg.getAttribute("alt") !== streamTitle) {
+              existingImg.alt = streamTitle;
+            }
+            if (existingImg.getAttribute("title") !== fullTooltip) {
+              existingImg.title = fullTooltip;
+            }
           }
         } else {
           const initials = getInitials(streamer.name);
@@ -440,38 +332,60 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Update Platform Corner Badge
-      const platformBadge = card.querySelector(".avatar-platform-corner");
-      if (platformBadge) {
-        const plat =
-          streamer.activePlatform ||
-          (streamer.urls && streamer.urls[0] ? streamer.platform : "other");
-        const platData = getPlatformBadgeData(plat);
-        const desiredBadgeHtml = `<span class="platform-mini-badge ${platData.className}">${platData.text}</span>`;
-        if (platformBadge.innerHTML !== desiredBadgeHtml) {
-          platformBadge.innerHTML = desiredBadgeHtml;
+      // Viewer Count Tag on Avatar Circle
+      const viewerTag = card.querySelector(".avatar-viewer-tag");
+      if (viewerTag) {
+        if (isLive && cached && cached.viewerCount != null) {
+          viewerTag.classList.remove("tag-offline");
+          viewerTag.innerHTML = `👁️ ${formatViewers(cached.viewerCount)}`;
+        } else if (isLive) {
+          viewerTag.classList.remove("tag-offline");
+          viewerTag.innerHTML = `🔴 LIVE`;
+        } else {
+          viewerTag.classList.add("tag-offline");
+          viewerTag.innerHTML = "";
         }
       }
 
-      // Update Status Badge Dot
-      const statusBadge = card.querySelector(".status-badge");
-      if (statusBadge) {
-        const desiredStatusClass = `status-badge ${isLive ? "status-badge-live" : "status-badge-offline"}`;
-        if (statusBadge.className !== desiredStatusClass) {
-          statusBadge.className = desiredStatusClass;
-        }
-      }
-
-      // Update Name Tag
-      const nameTag = card.querySelector(".user-name-tag");
-      if (nameTag) {
-        const desiredTagClass = `user-name-tag ${isLive ? "tag-live" : ""}`;
-        if (nameTag.className !== desiredTagClass) {
-          nameTag.className = desiredTagClass;
-        }
+      // Line 1: Nickname + Run time (live time)
+      const nicknameSpan = card.querySelector(".streamer-nickname");
+      if (nicknameSpan) {
         const nameText = streamer.name || "Streamer";
-        if (nameTag.textContent !== nameText) {
-          nameTag.textContent = nameText;
+        if (nicknameSpan.textContent !== nameText) {
+          nicknameSpan.textContent = nameText;
+        }
+      }
+
+      const runtimeSpan = card.querySelector(".streamer-runtime");
+      if (runtimeSpan) {
+        if (isLive) {
+          const startTime = cached ? cached.startTime || cached.liveTime : null;
+          const duration = formatLiveDuration(startTime);
+          const runtimeText = duration ? `• ${duration}` : "";
+          if (runtimeSpan.textContent !== runtimeText) {
+            runtimeSpan.textContent = runtimeText;
+          }
+          runtimeSpan.style.display = duration ? "inline" : "none";
+        } else {
+          runtimeSpan.textContent = "";
+          runtimeSpan.style.display = "none";
+        }
+      }
+
+      // Line 2: Category or "(no game)"
+      const categorySpan = card.querySelector(".streamer-category");
+      if (categorySpan) {
+        let categoryText = "(no game)";
+        if (isLive) {
+          const game = cached ? cached.game || cached.category : null;
+          categoryText = game && game.trim() ? game.trim() : "(no game)";
+        } else {
+          const game = cached ? cached.game || cached.category : null;
+          categoryText = game && game.trim() ? game.trim() : "(no game)";
+        }
+
+        if (categorySpan.textContent !== categoryText) {
+          categorySpan.textContent = categoryText;
         }
       }
     });
@@ -529,6 +443,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (initialSettings.sortBy) {
           updateSortButtonsUI(initialSettings.sortBy);
         }
+        applyLayoutSettings(initialSettings);
       }
       if (window.electronAPI.getStreamers) {
         const streamers = await window.electronAPI.getStreamers();
@@ -548,8 +463,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (window.electronAPI && window.electronAPI.onSettingsUpdated) {
     window.electronAPI.onSettingsUpdated((newSettings) => {
-      if (newSettings && newSettings.sortBy) {
-        updateSortButtonsUI(newSettings.sortBy);
+      if (newSettings) {
+        if (newSettings.sortBy) {
+          updateSortButtonsUI(newSettings.sortBy);
+        }
+        applyLayoutSettings(newSettings);
       }
     });
   }

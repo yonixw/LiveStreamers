@@ -181,6 +181,124 @@ body {
   line-height: 1.3;
 }
 
+/* Avatar Appearance Controls */
+.avatar-appearance-box {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .avatar-appearance-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+.appearance-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.appearance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.appearance-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.size-val-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.size-controls-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.size-preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.btn-size-preset {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-size-preset:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+
+.btn-size-preset.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.size-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.alignment-buttons-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-align-toggle {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-align-toggle:hover {
+  border-color: #475569;
+  color: var(--text-main);
+}
+
+.btn-align-toggle.active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
+}
+
 /* Streamer Form */
 .streamer-config-form {
   display: flex;

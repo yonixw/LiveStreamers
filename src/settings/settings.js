@@ -2,6 +2,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Sorting Strategy UI
   const sortRadios = document.querySelectorAll('input[name="sort-order"]');
 
+  // Avatar Size & Alignment UI
+  const avatarSizeSlider = document.getElementById("avatar-size-slider");
+  const avatarSizeDisplay = document.getElementById("avatar-size-display");
+  const sizePresetButtons = document.querySelectorAll(".btn-size-preset");
+  const btnAlignLeft = document.getElementById("btn-align-left");
+  const btnAlignRight = document.getElementById("btn-align-right");
+
   // Streamer Form Elements
   const streamerForm = document.getElementById("streamer-form");
   const editStreamerIdInput = document.getElementById("edit-streamer-id");
@@ -959,6 +966,78 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
+  // Avatar Size Handlers
+  function updateAvatarSizeUI(size) {
+    const num = parseInt(size, 10) || 80;
+    if (avatarSizeDisplay) avatarSizeDisplay.textContent = `${num}px`;
+    if (avatarSizeSlider) avatarSizeSlider.value = String(num);
+
+    sizePresetButtons.forEach((btn) => {
+      const presetSize = parseInt(btn.getAttribute("data-size"), 10);
+      if (presetSize === num) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  }
+
+  function saveAvatarSize(size) {
+    const num = Math.max(40, Math.min(200, parseInt(size, 10) || 80));
+    updateAvatarSizeUI(num);
+    if (window.electronAPI && window.electronAPI.updateSettings) {
+      window.electronAPI.updateSettings({ avatarSize: num });
+      appendLog(`Avatar size updated to: ${num}px`, "info", "Settings");
+    }
+  }
+
+  if (avatarSizeSlider) {
+    avatarSizeSlider.addEventListener("input", (e) => {
+      const size = parseInt(e.target.value, 10);
+      if (avatarSizeDisplay) avatarSizeDisplay.textContent = `${size}px`;
+      sizePresetButtons.forEach((btn) => {
+        btn.classList.toggle(
+          "active",
+          parseInt(btn.getAttribute("data-size"), 10) === size,
+        );
+      });
+    });
+
+    avatarSizeSlider.addEventListener("change", (e) => {
+      saveAvatarSize(e.target.value);
+    });
+  }
+
+  sizePresetButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const size = btn.getAttribute("data-size");
+      saveAvatarSize(size);
+    });
+  });
+
+  // Avatar Alignment Handlers
+  function updateAlignmentUI(align) {
+    const isRight = align === "right";
+    if (btnAlignLeft) btnAlignLeft.classList.toggle("active", !isRight);
+    if (btnAlignRight) btnAlignRight.classList.toggle("active", isRight);
+  }
+
+  function saveAlignment(align) {
+    updateAlignmentUI(align);
+    if (window.electronAPI && window.electronAPI.updateSettings) {
+      window.electronAPI.updateSettings({ avatarAlignment: align });
+      appendLog(`Avatar alignment updated to: ${align}`, "info", "Settings");
+    }
+  }
+
+  if (btnAlignLeft) {
+    btnAlignLeft.addEventListener("click", () => saveAlignment("left"));
+  }
+
+  if (btnAlignRight) {
+    btnAlignRight.addEventListener("click", () => saveAlignment("right"));
+  }
+
   // Checkbox handlers
   chkShowOverlay.addEventListener("change", () => {
     if (window.electronAPI && window.electronAPI.updateSettings) {
@@ -1025,6 +1104,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       sortRadios.forEach((radio) => {
         radio.checked = radio.value === settings.sortBy;
       });
+    }
+
+    if (settings.avatarSize) {
+      updateAvatarSizeUI(settings.avatarSize);
+    }
+
+    if (settings.avatarAlignment) {
+      updateAlignmentUI(settings.avatarAlignment);
     }
 
     if (typeof settings.overlayVisible === "boolean") {

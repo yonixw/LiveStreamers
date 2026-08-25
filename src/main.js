@@ -43,6 +43,8 @@ const persistedStatus = loadStatus();
 // Application state
 const state = {
   sortBy: persistedSettings.sortBy || "last-triggered",
+  avatarSize: persistedSettings.avatarSize || 80,
+  avatarAlignment: persistedSettings.avatarAlignment || "left",
   isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
   currentOpacity: persistedSettings.currentOpacity ?? 1.0,
@@ -86,8 +88,10 @@ function createDefaultTrayIcon() {
 // Calculate dimensions for vertical avatar list layout
 function calculateOverlayDimensions(itemCount) {
   const count = Math.max(1, itemCount || 1);
-  const width = 280;
-  const height = Math.max(280, Math.min(1080, count * 135 + 110));
+  const avatarSize = state.avatarSize || 80;
+  const width = Math.max(200, Math.min(400, avatarSize + 120));
+  const cardHeight = avatarSize + 48;
+  const height = Math.max(200, Math.min(1080, count * cardHeight + 60));
   return { width, height };
 }
 
@@ -569,6 +573,22 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
 
   if (typeof partialSettings.sortBy === "string") {
     state.sortBy = partialSettings.sortBy;
+  }
+
+  if (
+    typeof partialSettings.avatarSize === "number" ||
+    typeof partialSettings.avatarSize === "string"
+  ) {
+    const size = parseInt(partialSettings.avatarSize, 10);
+    if (!isNaN(size) && size >= 40 && size <= 200) {
+      state.avatarSize = size;
+    }
+  }
+
+  if (typeof partialSettings.avatarAlignment === "string") {
+    if (["left", "right", "center"].includes(partialSettings.avatarAlignment)) {
+      state.avatarAlignment = partialSettings.avatarAlignment;
+    }
   }
 
   if (typeof partialSettings.isAlwaysOnTop === "boolean") {

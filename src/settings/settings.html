@@ -26,7 +26,7 @@
         </header>
 
         <main class="settings-content">
-            <!-- Section 1: Avatar Display & Sorting Strategy -->
+            <!-- Section 1: Avatar Display, Size, Alignment & Sorting Strategy -->
             <section class="settings-card">
                 <div class="card-header flex-between">
                     <div>
@@ -76,6 +76,52 @@
                             <span class="sort-desc">A to Z by custom nickname</span>
                         </div>
                     </label>
+                </div>
+
+                <!-- Avatar Appearance: Size & Alignment -->
+                <div class="avatar-appearance-box">
+                    <div class="appearance-group">
+                        <div class="appearance-header">
+                            <span class="appearance-label">Avatar Circle Size:</span>
+                            <span id="avatar-size-display" class="size-val-badge">80px</span>
+                        </div>
+                        <div class="size-controls-row">
+                            <div class="size-preset-buttons">
+                                <button type="button" class="btn-size-preset" data-size="60">Small (60px)</button>
+                                <button type="button" class="btn-size-preset" data-size="80">Medium (80px)</button>
+                                <button type="button" class="btn-size-preset" data-size="100">Large (100px)</button>
+                                <button type="button" class="btn-size-preset" data-size="120">XL (120px)</button>
+                            </div>
+                            <input type="range" id="avatar-size-slider" min="50" max="140" step="2" value="80"
+                                class="size-slider" />
+                        </div>
+                    </div>
+
+                    <div class="appearance-group">
+                        <div class="appearance-header">
+                            <span class="appearance-label">Avatar Alignment:</span>
+                        </div>
+                        <div class="alignment-buttons-row">
+                            <button type="button" id="btn-align-left" class="btn-align-toggle active" data-align="left">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <line x1="3" y1="12" x2="15" y2="12"></line>
+                                    <line x1="3" y1="18" x2="18" y2="18"></line>
+                                </svg>
+                                Align Left
+                            </button>
+                            <button type="button" id="btn-align-right" class="btn-align-toggle" data-align="right">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <line x1="9" y1="12" x2="21" y2="12"></line>
+                                    <line x1="6" y1="18" x2="21" y2="18"></line>
+                                </svg>
+                                Align Right
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </section>
 

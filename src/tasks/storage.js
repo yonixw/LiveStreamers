@@ -73,6 +73,8 @@ const defaultStreamers = [
 
 const defaultSettings = {
   sortBy: "last-triggered",
+  avatarSize: 80,
+  avatarAlignment: "left",
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
   currentOpacity: 1.0,
@@ -204,6 +206,16 @@ function saveSettings(settings) {
   try {
     const toSave = {
       sortBy: settings.sortBy || "last-triggered",
+      avatarSize:
+        typeof settings.avatarSize === "number"
+          ? settings.avatarSize
+          : parseInt(settings.avatarSize, 10) || 80,
+      avatarAlignment:
+        settings.avatarAlignment === "right"
+          ? "right"
+          : settings.avatarAlignment === "center"
+            ? "center"
+            : "left",
       isAlwaysOnTop: settings.isAlwaysOnTop ?? true,
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,
       currentOpacity: settings.currentOpacity ?? 1.0,
