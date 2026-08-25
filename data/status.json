@@ -9,7 +9,7 @@
       "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
       "game": "Just Chatting",
       "category": "Just Chatting",
-      "viewerCount": 6691,
+      "viewerCount": 6623,
       "startTime": "2026-08-25T17:34:41.000Z",
       "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -18,9 +18,9 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T23:42:49.045Z"
+      "cachedAt": "2026-08-25T23:46:39.989Z"
     },
-    "lastChecked": "2026-08-25T23:42:49.046Z",
+    "lastChecked": "2026-08-25T23:46:39.989Z",
     "lastError": null,
     "lastTrigger": {
       "type": "category_change",
@@ -41,7 +41,7 @@
     "isLive": false,
     "activeUrl": "https://www.twitch.tv/sennyk4",
     "activePlatform": "twitch",
-    "checkStatus": "offline",
+    "checkStatus": "checking",
     "cachedInfo": {
       "title": "[237/365]🌎ASDASDASDASDASD🌎🔱KAEYFOUR.COM",
       "game": "Just Chatting",
@@ -95,7 +95,7 @@
       "title": "memein' and streamin' and buildin' my dreamin'",
       "game": "Factorio",
       "category": "Factorio",
-      "viewerCount": 4243,
+      "viewerCount": 4248,
       "startTime": "2026-08-25T20:00:40.000Z",
       "liveTime": "2026-08-25T20:00:40.000Z",
       "description": "The premier Internet POLITICS streamer, exploring philosophy, policy analysis, drama farmer and center of the extended orbiter universe.",
@@ -104,9 +104,9 @@
       "channelUrl": "https://kick.com/destiny",
       "url": "https://kick.com/destiny",
       "platform": "kick",
-      "cachedAt": "2026-08-25T23:42:36.904Z"
+      "cachedAt": "2026-08-25T23:46:28.121Z"
     },
-    "lastChecked": "2026-08-25T23:42:36.904Z",
+    "lastChecked": "2026-08-25T23:46:28.122Z",
     "lastError": null,
     "lastTrigger": {
       "type": "going_live",

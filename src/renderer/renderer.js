@@ -4,10 +4,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const avatarsContainer = document.getElementById("avatars-container");
 
   let streamersList = [];
+  let lastRawStreamersList = [];
   let isNicknameTagEnabled = false;
   let isSmartClickThroughEnabled = false;
   let isStaticClickThroughEnabled = false;
   let isHoveringInteractive = false;
+  let hideOfflineEnabled = false;
+  let hideOfflineDays = 7;
   const headerDragZone = document.getElementById("header-drag-zone");
   const headerStateIndicator = document.getElementById(
     "header-state-indicator",
@@ -127,6 +130,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       isNicknameTagEnabled = settings.showNicknameTag;
     }
 
+    if (typeof settings.hideOfflineEnabled === "boolean") {
+      hideOfflineEnabled = settings.hideOfflineEnabled;
+    }
+
+    if (settings.hideOfflineDays) {
+      hideOfflineDays = parseInt(settings.hideOfflineDays, 10) || 7;
+    }
+
+    if (lastRawStreamersList && lastRawStreamersList.length > 0) {
+      renderAvatarsInPlace(lastRawStreamersList);
+    }
+
     if (settings.avatarAlignment) {
       const align = settings.avatarAlignment;
       avatarsContainer.classList.remove(
@@ -230,7 +245,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Fine-grained Non-Flashing In-Place Reconciliation (Vertical Stack)
   function renderAvatarsInPlace(streamers) {
-    streamersList = Array.isArray(streamers) ? streamers : [];
+    lastRawStreamersList = Array.isArray(streamers) ? streamers : [];
+    streamersList = lastRawStreamersList.filter((s) => {
+      if (!hideOfflineEnabled) return true;
+      if (s.isLive) return true;
+      if (!s.offlineSince) return false;
+      try {
+        const offMs = Date.now() - new Date(s.offlineSince).getTime();
+        const offDays = offMs / (1000 * 60 * 60 * 24);
+        return offDays <= hideOfflineDays;
+      } catch {
+        return false;
+      }
+    });
 
     const existingChildren = Array.from(avatarsContainer.children).slice(1);
     const existingMap = new Map();

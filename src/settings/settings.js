@@ -1395,6 +1395,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  if (chkHideOfflineEnabled) {
+    chkHideOfflineEnabled.addEventListener("change", () => {
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          hideOfflineEnabled: chkHideOfflineEnabled.checked,
+        });
+        appendLog(
+          `Hide Inactive Offline Streamers set to: ${chkHideOfflineEnabled.checked ? "Enabled" : "Disabled"}`,
+          "info",
+          "Settings",
+        );
+        renderStreamersList(localStreamers);
+      }
+    });
+  }
+
+  if (inputHideOfflineDays) {
+    inputHideOfflineDays.addEventListener("change", (e) => {
+      const val = Math.max(1, Math.min(365, parseInt(e.target.value, 10) || 7));
+      e.target.value = String(val);
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          hideOfflineDays: val,
+        });
+        appendLog(
+          `Hide Offline threshold set to: ${val} day(s)`,
+          "info",
+          "Settings",
+        );
+        renderStreamersList(localStreamers);
+      }
+    });
+  }
+
   // Multiple Window States Handlers
   function renderWindowStatesUI(count, activeIndex) {
     const total = Math.max(1, parseInt(count, 10) || 1);
@@ -1535,6 +1569,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       chkShowBoundaryCorners
     ) {
       chkShowBoundaryCorners.checked = settings.showBoundaryCorners;
+    }
+    if (
+      typeof settings.hideOfflineEnabled === "boolean" &&
+      chkHideOfflineEnabled
+    ) {
+      chkHideOfflineEnabled.checked = settings.hideOfflineEnabled;
+    }
+    if (settings.hideOfflineDays && inputHideOfflineDays) {
+      inputHideOfflineDays.value = String(settings.hideOfflineDays);
     }
     renderWindowStatesUI(
       settings.windowStatesCount || 1,

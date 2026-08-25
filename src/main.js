@@ -841,7 +841,7 @@ ipcMain.handle("status:get", () => {
 });
 
 ipcMain.handle("streamers:get", () => {
-  return getSortedEnrichedStreamers();
+  return getOverlayFilteredStreamers(getSortedEnrichedStreamers());
 });
 
 ipcMain.handle("streamers:update", (_event, newStreamers) => {

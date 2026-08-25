@@ -10,8 +10,8 @@
   "isIgnoringMouseEvents": false,
   "smartClickThrough": false,
   "showBoundaryCorners": false,
-  "hideOfflineEnabled": false,
-  "hideOfflineDays": 7,
+  "hideOfflineEnabled": true,
+  "hideOfflineDays": 30,
   "windowStatesCount": 2,
   "currentWindowStateIndex": 1,
   "windowStates": [

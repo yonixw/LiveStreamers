@@ -1,7 +1,3 @@
-make "offline" remember last live and show it (local storage...)
-let me hide offline from list 
-    offline with no time || last_on_time > 30d
-
 trigger find text -> in game/categ also -> forsen game 
         search trigger allow "," for split for multi search
 
