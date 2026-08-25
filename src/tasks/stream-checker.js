@@ -483,6 +483,9 @@ async function checkStreamerLiveTask(
       `[${timestamp}] [Background Live Check] [${streamerName}] [Link ${i + 1}/${linksToCheck.length}] Checking ${plat.toUpperCase()} (freq: ${linkObj.freqMinutes}m): ${linkObj.url}...`,
     );
 
+    console.log(`[${timestamp}] [Background Live Check] 1sec cooldown`);
+    await new Promise((ok, _) => setTimeout(ok, 1_0000)); // 1sec cooldown
+
     const singleResult = await checkSingleUrlLive(linkObj.url, streamerName);
     lastCheckedUrl = singleResult.url;
     lastPlatform = singleResult.platform;
