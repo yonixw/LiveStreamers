@@ -926,6 +926,56 @@ body {
   color: #fca5a5;
 }
 
+.streamer-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.72rem;
+  margin-top: 1px;
+}
+
+.streamer-following-date {
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+}
+
+.streamer-following-date strong {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.streamer-note-tag {
+  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  max-width: 100%;
+}
+
+.streamer-note-tag .note-icon {
+  font-size: 0.68rem;
+}
+
+.streamer-note-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 320px;
+}
+
 .streamer-status-row {
   display: flex;
   flex-direction: column;

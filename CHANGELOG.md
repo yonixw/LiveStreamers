@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-08-26
+
+### Added
+- **Streamer Profile Metadata (Following Date & Note)**:
+  - Added `followingDate` and `note` fields to the streamer schema and normalization logic in [`src/tasks/storage.js:normalizeStreamerConfig()`](src/tasks/storage.js:136) and [`src/main.js`](src/main.js:826).
+  - Added "Following Date" (`<input type="date">`) defaulting to `now()` (today's date) and "Note" (`<input type="text">` free single-line text) to the streamer profile form in [`src/settings/settings.html`](src/settings/settings.html:220).
+  - Wired form reset, population for editing, submission, and quick presets in [`src/settings/settings.js`](src/settings/settings.js:456).
+  - Rendered "Followed" badge (`📅 Followed: YYYY-MM-DD`) and "Note" tag (`💬 <text>`) in the Settings streamer list with tooltips and truncation in [`src/settings/settings.js:renderStreamersList()`](src/settings/settings.js:740) and styled in [`src/settings/settings.css`](src/settings/settings.css:928).
+
 ## [1.8.0] - 2026-08-26
 
 ### Added

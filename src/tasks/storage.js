@@ -22,11 +22,21 @@ function getStatusPath() {
   return path.join(getDataDir(), "status.json");
 }
 
+function getTodayDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const defaultStreamers = [
   {
     id: "yt-lofigirl",
     name: "Lofi Girl",
     avatarImage: "",
+    followingDate: "2026-08-20",
+    note: "Cozy lo-fi beats stream",
     urls: [{ url: "https://www.youtube.com/@LofiGirl/live", freqMinutes: 1 }],
     triggers: {
       titleChange: true,
@@ -40,6 +50,8 @@ const defaultStreamers = [
     id: "tw-shroud",
     name: "Shroud",
     avatarImage: "",
+    followingDate: "2026-08-20",
+    note: "FPS / shooter gameplay",
     urls: [
       { url: "https://www.twitch.tv/shroud", freqMinutes: 1 },
       { url: "https://www.youtube.com/@shroud/live", freqMinutes: 2 },
@@ -56,6 +68,8 @@ const defaultStreamers = [
     id: "kc-xqc",
     name: "xQc",
     avatarImage: "",
+    followingDate: "2026-08-20",
+    note: "Variety / gaming",
     urls: [
       { url: "https://kick.com/xqc", freqMinutes: 1 },
       { url: "https://www.twitch.tv/xqcow", freqMinutes: 1 },
@@ -139,6 +153,8 @@ function normalizeStreamerConfig(streamer, index = 0) {
       id: `streamer-${Date.now()}-${index}`,
       name: `Streamer ${index + 1}`,
       avatarImage: "",
+      followingDate: getTodayDateString(),
+      note: "",
       urls: [],
       triggers: {
         titleChange: true,
@@ -179,6 +195,11 @@ function normalizeStreamerConfig(streamer, index = 0) {
     categoryChange: streamer.triggers?.categoryChange ?? true,
   };
 
+  const followingDate =
+    typeof streamer.followingDate === "string" && streamer.followingDate.trim()
+      ? streamer.followingDate.trim()
+      : getTodayDateString();
+  const note = typeof streamer.note === "string" ? streamer.note.trim() : "";
   const customTag =
     typeof streamer.customTag === "string" ? streamer.customTag.trim() : "";
   const snoozedUntil =
@@ -194,6 +215,8 @@ function normalizeStreamerConfig(streamer, index = 0) {
       typeof streamer.avatarImage === "string"
         ? streamer.avatarImage.trim()
         : "",
+    followingDate,
+    note,
     customTag,
     snoozedUntil,
     urls,

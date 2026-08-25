@@ -26,6 +26,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const streamerNameInput = document.getElementById("streamer-name-input");
   const streamerAvatarInput = document.getElementById("streamer-avatar-input");
+  const streamerFollowingDateInput = document.getElementById(
+    "streamer-following-date-input",
+  );
+  const streamerNoteInput = document.getElementById("streamer-note-input");
   const btnBrowseAvatar = document.getElementById("btn-browse-avatar");
   const avatarFormPreview = document.getElementById("avatar-form-preview");
   const avatarPreviewFallback = document.getElementById(
@@ -274,6 +278,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Format local date YYYY-MM-DD
+  function getTodayDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
   // Generate random default check frequency: 20 minutes + rand(1..20) -> 21 to 40 minutes
   function getRandomDefaultFreq() {
     return 20 + Math.floor(Math.random() * 20) + 1;
@@ -462,6 +475,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     streamerNameInput.value = "";
     streamerAvatarInput.value = "";
+    if (streamerFollowingDateInput) {
+      streamerFollowingDateInput.value = getTodayDateString();
+    }
+    if (streamerNoteInput) {
+      streamerNoteInput.value = "";
+    }
     setFormUrls([{ url: "", freqMinutes: getRandomDefaultFreq() }]);
 
     trigGoingLive.checked = true;
@@ -487,6 +506,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     streamerNameInput.value = streamer.name || "";
     streamerAvatarInput.value = streamer.avatarImage || "";
+    if (streamerFollowingDateInput) {
+      streamerFollowingDateInput.value = streamer.followingDate
+        ? String(streamer.followingDate).slice(0, 10)
+        : getTodayDateString();
+    }
+    if (streamerNoteInput) {
+      streamerNoteInput.value = streamer.note || "";
+    }
     setFormUrls(streamer.urls || [{ url: streamer.url, freqMinutes: 1 }]);
 
     const trig = streamer.triggers || {};
@@ -524,6 +551,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const name = streamerNameInput.value.trim();
     const avatarImage = streamerAvatarInput.value.trim();
+    const followingDate =
+      streamerFollowingDateInput && streamerFollowingDateInput.value
+        ? streamerFollowingDateInput.value.trim()
+        : getTodayDateString();
+    const note = streamerNoteInput ? streamerNoteInput.value.trim() : "";
     const urls = getFormUrls();
 
     if (!name || urls.length === 0) {
@@ -560,6 +592,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             ...s,
             name,
             avatarImage,
+            followingDate,
+            note,
             urls,
             triggers,
           };
@@ -586,6 +620,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const result = await window.electronAPI.addStreamer({
           name,
           avatarImage,
+          followingDate,
+          note,
           urls,
           triggers,
         });
@@ -860,6 +896,38 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       detailsDiv.appendChild(titleRow);
+
+      // Meta row: Following Date & Note
+      if (streamer.followingDate || streamer.note) {
+        const metaRow = document.createElement("div");
+        metaRow.className = "streamer-meta-row";
+
+        if (streamer.followingDate) {
+          const dateSpan = document.createElement("span");
+          dateSpan.className = "streamer-following-date";
+          dateSpan.title = `Following since: ${streamer.followingDate}`;
+          dateSpan.innerHTML = `📅 Followed: <strong>${streamer.followingDate}</strong>`;
+          metaRow.appendChild(dateSpan);
+        }
+
+        if (streamer.note) {
+          const noteSpan = document.createElement("span");
+          noteSpan.className = "streamer-note-tag";
+          noteSpan.title = streamer.note;
+          const noteIcon = document.createElement("span");
+          noteIcon.className = "note-icon";
+          noteIcon.textContent = "💬";
+          const noteText = document.createElement("span");
+          noteText.className = "streamer-note-text";
+          noteText.textContent = streamer.note;
+          noteSpan.appendChild(noteIcon);
+          noteSpan.appendChild(noteText);
+          metaRow.appendChild(noteSpan);
+        }
+
+        detailsDiv.appendChild(metaRow);
+      }
+
       detailsDiv.appendChild(statusRow);
 
       infoDiv.appendChild(avatarDiv);
@@ -979,12 +1047,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (preset === "lofi") {
         streamerNameInput.value = "Lofi Girl";
         streamerAvatarInput.value = "";
+        if (streamerFollowingDateInput)
+          streamerFollowingDateInput.value = getTodayDateString();
+        if (streamerNoteInput)
+          streamerNoteInput.value = "Cozy lo-fi beats stream";
         setFormUrls([
           { url: "https://www.youtube.com/@LofiGirl/live", freqMinutes: 1 },
         ]);
       } else if (preset === "shroud") {
         streamerNameInput.value = "Shroud";
         streamerAvatarInput.value = "";
+        if (streamerFollowingDateInput)
+          streamerFollowingDateInput.value = getTodayDateString();
+        if (streamerNoteInput)
+          streamerNoteInput.value = "FPS / shooter gameplay";
         setFormUrls([
           { url: "https://www.twitch.tv/shroud", freqMinutes: 1 },
           { url: "https://www.youtube.com/@shroud/live", freqMinutes: 2 },
@@ -992,6 +1068,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else if (preset === "xqc") {
         streamerNameInput.value = "xQc";
         streamerAvatarInput.value = "";
+        if (streamerFollowingDateInput)
+          streamerFollowingDateInput.value = getTodayDateString();
+        if (streamerNoteInput) streamerNoteInput.value = "Variety / gaming";
         setFormUrls([
           { url: "https://kick.com/xqc", freqMinutes: 1 },
           { url: "https://www.twitch.tv/xqcow", freqMinutes: 1 },
@@ -1416,7 +1495,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Initial load
-  setFormUrls([{ url: "", freqMinutes: getRandomDefaultFreq() }]);
+  resetStreamerForm();
   if (window.electronAPI) {
     try {
       if (window.electronAPI.getSettings) {

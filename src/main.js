@@ -827,6 +827,8 @@ ipcMain.handle("streamers:add", (_event, streamerData) => {
     id,
     name,
     avatarImage: streamerData.avatarImage || "",
+    followingDate: streamerData.followingDate,
+    note: streamerData.note || "",
     urls,
     triggers: streamerData.triggers || {
       titleChange: true,
