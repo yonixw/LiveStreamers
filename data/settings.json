@@ -13,7 +13,7 @@
   "hideOfflineEnabled": true,
   "hideOfflineDays": 30,
   "windowStatesCount": 2,
-  "currentWindowStateIndex": 1,
+  "currentWindowStateIndex": 0,
   "windowStates": [
     {
       "x": 153,
@@ -22,8 +22,8 @@
       "height": 484
     },
     {
-      "x": 425,
-      "y": 499,
+      "x": 46,
+      "y": 744,
       "width": 486,
       "height": 467
     }
@@ -31,10 +31,10 @@
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 425,
-    "y": 499,
-    "width": 486,
-    "height": 467
+    "x": 153,
+    "y": 383,
+    "width": 125,
+    "height": 484
   },
   "popupBounds": {
     "x": 1506,

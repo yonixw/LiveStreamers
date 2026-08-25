@@ -9,7 +9,7 @@
       "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
       "game": "Just Chatting",
       "category": "Just Chatting",
-      "viewerCount": 6623,
+      "viewerCount": 6637,
       "startTime": "2026-08-25T17:34:41.000Z",
       "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -18,9 +18,9 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T23:46:39.989Z"
+      "cachedAt": "2026-08-25T23:51:29.100Z"
     },
-    "lastChecked": "2026-08-25T23:46:39.989Z",
+    "lastChecked": "2026-08-25T23:52:28.667Z",
     "lastError": null,
     "lastTrigger": {
       "type": "category_change",
@@ -41,7 +41,7 @@
     "isLive": false,
     "activeUrl": "https://www.twitch.tv/sennyk4",
     "activePlatform": "twitch",
-    "checkStatus": "checking",
+    "checkStatus": "offline",
     "cachedInfo": {
       "title": "[237/365]🌎ASDASDASDASDASD🌎🔱KAEYFOUR.COM",
       "game": "Just Chatting",
@@ -57,7 +57,7 @@
       "platform": "twitch",
       "cachedAt": "2026-08-25T22:30:22.834Z"
     },
-    "lastChecked": "2026-08-25T23:43:01.447Z",
+    "lastChecked": "2026-08-25T23:51:41.484Z",
     "lastError": null,
     "lastTrigger": {
       "type": "title_change",

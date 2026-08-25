@@ -253,26 +253,35 @@ function evaluateTriggers(streamer, current, previous = null) {
       triggers.titleContainsText &&
       triggers.titleContainsText.trim()
     ) {
-      const keyword = triggers.titleContainsText.trim().toLowerCase();
-      const currTitle = (currInfo.title || "").toLowerCase();
-      const prevTitle = (prevInfo.title || "").toLowerCase();
+      const keywords = (
+        triggers.titleContainsText.trim().toLowerCase() || ""
+      ).split(",");
+
+      const currTitle = (
+        currInfo.title + " " + currInfo.game || ""
+      ).toLowerCase();
+      const prevTitle = (
+        prevInfo.title + " " + prevInfo.game || ""
+      ).toLowerCase();
 
       // Check if current title contains keyword and it was not previously matching (or just went live)
-      if (
-        currTitle.includes(keyword) &&
-        (!prev.isLive || !prevTitle.includes(keyword))
-      ) {
-        const rawKeyword = triggers.titleContainsText.trim();
-        return {
-          type: "title_keyword",
-          label: `Title: "${rawKeyword}"`,
-          message: `Stream title contains "${rawKeyword}": "${currInfo.title || ""}"`,
-          diff: {
-            from: prevInfo.title || "Offline",
-            to: currInfo.title || rawKeyword,
-          },
-          timestamp: nowIso,
-        };
+      for (const keyword of keywords) {
+        if (
+          currTitle.includes(keyword) &&
+          (!prev.isLive || !prevTitle.includes(keyword))
+        ) {
+          const rawKeyword = triggers.titleContainsText.trim();
+          return {
+            type: "title_keyword",
+            label: `Title or game: "${rawKeyword}"`,
+            message: `Stream title or game contains "${rawKeyword}": "${currInfo.title || ""}"`,
+            diff: {
+              from: prevTitle || "Offline",
+              to: currTitle || rawKeyword,
+            },
+            timestamp: nowIso,
+          };
+        }
       }
     }
 
