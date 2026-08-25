@@ -2,12 +2,12 @@
   "sortBy": "last-triggered",
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
-  "currentOpacity": 0.5,
+  "currentOpacity": 1,
   "overlayVisible": true,
   "overlayBounds": {
     "x": 228,
     "y": 153,
-    "width": 256,
+    "width": 310,
     "height": 1121
   },
   "streamers": [
@@ -50,7 +50,7 @@
       "triggers": {
         "titleChange": true,
         "viewerCountEnabled": true,
-        "viewerCountThreshold": 6800,
+        "viewerCountThreshold": 6500,
         "goingLive": true,
         "categoryChange": true
       }

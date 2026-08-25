@@ -376,12 +376,10 @@ async function checkStreamerLiveTask(
   }
 
   // Filter links to check based on per-link frequency (counter % freqMinutes === 0)
-  // If isManual or streamer is currently live, ensure at least active link is checked
-  const linksToCheck = urlObjects.filter((linkObj, idx) => {
+  const linksToCheck = urlObjects.filter((linkObj) => {
     if (isManual) return true;
     const freq = linkObj.freqMinutes || 1;
     const isDue = minuteCounter % freq === 0;
-    // If streamer was live on this specific link, check it on schedule or every minute
     const isCurrentlyActiveLiveLink =
       previousStatus?.isLive && previousStatus.activeUrl === linkObj.url;
     return isDue || isCurrentlyActiveLiveLink;
@@ -485,7 +483,7 @@ async function checkStreamerLiveTask(
 }
 
 /**
- * Background Scheduler Class to check streamer links with per-link frequencies and sequential queue.
+ * Background Scheduler Class to check streamer links with per-link frequencies and sequential FIFO across streamers.
  */
 class StreamLiveCheckerService {
   constructor({
@@ -503,7 +501,8 @@ class StreamLiveCheckerService {
     this.timer = null;
     this.isRunning = false;
     this.minuteCounter = 0;
-    this.activeChecks = new Set();
+    this.streamerQueue = [];
+    this.isProcessingStreamerQueue = false;
   }
 
   /**
@@ -514,10 +513,10 @@ class StreamLiveCheckerService {
     this.isRunning = true;
     this.onLog(
       "StreamChecker",
-      `Background Live Checker started (Interval: 1m tick, 5s yt-dlp cooldown).`,
+      `Background Live Checker started (1m tick, sequential streamer FIFO, 5s yt-dlp cooldown).`,
     );
 
-    // Initial check (minute 0 checks all freqMinutes % 1 === 0, i.e. all links)
+    // Initial check
     this.checkAll(false);
 
     // Regular 1-minute interval
@@ -540,7 +539,8 @@ class StreamLiveCheckerService {
   }
 
   /**
-   * Checks streamers.
+   * Checks all streamers strictly sequentially in FIFO order.
+   * Avatar 1 finishes all its links before Avatar 2 starts.
    * @param {boolean} [isManual=false]
    */
   async checkAll(isManual = false) {
@@ -551,23 +551,43 @@ class StreamLiveCheckerService {
 
     for (const streamer of streamers) {
       if (!streamer || !streamer.id) continue;
-      this.checkSingleStreamer(streamer, isManual);
+      this.enqueueStreamerCheck(streamer, isManual);
     }
   }
 
   /**
-   * Checks a single streamer.
+   * Enqueues a single streamer check into the streamer FIFO queue.
    * @param {object} streamer
    * @param {boolean} [isManual=false]
    * @returns {Promise<object>}
    */
+  enqueueStreamerCheck(streamer, isManual = false) {
+    return new Promise((resolve, reject) => {
+      this.streamerQueue.push({ streamer, isManual, resolve, reject });
+      this.processStreamerQueue();
+    });
+  }
+
+  /**
+   * Single streamer check entry point.
+   */
   async checkSingleStreamer(streamer, isManual = false) {
-    const streamerId = streamer.id;
-    if (this.activeChecks.has(streamerId)) {
+    return await this.enqueueStreamerCheck(streamer, isManual);
+  }
+
+  /**
+   * Processes the streamer queue strictly in FIFO order.
+   * Avatar 1 finishes completely before Avatar 2 starts.
+   */
+  async processStreamerQueue() {
+    if (this.isProcessingStreamerQueue || this.streamerQueue.length === 0) {
       return;
     }
 
-    this.activeChecks.add(streamerId);
+    this.isProcessingStreamerQueue = true;
+    const { streamer, isManual, resolve, reject } = this.streamerQueue.shift();
+    const streamerId = streamer.id;
+
     if (this.onStatusUpdate) {
       this.onStatusUpdate({
         streamerId,
@@ -579,6 +599,7 @@ class StreamLiveCheckerService {
       const statusMap = this.getStatusMap ? this.getStatusMap() : {};
       const previousStatus = statusMap[streamerId] || null;
 
+      // Check streamer across all its links (Avatar 1 completes all links before next avatar)
       const result = await checkStreamerLiveTask(streamer, previousStatus, {
         isManual,
         minuteCounter: this.minuteCounter,
@@ -594,7 +615,8 @@ class StreamLiveCheckerService {
               : "error",
         });
       }
-      return result;
+
+      resolve(result);
     } catch (err) {
       if (this.onStatusUpdate) {
         this.onStatusUpdate({
@@ -605,8 +627,12 @@ class StreamLiveCheckerService {
           lastError: err.message,
         });
       }
+      reject(err);
     } finally {
-      this.activeChecks.delete(streamerId);
+      this.isProcessingStreamerQueue = false;
+      if (this.streamerQueue.length > 0) {
+        setTimeout(() => this.processStreamerQueue(), 50);
+      }
     }
   }
 }
