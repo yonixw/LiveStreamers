@@ -732,7 +732,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         snoozeBtn.type = "button";
         snoozeBtn.className = "btn-snooze-badge";
         snoozeBtn.title = `Snoozed until ${snoozeDate.toLocaleTimeString()} (${snoozeDate.toLocaleDateString()}). Click to un-snooze!`;
-        snoozeBtn.innerHTML = `💤 Snoozed (Click to Un-snooze)`;
+        snoozeBtn.innerHTML = `💤 Click to Un-snooze`;
         snoozeBtn.addEventListener("click", async (e) => {
           e.stopPropagation();
           const updated = localStreamers.map((s) =>

@@ -220,6 +220,8 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
   switch (sortBy) {
     case "last-triggered": {
       return [...enriched].sort((a, b) => {
+        if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+
         const snoozedA = isSnoozed(a);
         const snoozedB = isSnoozed(b);
         if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
@@ -231,7 +233,7 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
           ? new Date(b.lastTriggeredAt).getTime()
           : 0;
         if (timeA !== timeB) return timeB - timeA;
-        if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+
         return (a.name || "").localeCompare(b.name || "");
       });
     }
@@ -248,8 +250,8 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
 
     case "longest-live": {
       return [...enriched].sort((a, b) => {
-        if (a.isLive && !b.isLive) return -1;
-        if (!a.isLive && b.isLive) return 1;
+        if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+
         if (a.isLive && b.isLive) {
           const startA = a.cachedInfo?.startTime
             ? new Date(a.cachedInfo.startTime).getTime()
@@ -265,12 +267,12 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
 
     case "last-started": {
       return [...enriched].sort((a, b) => {
+        if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+
         const snoozedA = isSnoozed(a);
         const snoozedB = isSnoozed(b);
         if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
 
-        if (a.isLive && !b.isLive) return -1;
-        if (!a.isLive && b.isLive) return 1;
         if (a.isLive && b.isLive) {
           const startA = a.cachedInfo?.startTime
             ? new Date(a.cachedInfo.startTime).getTime()
