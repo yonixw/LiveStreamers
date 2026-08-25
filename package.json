@@ -1,7 +1,7 @@
 {
-  "name": "electron-circle-overlay",
+  "name": "live-streamers-circles",
   "version": "1.0.0",
-  "description": "Cross-platform Electron boilerplate with transparent circular UI and system tray",
+  "description": "Cross-platform Electron app with live streamers overlay for status",
   "main": "src/main.js",
   "type": "commonjs",
   "scripts": {
@@ -18,8 +18,8 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "com.livestreamers.overlay",
-    "productName": "LiveStreamers",
+    "appId": "com.livestreamers-overlay",
+    "productName": "LiveStreamersCircles",
     "directories": {
       "output": "dist"
     },
@@ -28,19 +28,16 @@
     ],
     "win": {
       "target": [
-        "nsis",
         "portable"
       ]
     },
     "mac": {
       "target": [
-        "dmg",
         "zip"
       ]
     },
     "linux": {
       "target": [
-        "AppImage",
         "deb"
       ]
     }
