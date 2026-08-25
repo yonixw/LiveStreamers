@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   checkStreamerLive: (streamerId) =>
     ipcRenderer.invoke("streamers:check-now", streamerId),
   selectAvatarImage: () => ipcRenderer.invoke("dialog:select-avatar-image"),
+  openStreamerLinksPopup: (streamerId) =>
+    ipcRenderer.invoke("popup:open-streamer-links", streamerId),
+  getActivePopupStreamer: () => ipcRenderer.invoke("popup:get-active-streamer"),
 
   // Node.js Side Tasks
   runPetAvatarTask: (userName) =>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: file: blob:; connect-src 'self' data: https: file:;" />
+    <title>Stream Links</title>
+    <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+    <div class="popup-window-container">
+        <!-- Header with streamer avatar, name, and close button -->
+        <header class="popup-header">
+            <div class="popup-streamer-profile">
+                <div id="popup-avatar" class="popup-avatar-circle">
+                    <span id="popup-avatar-fallback">?</span>
+                    <img id="popup-avatar-img" style="display: none;" alt="Avatar" />
+                </div>
+                <div class="popup-title-group">
+                    <h1 id="popup-streamer-name">Streamer</h1>
+                    <span id="popup-status-badge" class="popup-status-badge">Offline</span>
+                </div>
+            </div>
+            <button type="button" id="btn-close-window" class="btn-close-popup" title="Close Window">✕</button>
+        </header>
+
+        <!-- Subheader hint -->
+        <div class="popup-instruction">
+            <span>Select a platform to watch:</span>
+        </div>
+
+        <!-- Links list -->
+        <main class="popup-main">
+            <div id="links-container" class="links-container">
+                <!-- Dynamic link cards rendered by popup.js -->
+            </div>
+        </main>
+
+        <footer class="popup-footer">
+            <span id="popup-footer-text">Click any link to open in your browser</span>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

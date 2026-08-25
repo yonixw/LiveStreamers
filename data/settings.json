@@ -1,16 +1,16 @@
 {
   "sortBy": "last-triggered",
   "avatarSize": 60,
-  "avatarAlignment": "left",
+  "avatarAlignment": "right",
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
-  "currentOpacity": 1,
+  "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 8,
-    "y": 24,
-    "width": 112,
-    "height": 416
+    "x": -9,
+    "y": 0,
+    "width": 98,
+    "height": 366
   },
   "streamers": [
     {

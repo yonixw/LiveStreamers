@@ -32,6 +32,8 @@ const {
 
 let overlayWindow = null;
 let settingsWindow = null;
+let linksPopupWindow = null;
+let activePopupStreamerId = null;
 let tray = null;
 let liveCheckerService = null;
 let saveBoundsTimeout = null;
@@ -324,6 +326,48 @@ function createSettingsWindow() {
   });
 
   return settingsWindow;
+}
+
+function createLinksPopupWindow(streamerId) {
+  activePopupStreamerId = streamerId;
+
+  if (linksPopupWindow && !linksPopupWindow.isDestroyed()) {
+    linksPopupWindow.show();
+    linksPopupWindow.focus();
+    linksPopupWindow.webContents.reload();
+    return linksPopupWindow;
+  }
+
+  // Determine spawn position near cursor
+  const cursorPos = screen.getCursorScreenPoint();
+  const width = 340;
+  const height = 400;
+
+  linksPopupWindow = new BrowserWindow({
+    width,
+    height,
+    x: Math.max(10, cursorPos.x - Math.floor(width / 2)),
+    y: Math.max(10, cursorPos.y - 50),
+    frame: false,
+    resizable: false,
+    alwaysOnTop: true,
+    backgroundColor: "#0f172a",
+    title: "Stream Links",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  linksPopupWindow.loadFile(path.join(__dirname, "popup", "popup.html"));
+
+  linksPopupWindow.on("closed", () => {
+    linksPopupWindow = null;
+  });
+
+  return linksPopupWindow;
 }
 
 function createTray() {
@@ -656,6 +700,23 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
 });
 
 // File picker for selecting local avatar image
+ipcMain.handle("popup:open-streamer-links", (_event, streamerId) => {
+  createLinksPopupWindow(streamerId);
+  return true;
+});
+
+ipcMain.handle("popup:get-active-streamer", () => {
+  if (!activePopupStreamerId) return null;
+  const streamer = state.streamers.find((s) => s.id === activePopupStreamerId);
+  if (!streamer) return null;
+  const enriched = getEnrichedStreamer(streamer);
+  return {
+    streamer: enriched,
+    isLive: enriched.isLive,
+    activeUrl: enriched.activeUrl,
+  };
+});
+
 ipcMain.handle("dialog:select-avatar-image", async () => {
   const result = await dialog.showOpenDialog({
     title: "Select Avatar Image",

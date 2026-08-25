@@ -3,39 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const overlayRoot = document.getElementById("overlay-root");
   const avatarsContainer = document.getElementById("avatars-container");
 
-  // Multi-URL Popup Modal Elements
-  const linksPopup = document.getElementById("links-popup");
-  const linksPopupBackdrop = document.getElementById("links-popup-backdrop");
-  const linksPopupName = document.getElementById("links-popup-name");
-  const linksPopupList = document.getElementById("links-popup-list");
-  const btnCloseLinksPopup = document.getElementById("btn-close-links-popup");
-
   let streamersList = [];
-
-  // Helper to detect platform
-  function detectPlatform(url) {
-    if (!url || typeof url !== "string") return "other";
-    const lower = url.toLowerCase();
-    if (lower.includes("kick.com")) return "kick";
-    if (lower.includes("twitch.tv")) return "twitch";
-    if (lower.includes("youtube.com") || lower.includes("youtu.be"))
-      return "youtube";
-    return "other";
-  }
-
-  // Helper to get platform badge class
-  function getPlatformBadgeClass(plat) {
-    switch (plat) {
-      case "youtube":
-        return "badge-youtube";
-      case "twitch":
-        return "badge-twitch";
-      case "kick":
-        return "badge-kick";
-      default:
-        return "badge-other";
-    }
-  }
 
   // Helper to get initials
   function getInitials(name) {
@@ -127,71 +95,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Close Links Popup
-  function closeLinksPopup() {
-    if (linksPopup) {
-      linksPopup.style.display = "none";
-    }
-  }
-
-  if (linksPopupBackdrop) {
-    linksPopupBackdrop.addEventListener("click", closeLinksPopup);
-  }
-  if (btnCloseLinksPopup) {
-    btnCloseLinksPopup.addEventListener("click", closeLinksPopup);
-  }
-
-  // Open Multi-URL Popup
-  function showLinksPopup(streamer, urls) {
-    if (!linksPopup || !linksPopupList) return;
-    const name = streamer.name || "Streamer";
-    if (linksPopupName) linksPopupName.textContent = name;
-    linksPopupList.innerHTML = "";
-
-    const activeUrl = streamer.activeUrl;
-    const isLive = Boolean(streamer.isLive);
-
-    urls.forEach((entry, idx) => {
-      const urlStr = typeof entry === "string" ? entry : entry?.url || "";
-      const plat = detectPlatform(urlStr);
-      const isActiveLiveLink = isLive && activeUrl === urlStr;
-
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = `links-popup-item-btn ${isActiveLiveLink ? "is-active-live" : ""}`;
-
-      const platBadge = document.createElement("span");
-      platBadge.className = `links-platform-badge ${getPlatformBadgeClass(plat)}`;
-      platBadge.textContent = plat.toUpperCase();
-
-      const textSpan = document.createElement("span");
-      textSpan.className = "links-item-title";
-      textSpan.textContent = `#${idx + 1} ${plat.toUpperCase()}`;
-
-      btn.appendChild(platBadge);
-      btn.appendChild(textSpan);
-
-      if (isActiveLiveLink) {
-        const livePill = document.createElement("span");
-        livePill.className = "links-live-pill";
-        livePill.textContent = "LIVE 🔴";
-        btn.appendChild(livePill);
-      }
-
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        closeLinksPopup();
-        if (urlStr && window.electronAPI && window.electronAPI.openExternal) {
-          window.electronAPI.openExternal(urlStr);
-        }
-      });
-
-      linksPopupList.appendChild(btn);
-    });
-
-    linksPopup.style.display = "flex";
-  }
-
   // Extract clean URL list from streamer object
   function getStreamerUrlsList(streamer) {
     if (!streamer) return [];
@@ -207,7 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Handle avatar click logic: direct open if 1 link, popup modal if multiple links
+  // Handle avatar click logic: direct open if 1 link, dedicated popup window if multiple links
   function handleAvatarClick(streamer) {
     if (!streamer) return;
     const urls = getStreamerUrlsList(streamer);
@@ -224,7 +127,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.electronAPI.openExternal(targetUrl);
       }
     } else {
-      showLinksPopup(streamer, urls);
+      if (window.electronAPI && window.electronAPI.openStreamerLinksPopup) {
+        window.electronAPI.openStreamerLinksPopup(streamer.id);
+      }
     }
   }
 
