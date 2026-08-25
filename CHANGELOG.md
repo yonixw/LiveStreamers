@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-08-26
+
+### Added
+- **Popup-Only / Check-Ignored URL Prefix (`!`)**:
+  - Added support for prefixing URLs with `!` (e.g., `!https://...`) to designate helper links, custom embeds, or third-party web players in [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:482).
+  - Background live checker automatically ignores and skips network crawler checks for URLs marked with `!`.
+  - Links popup window ([`src/popup/popup.js`](src/popup/popup.js:173)) strips the `!` prefix on render, allowing users to view and launch the link in an external browser seamlessly.
+
+### Changed
+- **Always-Open Links Popup on Avatar Click**:
+  - Updated [`handleAvatarClick()`](src/renderer/renderer.js:193) in [`src/renderer/renderer.js`](src/renderer/renderer.js:193) to always launch the dedicated streamer links popup window upon clicking an avatar card, even when only a single URL is configured.
+  - Ensures direct and consistent access to streamer metadata, platform URLs, and snooze controls for all streamers.
+
 ## [1.7.0] - 2026-08-25
 
 ### Added
