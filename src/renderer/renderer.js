@@ -256,14 +256,42 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Stream Title for Tooltip and alt
-      const streamTitle =
-        cached && cached.title ? cached.title : streamer.name || "Streamer";
-      const fullTooltip = isLive
-        ? cached && cached.title
-          ? `${streamer.name}: ${cached.title}`
-          : `${streamer.name} (Live)`
-        : `${streamer.name || "Streamer"} (Offline)`;
+      // Tooltip and ALT_TEXT: ${username nick} / ${domain} / ${game} / ${full title}
+      const userNick = streamer.customTag || streamer.name || "Streamer";
+      let domain = "offline";
+      const activeOrFirstUrl =
+        isLive && streamer.activeUrl
+          ? streamer.activeUrl
+          : Array.isArray(streamer.urls) && streamer.urls.length > 0
+            ? typeof streamer.urls[0] === "string"
+              ? streamer.urls[0]
+              : streamer.urls[0].url
+            : streamer.url || "";
+
+      if (activeOrFirstUrl) {
+        try {
+          const parsed = new URL(
+            activeOrFirstUrl.startsWith("http")
+              ? activeOrFirstUrl
+              : `https://${activeOrFirstUrl}`,
+          );
+          domain = parsed.hostname.replace(/^www\./, "");
+        } catch (_e) {
+          domain = streamer.activePlatform || "stream";
+        }
+      }
+
+      const game =
+        cached && (cached.category || cached.game)
+          ? cached.category || cached.game
+          : isLive
+            ? "Live"
+            : "Offline";
+
+      const fullTitle =
+        cached && cached.title ? cached.title : isLive ? "No Title" : "Offline";
+
+      const fullTooltip = `${userNick} / ${domain} / ${game} / ${fullTitle}`;
 
       card.setAttribute("title", fullTooltip);
       if (frame) frame.setAttribute("title", fullTooltip);
@@ -271,6 +299,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Update Avatar Image / Initials without flash
       const inner = card.querySelector(".avatar-inner");
       if (inner) {
+        inner.setAttribute("title", fullTooltip);
         const imgSrc = formatImageSrc(streamer.avatarImage);
         if (imgSrc) {
           let existingImg = inner.querySelector("img");
@@ -278,7 +307,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             inner.textContent = "";
             inner.style.background = "#18181b";
             existingImg = document.createElement("img");
-            existingImg.alt = streamTitle;
+            existingImg.alt = fullTooltip;
             existingImg.title = fullTooltip;
             existingImg.src = imgSrc;
             existingImg.onerror = () => {
@@ -291,8 +320,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (existingImg.getAttribute("src") !== imgSrc) {
               existingImg.src = imgSrc;
             }
-            if (existingImg.getAttribute("alt") !== streamTitle) {
-              existingImg.alt = streamTitle;
+            if (existingImg.getAttribute("alt") !== fullTooltip) {
+              existingImg.alt = fullTooltip;
             }
             if (existingImg.getAttribute("title") !== fullTooltip) {
               existingImg.title = fullTooltip;

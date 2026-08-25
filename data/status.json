@@ -1,52 +1,4 @@
 {
-  "yt-lofigirl": {
-    "streamerId": "yt-lofigirl",
-    "isLive": true,
-    "activeUrl": "https://www.youtube.com/@LofiGirl/live",
-    "activePlatform": "youtube",
-    "checkStatus": "live",
-    "cachedInfo": {
-      "title": "lofi hip hop radio 📚 beats to relax/study to",
-      "game": "Music",
-      "category": "Music",
-      "viewerCount": 9548,
-      "startTime": "2026-08-19T07:43:43.000Z",
-      "liveTime": "2026-08-19T07:43:43.000Z",
-      "description": "🎼 | Listen on Spotify, Apple music and more\n→  https://lnk.to/lofi-hiphop-beats-to-r...\n\n🌎 | Lofi Girl on all social media\n→  https://link.lofigirl.com/m/Community\n\n🌐| Our Websites\n→  https://link.lofigirl.com/m/website\n\n👕 | Lofi Girl merch\n→  https://link.lofigirlshop.com/shop\n\n🎮 | Our video games\n→ https://link.lofigirl.com/m/games\n\n🎭 | Create your lofi avatar now\n→  https://lofigirl.com/generator/\n\n🎨 | Art by Lofi Studio (full list of artists here)\n→    / cuchqfxs08m  \n\n🤗 Thank you for listening, I hope you will have a good time here\n\n🧡All visuals and music in this video are 100% crafted by talented human artists, without the use of AI. We’re committed to delivering genuine, hand-made creations for our audience to enjoy.",
-      "thumbnail": "https://i.ytimg.com/vi/rFZHOHl-L8A/maxresdefault.jpg",
-      "channel": "Lofi Girl",
-      "channelUrl": "https://www.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow",
-      "url": "https://www.youtube.com/watch?v=rFZHOHl-L8A",
-      "platform": "youtube",
-      "cachedAt": "2026-08-25T03:57:06.689Z"
-    },
-    "lastChecked": "2026-08-25T03:57:06.689Z",
-    "lastError": null,
-    "lastTrigger": {
-      "type": "going_live",
-      "label": "Going Live",
-      "message": "Went Live on YOUTUBE (changed from Offline)",
-      "diff": {
-        "from": "Offline",
-        "to": "Live on YOUTUBE"
-      },
-      "timestamp": "2026-08-25T02:45:41.563Z"
-    },
-    "lastTriggeredAt": "2026-08-25T02:45:41.563Z",
-    "checkedUrlsCount": 1
-  },
-  "tw-shroud": {
-    "streamerId": "tw-shroud",
-    "isLive": false,
-    "activeUrl": "https://www.twitch.tv/shroud",
-    "activePlatform": "twitch",
-    "checkStatus": "checking",
-    "lastChecked": "2026-08-25T03:56:21.925Z",
-    "lastError": null,
-    "lastTrigger": null,
-    "lastTriggeredAt": null,
-    "checkedUrlsCount": 1
-  },
   "kc-xqc": {
     "streamerId": "kc-xqc",
     "isLive": true,
@@ -54,33 +6,81 @@
     "activePlatform": "kick",
     "checkStatus": "live",
     "cachedInfo": {
-      "title": "🐕LIVE🐕CLICK🐕HERE🐕DRAMA🐕 NEWS🐕VIDEOS🐕GAMES🐕IMPORTANT🐕LIVE🐕QUICKLY🐕LOCK IN🐕PULL UP🐕BANG🐕",
-      "game": "Jackbox Party Packs",
-      "category": "Jackbox Party Packs",
-      "viewerCount": 7364,
-      "startTime": "2026-08-24T23:07:42.000Z",
-      "liveTime": "2026-08-24T23:07:42.000Z",
+      "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
+      "game": "Special Events",
+      "category": "Special Events",
+      "viewerCount": 6623,
+      "startTime": "2026-08-25T17:34:41.000Z",
+      "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
-      "thumbnail": "https://stream.kick.com/thumbnails/livestream/123910908/thumb0/video_thumbnail/thumb0.jpg",
+      "thumbnail": "https://stream.kick.com/thumbnails/livestream/124022094/thumb0/video_thumbnail/thumb0.jpg",
       "channel": "xqc",
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T03:57:13.681Z"
+      "cachedAt": "2026-08-25T19:33:31.113Z"
     },
-    "lastChecked": "2026-08-25T03:57:13.681Z",
+    "lastChecked": "2026-08-25T19:33:31.113Z",
     "lastError": null,
     "lastTrigger": {
       "type": "category_change",
       "label": "Category Changed",
-      "message": "Category changed from \"PlateUp!\" to \"Jackbox Party Packs\"",
+      "message": "Category changed from \"Just Chatting\" to \"Special Events\"",
       "diff": {
-        "from": "PlateUp!",
-        "to": "Jackbox Party Packs"
+        "from": "Just Chatting",
+        "to": "Special Events"
       },
-      "timestamp": "2026-08-25T03:41:13.153Z"
+      "timestamp": "2026-08-25T17:41:10.253Z"
     },
-    "lastTriggeredAt": "2026-08-25T03:41:13.153Z",
+    "lastTriggeredAt": "2026-08-25T17:41:10.253Z",
     "checkedUrlsCount": 1
+  },
+  "streamer-1787680783492-330": {
+    "streamerId": "streamer-1787680783492-330",
+    "isLive": true,
+    "activeUrl": "https://www.twitch.tv/sennyk4",
+    "activePlatform": "twitch",
+    "checkStatus": "live",
+    "cachedInfo": {
+      "title": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM",
+      "game": "Special Events",
+      "category": "Special Events",
+      "viewerCount": 256,
+      "startTime": "2026-08-25T17:26:54.000Z",
+      "liveTime": "2026-08-25T17:26:54.000Z",
+      "description": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM",
+      "thumbnail": "https://static-cdn.jtvnw.net/previews-ttv/live_user_sennyk4-0x0.jpg",
+      "channel": "sennyk4",
+      "channelUrl": "https://www.twitch.tv/sennyk4",
+      "url": "https://www.twitch.tv/sennyk4",
+      "platform": "twitch",
+      "cachedAt": "2026-08-25T19:32:32.443Z"
+    },
+    "lastChecked": "2026-08-25T19:32:32.443Z",
+    "lastError": null,
+    "lastTrigger": {
+      "type": "title_change",
+      "label": "Title Changed",
+      "message": "Title changed from \"sennyk4 (live)\" to \"[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM\"",
+      "diff": {
+        "from": "sennyk4 (live)",
+        "to": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM"
+      },
+      "timestamp": "2026-08-25T18:25:00.649Z"
+    },
+    "lastTriggeredAt": "2026-08-25T18:25:00.649Z",
+    "checkedUrlsCount": 1
+  },
+  "tw-shroud": {
+    "streamerId": "tw-shroud",
+    "isLive": false,
+    "activeUrl": "https://www.twitch.tv/shroud",
+    "activePlatform": "twitch",
+    "checkStatus": "offline",
+    "lastChecked": "2026-08-25T18:29:20.055Z",
+    "lastError": null,
+    "lastTrigger": null,
+    "lastTriggeredAt": null,
+    "checkedUrlsCount": 2
   }
 }

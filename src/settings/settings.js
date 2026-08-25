@@ -258,11 +258,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Generate random default check frequency: 20 minutes + rand(1..20) -> 21 to 40 minutes
+  function getRandomDefaultFreq() {
+    return 20 + Math.floor(Math.random() * 20) + 1;
+  }
+
   // URL builder row management with per-link frequency in minutes
-  function createUrlRow(entry = { url: "", freqMinutes: 1 }) {
+  function createUrlRow(
+    entry = { url: "", freqMinutes: getRandomDefaultFreq() },
+  ) {
     const rawUrl = typeof entry === "string" ? entry : entry?.url || "";
     const rawFreq =
-      typeof entry === "object" && entry?.freqMinutes ? entry.freqMinutes : 1;
+      typeof entry === "object" && entry?.freqMinutes
+        ? entry.freqMinutes
+        : getRandomDefaultFreq();
 
     const row = document.createElement("div");
     row.className = "url-input-row";
@@ -289,11 +298,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     urlInput.addEventListener("input", updatePlatTag);
     updatePlatTag();
 
-    // Frequency in minutes input
+    // Frequency in minutes input (min 5 minutes, default 20 + 1-20 rand)
     const freqWrapper = document.createElement("div");
     freqWrapper.className = "url-freq-wrapper";
     freqWrapper.title =
-      "Check frequency for this link in minutes (Checks at minute counter % freq == 0)";
+      "Check frequency for this link in minutes (min 5m, checks at minute counter % freq == 0)";
 
     const freqLabel = document.createElement("span");
     freqLabel.className = "url-freq-label";
@@ -302,9 +311,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const freqInput = document.createElement("input");
     freqInput.type = "number";
     freqInput.className = "input-url-freq";
-    freqInput.min = "1";
+    freqInput.min = "5";
     freqInput.step = "1";
-    freqInput.value = String(Math.max(1, parseInt(rawFreq, 10) || 1));
+    freqInput.value = String(
+      Math.max(5, parseInt(rawFreq, 10) || getRandomDefaultFreq()),
+    );
 
     const freqUnit = document.createElement("span");
     freqUnit.className = "url-freq-label";
@@ -354,7 +365,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateUrlsOrderChips();
       } else {
         urlInput.value = "";
-        freqInput.value = "1";
+        freqInput.value = getRandomDefaultFreq().toString();
         updatePlatTag();
       }
     });
@@ -390,7 +401,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   function setFormUrls(urls = []) {
     urlsInputList.innerHTML = "";
     if (!urls || urls.length === 0) {
-      urlsInputList.appendChild(createUrlRow({ url: "", freqMinutes: 1 }));
+      urlsInputList.appendChild(
+        createUrlRow({ url: "", freqMinutes: getRandomDefaultFreq() }),
+      );
     } else {
       urls.forEach((u) => urlsInputList.appendChild(createUrlRow(u)));
     }
@@ -405,8 +418,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         const freqInp = row.querySelector(".input-url-freq");
         const url = urlInp ? urlInp.value.trim() : "";
         const freqMinutes = freqInp
-          ? Math.max(1, parseInt(freqInp.value, 10) || 1)
-          : 1;
+          ? Math.max(5, parseInt(freqInp.value, 10) || getRandomDefaultFreq())
+          : getRandomDefaultFreq();
         return { url, freqMinutes };
       })
       .filter((item) => item.url.length > 0);
@@ -414,7 +427,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (btnAddUrlRow) {
     btnAddUrlRow.addEventListener("click", () => {
-      urlsInputList.appendChild(createUrlRow({ url: "", freqMinutes: 1 }));
+      urlsInputList.appendChild(
+        createUrlRow({ url: "", freqMinutes: getRandomDefaultFreq() }),
+      );
       updateUrlsOrderChips();
       const lastInput =
         urlsInputList.lastElementChild.querySelector('input[type="text"]');
@@ -431,7 +446,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     streamerNameInput.value = "";
     streamerAvatarInput.value = "";
-    setFormUrls([{ url: "", freqMinutes: 1 }]);
+    setFormUrls([{ url: "", freqMinutes: getRandomDefaultFreq() }]);
 
     trigGoingLive.checked = true;
     trigTitleChange.checked = true;
@@ -1298,7 +1313,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Initial load
-  setFormUrls([{ url: "", freqMinutes: 1 }]);
+  setFormUrls([{ url: "", freqMinutes: getRandomDefaultFreq() }]);
   if (window.electronAPI) {
     try {
       if (window.electronAPI.getSettings) {

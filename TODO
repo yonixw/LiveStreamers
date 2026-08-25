@@ -4,12 +4,6 @@ clickthrough only for transparent parts?
     let 2 config "open" + "close" that will open on mouse over....
         like top 3 half showing to top 10 showing all 
 
-nicer ui 
-    default freq - should be 20 minutes + 1-20 *rand
-        make min 5?
-    replace text shadow with 1px border - more readable
-    ALT_TEXT -> add game so: ${nick} / ${domain} / ${game} / ${full title}
-
 Triggers 
     trigger -> +X (like +100) viewers 
 
