@@ -195,20 +195,9 @@ function calculateOverlayDimensions(itemCount) {
 }
 
 function updateOverlayBounds() {
+  // Preserve user-defined window position and dimensions strictly.
+  // Resizing/moving by the user is preserved and persisted across all streamer updates.
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
-  const count = state.streamers ? state.streamers.length : 1;
-  const { width, height } = calculateOverlayDimensions(count);
-  const bounds = overlayWindow.getBounds();
-
-  // If user hasn't explicitly resized height/width, or if count changed significantly
-  if (bounds.width !== width) {
-    overlayWindow.setBounds({
-      x: bounds.x,
-      y: bounds.y,
-      width,
-      height: Math.max(bounds.height, height),
-    });
-  }
 }
 
 function debounceSaveOverlayBounds() {
