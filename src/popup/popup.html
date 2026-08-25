@@ -39,6 +39,26 @@
             </div>
         </main>
 
+        <!-- Snooze Options Section -->
+        <section class="popup-snooze-section">
+            <div class="popup-snooze-header">
+                <span class="popup-snooze-label">💤 Snooze for:</span>
+                <span id="popup-snooze-status" class="popup-snooze-current" style="display: none;"></span>
+            </div>
+            <div class="popup-snooze-buttons">
+                <button type="button" class="btn-snooze-option" data-duration="3600000"
+                    title="Snooze for 1 hour">1h</button>
+                <button type="button" class="btn-snooze-option" data-duration="28800000"
+                    title="Snooze for 8 hours">8h</button>
+                <button type="button" class="btn-snooze-option" data-duration="86400000"
+                    title="Snooze for 1 day">1d</button>
+                <button type="button" class="btn-snooze-option" data-duration="604800000"
+                    title="Snooze for 7 days">7d</button>
+                <button type="button" id="btn-unsnooze" class="btn-unsnooze-option" style="display: none;"
+                    title="Cancel snooze">Un-snooze</button>
+            </div>
+        </section>
+
         <footer class="popup-footer">
             <span id="popup-footer-text">Click any link to open in your browser</span>
         </footer>

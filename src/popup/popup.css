@@ -266,9 +266,81 @@ html, body {
   transform: translateX(2px);
 }
 
+/* Snooze Section */
+.popup-snooze-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.popup-snooze-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup-snooze-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.popup-snooze-current {
+  font-size: 0.64rem;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.popup-snooze-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-snooze-option {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 4px 6px;
+  border-radius: 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.btn-snooze-option:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+.btn-unsnooze-option {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-unsnooze-option:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
 /* Footer */
 .popup-footer {
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid var(--border-color);
   text-align: center;
   font-size: 0.68rem;

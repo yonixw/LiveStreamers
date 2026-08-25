@@ -6,6 +6,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const popupStatusBadge = document.getElementById("popup-status-badge");
   const linksContainer = document.getElementById("links-container");
   const btnCloseWindow = document.getElementById("btn-close-window");
+  const popupSnoozeStatus = document.getElementById("popup-snooze-status");
+  const btnSnoozeOptions = document.querySelectorAll(".btn-snooze-option");
+  const btnUnsnooze = document.getElementById("btn-unsnooze");
+
+  let currentStreamerId = null;
 
   // Helper to detect platform
   function detectPlatform(url) {
@@ -69,13 +74,57 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Snooze Button Handlers
+  btnSnoozeOptions.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const durationMs = parseInt(btn.getAttribute("data-duration"), 10);
+      if (
+        currentStreamerId &&
+        window.electronAPI &&
+        window.electronAPI.snoozeStreamer
+      ) {
+        await window.electronAPI.snoozeStreamer(currentStreamerId, durationMs);
+      }
+      if (window.electronAPI && window.electronAPI.closeWindow) {
+        window.electronAPI.closeWindow();
+      }
+    });
+  });
+
+  if (btnUnsnooze) {
+    btnUnsnooze.addEventListener("click", async () => {
+      if (
+        currentStreamerId &&
+        window.electronAPI &&
+        window.electronAPI.snoozeStreamer
+      ) {
+        await window.electronAPI.snoozeStreamer(currentStreamerId, null);
+      }
+      if (window.electronAPI && window.electronAPI.closeWindow) {
+        window.electronAPI.closeWindow();
+      }
+    });
+  }
+
   // Render streamer details and link cards
   function renderStreamerData(data) {
     if (!data || !data.streamer) return;
-    const { streamer, isLive, activeUrl } = data;
+    const { streamer, isLive, activeUrl, isSnoozed, snoozedUntil } = data;
+    currentStreamerId = streamer.id;
 
     const name = streamer.name || "Streamer";
     popupStreamerName.textContent = name;
+
+    // Snooze status badge
+    if (isSnoozed && snoozedUntil) {
+      const untilDate = new Date(snoozedUntil);
+      popupSnoozeStatus.textContent = `(Snoozed until ${untilDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})`;
+      popupSnoozeStatus.style.display = "inline";
+      if (btnUnsnooze) btnUnsnooze.style.display = "inline-block";
+    } else {
+      popupSnoozeStatus.style.display = "none";
+      if (btnUnsnooze) btnUnsnooze.style.display = "none";
+    }
 
     if (isLive) {
       popupStatusBadge.textContent = "🔴 LIVE NOW";

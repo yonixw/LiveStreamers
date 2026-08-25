@@ -54,6 +54,7 @@ const state = {
   currentOpacity: persistedSettings.currentOpacity ?? 1.0,
   overlayVisible: persistedSettings.overlayVisible ?? true,
   overlayBounds: persistedSettings.overlayBounds || null,
+  popupBounds: persistedSettings.popupBounds || null,
   streamers: Array.isArray(persistedSettings.streamers)
     ? persistedSettings.streamers
     : defaultStreamers,
@@ -134,18 +135,52 @@ function debounceSaveOverlayBounds() {
   }, 400);
 }
 
+let savePopupBoundsTimeout = null;
+function debounceSavePopupBounds() {
+  if (!linksPopupWindow || linksPopupWindow.isDestroyed()) return;
+  if (savePopupBoundsTimeout) clearTimeout(savePopupBoundsTimeout);
+
+  savePopupBoundsTimeout = setTimeout(() => {
+    if (linksPopupWindow && !linksPopupWindow.isDestroyed()) {
+      const bounds = linksPopupWindow.getBounds();
+      state.popupBounds = {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+      };
+      saveSettings(state);
+    }
+  }, 400);
+}
+
 function resetOverlayUI() {
   if (!overlayWindow || overlayWindow.isDestroyed()) {
     createOverlayWindow();
-    return true;
+  } else {
+    const count = state.streamers ? state.streamers.length : 1;
+    const { width, height } = calculateOverlayDimensions(count);
+    state.overlayBounds = { x: null, y: null, width, height };
+    overlayWindow.setSize(width, height);
+    overlayWindow.center();
   }
-  const count = state.streamers ? state.streamers.length : 1;
-  const { width, height } = calculateOverlayDimensions(count);
-  state.overlayBounds = { x: null, y: null, width, height };
-  overlayWindow.setSize(width, height);
-  overlayWindow.center();
+
+  state.popupBounds = null;
+  if (linksPopupWindow && !linksPopupWindow.isDestroyed()) {
+    linksPopupWindow.setSize(340, 440);
+    linksPopupWindow.center();
+  }
+
   saveSettings(state);
   return true;
+}
+
+function isSnoozed(streamer) {
+  return Boolean(
+    streamer &&
+    streamer.snoozedUntil &&
+    new Date(streamer.snoozedUntil).getTime() > Date.now(),
+  );
 }
 
 /**
@@ -185,6 +220,10 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
   switch (sortBy) {
     case "last-triggered": {
       return [...enriched].sort((a, b) => {
+        const snoozedA = isSnoozed(a);
+        const snoozedB = isSnoozed(b);
+        if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
+
         const timeA = a.lastTriggeredAt
           ? new Date(a.lastTriggeredAt).getTime()
           : 0;
@@ -226,6 +265,10 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
 
     case "last-started": {
       return [...enriched].sort((a, b) => {
+        const snoozedA = isSnoozed(a);
+        const snoozedB = isSnoozed(b);
+        if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
+
         if (a.isLive && !b.isLive) return -1;
         if (!a.isLive && b.isLive) return 1;
         if (a.isLive && b.isLive) {
@@ -247,7 +290,15 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
       );
     }
 
-    case "manual":
+    case "manual": {
+      return [...enriched].sort((a, b) => {
+        const snoozedA = isSnoozed(a);
+        const snoozedB = isSnoozed(b);
+        if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
+        return 0;
+      });
+    }
+
     default:
       return enriched;
   }
@@ -347,11 +398,26 @@ function createSettingsWindow() {
 function createLinksPopupWindow(streamerId) {
   activePopupStreamerId = streamerId;
 
-  const width = 340;
-  const height = 400;
+  let initialBounds = { width: 340, height: 440 };
+  let shouldCenter = true;
+
+  if (state.popupBounds && typeof state.popupBounds.width === "number") {
+    initialBounds.width = state.popupBounds.width;
+    initialBounds.height = state.popupBounds.height;
+    if (
+      typeof state.popupBounds.x === "number" &&
+      typeof state.popupBounds.y === "number"
+    ) {
+      initialBounds.x = state.popupBounds.x;
+      initialBounds.y = state.popupBounds.y;
+      shouldCenter = false;
+    }
+  }
 
   if (linksPopupWindow && !linksPopupWindow.isDestroyed()) {
-    linksPopupWindow.center();
+    if (shouldCenter) {
+      linksPopupWindow.center();
+    }
     linksPopupWindow.show();
     linksPopupWindow.focus();
     linksPopupWindow.webContents.reload();
@@ -359,10 +425,9 @@ function createLinksPopupWindow(streamerId) {
   }
 
   linksPopupWindow = new BrowserWindow({
-    width,
-    height,
+    ...initialBounds,
     frame: false,
-    resizable: false,
+    resizable: true,
     alwaysOnTop: true,
     skipTaskbar: true,
     backgroundColor: "#0f172a",
@@ -375,8 +440,14 @@ function createLinksPopupWindow(streamerId) {
     },
   });
 
-  linksPopupWindow.center();
+  if (shouldCenter) {
+    linksPopupWindow.center();
+  }
+
   linksPopupWindow.loadFile(path.join(__dirname, "popup", "popup.html"));
+
+  linksPopupWindow.on("moved", debounceSavePopupBounds);
+  linksPopupWindow.on("resized", debounceSavePopupBounds);
 
   linksPopupWindow.on("closed", () => {
     linksPopupWindow = null;
@@ -740,8 +811,28 @@ ipcMain.handle("popup:get-active-streamer", () => {
     streamer: enriched,
     isLive: enriched.isLive,
     activeUrl: enriched.activeUrl,
+    isSnoozed: isSnoozed(streamer),
+    snoozedUntil: streamer.snoozedUntil || null,
   };
 });
+
+ipcMain.handle(
+  "popup:snooze-streamer",
+  (_event, { streamerId, durationMs }) => {
+    const id = streamerId || activePopupStreamerId;
+    if (!id) return false;
+    const streamer = state.streamers.find((s) => s.id === id);
+    if (streamer) {
+      streamer.snoozedUntil = durationMs
+        ? new Date(Date.now() + durationMs).toISOString()
+        : null;
+      saveSettings(state);
+      broadcastStateUpdate();
+      return true;
+    }
+    return false;
+  },
+);
 
 ipcMain.handle("dialog:select-avatar-image", async () => {
   const result = await dialog.showOpenDialog({

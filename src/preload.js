@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   openStreamerLinksPopup: (streamerId) =>
     ipcRenderer.invoke("popup:open-streamer-links", streamerId),
   getActivePopupStreamer: () => ipcRenderer.invoke("popup:get-active-streamer"),
+  snoozeStreamer: (streamerId, durationMs) =>
+    ipcRenderer.invoke("popup:snooze-streamer", { streamerId, durationMs }),
 
   // Node.js Side Tasks
   runPetAvatarTask: (userName) =>

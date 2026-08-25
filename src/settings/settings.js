@@ -722,6 +722,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       titleRow.appendChild(urlsContainer);
 
+      // Snoozed Badge button (Click to un-snooze)
+      if (
+        streamer.snoozedUntil &&
+        new Date(streamer.snoozedUntil).getTime() > Date.now()
+      ) {
+        const snoozeDate = new Date(streamer.snoozedUntil);
+        const snoozeBtn = document.createElement("button");
+        snoozeBtn.type = "button";
+        snoozeBtn.className = "btn-snooze-badge";
+        snoozeBtn.title = `Snoozed until ${snoozeDate.toLocaleTimeString()} (${snoozeDate.toLocaleDateString()}). Click to un-snooze!`;
+        snoozeBtn.innerHTML = `💤 Snoozed (Click to Un-snooze)`;
+        snoozeBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const updated = localStreamers.map((s) =>
+            s.id === streamer.id ? { ...s, snoozedUntil: null } : s,
+          );
+          if (window.electronAPI && window.electronAPI.updateStreamers) {
+            const res = await window.electronAPI.updateStreamers(updated);
+            renderStreamersList(res);
+            appendLog(
+              `Un-snoozed streamer: ${streamer.name}`,
+              "info",
+              "Streamer",
+            );
+          }
+        });
+        titleRow.appendChild(snoozeBtn);
+      }
+
       // Status Row
       const statusRow = document.createElement("div");
       statusRow.className = "streamer-status-row";

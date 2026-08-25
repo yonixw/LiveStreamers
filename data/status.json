@@ -4,12 +4,12 @@
     "isLive": true,
     "activeUrl": "https://www.youtube.com/@LofiGirl/live",
     "activePlatform": "youtube",
-    "checkStatus": "live",
+    "checkStatus": "checking",
     "cachedInfo": {
       "title": "lofi hip hop radio 📚 beats to relax/study to",
       "game": "Music",
       "category": "Music",
-      "viewerCount": 10016,
+      "viewerCount": 9829,
       "startTime": "2026-08-19T07:43:43.000Z",
       "liveTime": "2026-08-19T07:43:43.000Z",
       "description": "🎼 | Listen on Spotify, Apple music and more\n→  https://lnk.to/lofi-hiphop-beats-to-r...\n\n🌎 | Lofi Girl on all social media\n→  https://link.lofigirl.com/m/Community\n\n🌐| Our Websites\n→  https://link.lofigirl.com/m/website\n\n👕 | Lofi Girl merch\n→  https://link.lofigirlshop.com/shop\n\n🎮 | Our video games\n→ https://link.lofigirl.com/m/games\n\n🎭 | Create your lofi avatar now\n→  https://lofigirl.com/generator/\n\n🎨 | Art by Lofi Studio (full list of artists here)\n→    / cuchqfxs08m  \n\n🤗 Thank you for listening, I hope you will have a good time here\n\n🧡All visuals and music in this video are 100% crafted by talented human artists, without the use of AI. We’re committed to delivering genuine, hand-made creations for our audience to enjoy.",
@@ -18,9 +18,9 @@
       "channelUrl": "https://www.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow",
       "url": "https://www.youtube.com/watch?v=rFZHOHl-L8A",
       "platform": "youtube",
-      "cachedAt": "2026-08-25T03:27:55.552Z"
+      "cachedAt": "2026-08-25T03:41:58.435Z"
     },
-    "lastChecked": "2026-08-25T03:27:55.552Z",
+    "lastChecked": "2026-08-25T03:41:58.435Z",
     "lastError": null,
     "lastTrigger": {
       "type": "going_live",
@@ -41,11 +41,11 @@
     "activeUrl": "https://www.twitch.tv/shroud",
     "activePlatform": "twitch",
     "checkStatus": "offline",
-    "lastChecked": "2026-08-25T03:28:02.981Z",
+    "lastChecked": "2026-08-25T03:42:12.825Z",
     "lastError": null,
     "lastTrigger": null,
     "lastTriggeredAt": null,
-    "checkedUrlsCount": 1
+    "checkedUrlsCount": 2
   },
   "kc-xqc": {
     "streamerId": "kc-xqc",
@@ -55,9 +55,9 @@
     "checkStatus": "live",
     "cachedInfo": {
       "title": "🐕LIVE🐕CLICK🐕HERE🐕DRAMA🐕 NEWS🐕VIDEOS🐕GAMES🐕IMPORTANT🐕LIVE🐕QUICKLY🐕LOCK IN🐕PULL UP🐕BANG🐕",
-      "game": "Codenames",
-      "category": "Codenames",
-      "viewerCount": 6896,
+      "game": "Jackbox Party Packs",
+      "category": "Jackbox Party Packs",
+      "viewerCount": 6929,
       "startTime": "2026-08-24T23:07:42.000Z",
       "liveTime": "2026-08-24T23:07:42.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -66,21 +66,21 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T03:28:09.893Z"
+      "cachedAt": "2026-08-25T03:42:19.966Z"
     },
-    "lastChecked": "2026-08-25T03:28:09.893Z",
+    "lastChecked": "2026-08-25T03:42:19.966Z",
     "lastError": null,
     "lastTrigger": {
-      "type": "going_live",
-      "label": "Going Live",
-      "message": "Went Live on KICK (changed from Offline)",
+      "type": "category_change",
+      "label": "Category Changed",
+      "message": "Category changed from \"PlateUp!\" to \"Jackbox Party Packs\"",
       "diff": {
-        "from": "Offline",
-        "to": "Live on KICK"
+        "from": "PlateUp!",
+        "to": "Jackbox Party Packs"
       },
-      "timestamp": "2026-08-25T02:46:02.979Z"
+      "timestamp": "2026-08-25T03:41:13.153Z"
     },
-    "lastTriggeredAt": "2026-08-25T02:46:02.979Z",
+    "lastTriggeredAt": "2026-08-25T03:41:13.153Z",
     "checkedUrlsCount": 1
   }
 }

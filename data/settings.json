@@ -11,8 +11,14 @@
   "overlayBounds": {
     "x": -70,
     "y": 796,
-    "width": 71,
+    "width": 74,
     "height": 688
+  },
+  "popupBounds": {
+    "x": 1506,
+    "y": 500,
+    "width": 340,
+    "height": 487
   },
   "streamers": [
     {
@@ -20,6 +26,7 @@
       "name": "Lofi Girl",
       "avatarImage": "",
       "customTag": "",
+      "snoozedUntil": null,
       "urls": [
         {
           "url": "https://www.youtube.com/@LofiGirl/live",
@@ -43,6 +50,7 @@
       "name": "Shroud",
       "avatarImage": "",
       "customTag": "",
+      "snoozedUntil": null,
       "urls": [
         {
           "url": "https://www.twitch.tv/shroud",
@@ -70,6 +78,7 @@
       "name": "xQc",
       "avatarImage": "",
       "customTag": "",
+      "snoozedUntil": null,
       "urls": [
         {
           "url": "https://kick.com/xqc",

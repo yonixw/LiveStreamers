@@ -87,6 +87,7 @@ const defaultSettings = {
     width: 280,
     height: 460,
   },
+  popupBounds: null,
   streamers: defaultStreamers,
 };
 
@@ -166,6 +167,10 @@ function normalizeStreamerConfig(streamer, index = 0) {
 
   const customTag =
     typeof streamer.customTag === "string" ? streamer.customTag.trim() : "";
+  const snoozedUntil =
+    typeof streamer.snoozedUntil === "string" && streamer.snoozedUntil.trim()
+      ? streamer.snoozedUntil.trim()
+      : null;
 
   return {
     id: streamer.id || `streamer-${Date.now()}-${index}`,
@@ -176,6 +181,7 @@ function normalizeStreamerConfig(streamer, index = 0) {
         ? streamer.avatarImage.trim()
         : "",
     customTag,
+    snoozedUntil,
     urls,
     triggers,
   };
@@ -240,6 +246,7 @@ function saveSettings(settings) {
       currentOpacity: settings.currentOpacity ?? 1.0,
       overlayVisible: settings.overlayVisible ?? true,
       overlayBounds: settings.overlayBounds || null,
+      popupBounds: settings.popupBounds || null,
       streamers: Array.isArray(settings.streamers)
         ? settings.streamers.map((s, idx) => normalizeStreamerConfig(s, idx))
         : defaultStreamers,
