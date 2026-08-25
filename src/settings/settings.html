@@ -107,7 +107,24 @@
 
                     <div class="appearance-group">
                         <div class="appearance-header">
-                            <span class="appearance-label">Avatar Alignment:</span>
+                            <span class="appearance-label">Text & Tag Font Size:</span>
+                            <span id="font-size-display" class="size-val-badge">12px</span>
+                        </div>
+                        <div class="size-controls-row">
+                            <div class="size-preset-buttons font-size-preset-buttons">
+                                <button type="button" class="btn-font-preset" data-size="10">Small (10px)</button>
+                                <button type="button" class="btn-font-preset" data-size="12">Normal (12px)</button>
+                                <button type="button" class="btn-font-preset" data-size="14">Large (14px)</button>
+                                <button type="button" class="btn-font-preset" data-size="16">XL (16px)</button>
+                            </div>
+                            <input type="range" id="font-size-slider" min="9" max="22" step="1" value="12"
+                                class="size-slider" />
+                        </div>
+                    </div>
+
+                    <div class="appearance-group full-width-group">
+                        <div class="appearance-header">
+                            <span class="appearance-label">Avatar & Tag Alignment:</span>
                         </div>
                         <div class="alignment-buttons-row">
                             <button type="button" id="btn-align-left" class="btn-align-toggle active" data-align="left">

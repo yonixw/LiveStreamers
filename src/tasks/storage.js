@@ -75,6 +75,7 @@ const defaultSettings = {
   sortBy: "last-triggered",
   avatarSize: 80,
   avatarAlignment: "left",
+  fontSize: 12,
   showNicknameTag: false,
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
@@ -229,6 +230,10 @@ function saveSettings(settings) {
           : settings.avatarAlignment === "center"
             ? "center"
             : "left",
+      fontSize:
+        typeof settings.fontSize === "number"
+          ? settings.fontSize
+          : parseInt(settings.fontSize, 10) || 12,
       showNicknameTag: settings.showNicknameTag ?? false,
       isAlwaysOnTop: settings.isAlwaysOnTop ?? true,
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,

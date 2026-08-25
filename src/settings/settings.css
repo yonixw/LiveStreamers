@@ -241,7 +241,8 @@ body {
   gap: 5px;
 }
 
-.btn-size-preset {
+.btn-size-preset,
+.btn-font-preset {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   color: var(--text-muted);
@@ -253,12 +254,14 @@ body {
   transition: all 0.15s;
 }
 
-.btn-size-preset:hover {
+.btn-size-preset:hover,
+.btn-font-preset:hover {
   border-color: var(--accent);
   color: var(--text-main);
 }
 
-.btn-size-preset.active {
+.btn-size-preset.active,
+.btn-font-preset.active {
   background: var(--accent);
   border-color: var(--accent);
   color: #ffffff;

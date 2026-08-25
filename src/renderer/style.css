@@ -6,6 +6,7 @@
 
 :root {
   --avatar-size: 80px;
+  --font-size-base: 12px;
 }
 
 html, body {
@@ -237,17 +238,15 @@ body {
 /* Nickname / Custom Tag (White text on 50% transparent black tag) */
 .avatar-nickname-tag {
   position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -5px;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   color: #ffffff;
-  font-size: 0.62rem;
+  font-size: calc(var(--font-size-base, 12px) * 0.82);
   font-weight: 700;
-  padding: 1px 7px;
+  padding: 1px 6px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.02em;
   z-index: 12;
@@ -257,17 +256,36 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition: all 0.2s ease;
+}
+
+/* Align Nickname Tag according to container alignment */
+.avatars-container.align-left .avatar-nickname-tag {
+  left: -2px;
+  right: auto;
+  transform: none;
+}
+
+.avatars-container.align-right .avatar-nickname-tag {
+  right: -2px;
+  left: auto;
+  transform: none;
+}
+
+.avatars-container.align-center .avatar-nickname-tag {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
 }
 
 /* Viewer Count Tag on Avatar */
 .avatar-viewer-tag {
   position: absolute;
   bottom: -4px;
-  right: -4px;
   background: rgba(15, 23, 42, 0.92);
   border: 1.5px solid #22c55e;
   color: #4ade80;
-  font-size: 0.62rem;
+  font-size: calc(var(--font-size-base, 12px) * 0.82);
   font-weight: 800;
   padding: 1px 5px;
   border-radius: 999px;
@@ -279,6 +297,26 @@ body {
   display: flex;
   align-items: center;
   gap: 3px;
+  transition: all 0.2s ease;
+}
+
+/* Align Viewer Count Tag according to container alignment */
+.avatars-container.align-left .avatar-viewer-tag {
+  left: -2px;
+  right: auto;
+  transform: none;
+}
+
+.avatars-container.align-right .avatar-viewer-tag {
+  right: -2px;
+  left: auto;
+  transform: none;
+}
+
+.avatars-container.align-center .avatar-viewer-tag {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
 }
 
 .avatar-viewer-tag.tag-offline {
@@ -317,7 +355,7 @@ body {
   align-items: baseline;
   width: 100%;
   overflow: hidden;
-  font-size: 0.74rem;
+  font-size: var(--font-size-base, 12px);
   font-weight: 700;
   color: #f8fafc;
   line-height: 1.25;
@@ -352,7 +390,7 @@ body {
   align-items: baseline;
   width: 100%;
   overflow: hidden;
-  font-size: 0.68rem;
+  font-size: calc(var(--font-size-base, 12px) * 0.9);
   font-weight: 600;
   color: #4ade80;
   line-height: 1.2;

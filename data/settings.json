@@ -2,16 +2,17 @@
   "sortBy": "last-triggered",
   "avatarSize": 70,
   "avatarAlignment": "left",
+  "fontSize": 12,
   "showNicknameTag": true,
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": -82,
-    "y": 1086,
-    "width": 83,
-    "height": 398
+    "x": -70,
+    "y": 796,
+    "width": 71,
+    "height": 688
   },
   "streamers": [
     {

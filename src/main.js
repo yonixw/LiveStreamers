@@ -47,6 +47,7 @@ const state = {
   sortBy: persistedSettings.sortBy || "last-triggered",
   avatarSize: persistedSettings.avatarSize || 80,
   avatarAlignment: persistedSettings.avatarAlignment || "left",
+  fontSize: persistedSettings.fontSize || 12,
   showNicknameTag: persistedSettings.showNicknameTag ?? false,
   isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
@@ -653,6 +654,16 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
   if (typeof partialSettings.avatarAlignment === "string") {
     if (["left", "right", "center"].includes(partialSettings.avatarAlignment)) {
       state.avatarAlignment = partialSettings.avatarAlignment;
+    }
+  }
+
+  if (
+    typeof partialSettings.fontSize === "number" ||
+    typeof partialSettings.fontSize === "string"
+  ) {
+    const fsize = parseInt(partialSettings.fontSize, 10);
+    if (!isNaN(fsize) && fsize >= 8 && fsize <= 32) {
+      state.fontSize = fsize;
     }
   }
 

@@ -6,6 +6,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const avatarSizeSlider = document.getElementById("avatar-size-slider");
   const avatarSizeDisplay = document.getElementById("avatar-size-display");
   const sizePresetButtons = document.querySelectorAll(".btn-size-preset");
+  const fontSizeSlider = document.getElementById("font-size-slider");
+  const fontSizeDisplay = document.getElementById("font-size-display");
+  const fontPresetButtons = document.querySelectorAll(".btn-font-preset");
   const btnAlignLeft = document.getElementById("btn-align-left");
   const btnAlignRight = document.getElementById("btn-align-right");
 
@@ -1054,6 +1057,55 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
+  // Font Size Handlers
+  function updateFontSizeUI(size) {
+    const num = parseInt(size, 10) || 12;
+    if (fontSizeDisplay) fontSizeDisplay.textContent = `${num}px`;
+    if (fontSizeSlider) fontSizeSlider.value = String(num);
+
+    fontPresetButtons.forEach((btn) => {
+      const presetSize = parseInt(btn.getAttribute("data-size"), 10);
+      if (presetSize === num) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+  }
+
+  function saveFontSize(size) {
+    const num = Math.max(8, Math.min(32, parseInt(size, 10) || 12));
+    updateFontSizeUI(num);
+    if (window.electronAPI && window.electronAPI.updateSettings) {
+      window.electronAPI.updateSettings({ fontSize: num });
+      appendLog(`Font size updated to: ${num}px`, "info", "Settings");
+    }
+  }
+
+  if (fontSizeSlider) {
+    fontSizeSlider.addEventListener("input", (e) => {
+      const size = parseInt(e.target.value, 10);
+      if (fontSizeDisplay) fontSizeDisplay.textContent = `${size}px`;
+      fontPresetButtons.forEach((btn) => {
+        btn.classList.toggle(
+          "active",
+          parseInt(btn.getAttribute("data-size"), 10) === size,
+        );
+      });
+    });
+
+    fontSizeSlider.addEventListener("change", (e) => {
+      saveFontSize(e.target.value);
+    });
+  }
+
+  fontPresetButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const size = btn.getAttribute("data-size");
+      saveFontSize(size);
+    });
+  });
+
   // Avatar Alignment Handlers
   function updateAlignmentUI(align) {
     const isRight = align === "right";
@@ -1163,6 +1215,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (settings.avatarSize) {
       updateAvatarSizeUI(settings.avatarSize);
+    }
+
+    if (settings.fontSize) {
+      updateFontSizeUI(settings.fontSize);
     }
 
     if (settings.avatarAlignment) {

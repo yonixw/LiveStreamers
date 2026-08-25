@@ -70,13 +70,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `file:///${trimmed.replace(/\\/g, "/")}`;
   }
 
-  // Apply layout settings (avatar size, alignment, nickname tag)
+  // Apply layout settings (avatar size, alignment, font size, nickname tag)
   function applyLayoutSettings(settings) {
     if (!settings) return;
 
     if (settings.avatarSize) {
       const size = parseInt(settings.avatarSize, 10) || 80;
       document.documentElement.style.setProperty("--avatar-size", `${size}px`);
+    }
+
+    if (settings.fontSize) {
+      const fsize = parseInt(settings.fontSize, 10) || 12;
+      document.documentElement.style.setProperty(
+        "--font-size-base",
+        `${fsize}px`,
+      );
     }
 
     if (typeof settings.showNicknameTag === "boolean") {
