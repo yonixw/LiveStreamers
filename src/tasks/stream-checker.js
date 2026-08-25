@@ -1,5 +1,5 @@
 const path = require("path");
-const { getStreamMetadata } = require("./yt-dlp-utils");
+const { getStreamMetadata, cleanStreamTitle } = require("./yt-dlp-utils");
 
 /**
  * Detects the streaming platform from a given URL.
@@ -92,8 +92,11 @@ async function checkSingleUrlLive(url, streamerName = "Streamer") {
 
     let cachedInfo = null;
     if (isLive && metadata) {
+      const cleanTitle =
+        cleanStreamTitle(metadata.title) || `${streamerName} is Live!`;
+
       cachedInfo = {
-        title: metadata.title || `${streamerName} is Live!`,
+        title: cleanTitle,
         game: metadata.game || metadata.category || null,
         category: metadata.category || metadata.game || null,
         viewerCount: metadata.viewerCount ?? null,
@@ -182,10 +185,10 @@ function evaluateTriggers(streamer, current, previous = null) {
 
   // If both current and previous were live, check in-stream triggers
   if (current.isLive && prev.isLive) {
-    // 2. Stream Title Change Trigger
+    // 2. Stream Title Change Trigger (comparing cleaned titles)
     if (triggers.titleChange !== false) {
-      const prevTitle = (prevInfo.title || "").trim();
-      const currTitle = (currInfo.title || "").trim();
+      const prevTitle = cleanStreamTitle(prevInfo.title || "") || "";
+      const currTitle = cleanStreamTitle(currInfo.title || "") || "";
       if (prevTitle && currTitle && prevTitle !== currTitle) {
         return {
           type: "title_change",

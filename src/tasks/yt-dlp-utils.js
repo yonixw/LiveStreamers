@@ -46,7 +46,6 @@ function getCacheDir(customCacheDir) {
   if (customCacheDir) {
     return path.resolve(customCacheDir);
   }
-  // Default to ./cache in the project workspace
   return path.resolve(process.cwd(), "cache");
 }
 
@@ -117,6 +116,37 @@ async function getYtDlpInstance(options = {}) {
 }
 
 /**
+ * Cleans dynamic trailing timestamps / date strings automatically added by yt-dlp to live stream titles.
+ * E.g. "lofi hip hop radio 📚 beats to relax/study to 2026-08-25 04:35" -> "lofi hip hop radio 📚 beats to relax/study to"
+ * @param {string|null|undefined} rawTitle
+ * @returns {string|null} Clean title
+ */
+function cleanStreamTitle(rawTitle) {
+  if (!rawTitle || typeof rawTitle !== "string") return null;
+  let cleaned = rawTitle.trim();
+
+  // 1. Remove trailing date + optional time (e.g. " 2026-08-25 04:35:12" or " 2026-08-25 04:35" or " 2026-08-25")
+  cleaned = cleaned.replace(
+    /\s+[-–—]?\s*\d{4}[-/.]\d{2}[-/.]\d{2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)?\s*$/i,
+    "",
+  );
+
+  // 2. Remove bracketed / parenthesized date times (e.g. " [2026-08-25 04:35]" or " (2026-08-25)")
+  cleaned = cleaned.replace(
+    /\s*[\(\[]\d{4}[-/.]\d{2}[-/.]\d{2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)?[\)\]]\s*$/i,
+    "",
+  );
+
+  // 3. Remove trailing time stamp only (e.g. " - 04:35:12")
+  cleaned = cleaned.replace(
+    /\s+[-–—]\s*\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?\s*$/i,
+    "",
+  );
+
+  return cleaned.trim() || rawTitle.trim();
+}
+
+/**
  * Formats a timestamp/epoch to ISO 8601 string or returns null.
  * @param {number|string|null|undefined} value
  * @returns {string|null}
@@ -126,14 +156,12 @@ function formatIsoTime(value) {
     return null;
   }
   if (typeof value === "number") {
-    // If seconds timestamp
     if (value < 10000000000) {
       return new Date(value * 1000).toISOString();
     }
     return new Date(value).toISOString();
   }
   if (typeof value === "string") {
-    // Check if numeric string
     const num = Number(value);
     if (!isNaN(num) && num > 0) {
       if (num < 10000000000) {
@@ -177,14 +205,14 @@ function extractStreamMetadata(info) {
     };
   }
 
-  // Handle single item in array or playlist
   const item =
     Array.isArray(info.entries) && info.entries.length > 0
       ? info.entries[0]
       : info;
 
-  // Title
-  const title = item.title ?? item.fulltitle ?? null;
+  // Clean dynamic timestamp from title
+  const rawTitle = item.title ?? item.fulltitle ?? null;
+  const title = cleanStreamTitle(rawTitle);
 
   // Video ID
   const videoId = item.id ?? null;
@@ -286,7 +314,6 @@ async function getRawStreamInfo(targetUrl, options = {}) {
   const ytDlp = await getYtDlpInstance(options);
   const extraArgs = options.args || [];
 
-  // Arguments optimized for fast metadata retrieval without downloading video
   const defaultArgs = [
     targetUrl,
     "--dump-single-json",
@@ -302,7 +329,6 @@ async function getRawStreamInfo(targetUrl, options = {}) {
   try {
     return JSON.parse(output);
   } catch (err) {
-    // If output contains multiple JSON lines, take first valid JSON
     const lines = output.trim().split(/\r?\n/);
     for (const line of lines) {
       try {
@@ -333,6 +359,7 @@ module.exports = {
   getCacheDir,
   getBinaryPath,
   ensureBinary,
+  cleanStreamTitle,
   getYtDlpInstance,
   formatIsoTime,
   extractStreamMetadata,
