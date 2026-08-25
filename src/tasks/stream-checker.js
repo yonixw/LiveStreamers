@@ -3,7 +3,7 @@ const { getStreamMetadata } = require("./yt-dlp-utils");
 
 /**
  * Detects the streaming platform from a given URL.
- * Supports Kick, Twitch, and YouTube.
+ * Supports Kick, Twitch, YouTube, and other web streams.
  * @param {string} url
  * @returns {"kick" | "twitch" | "youtube" | "other"}
  */
@@ -71,24 +71,18 @@ function extractStreamerName(url) {
 }
 
 /**
- * Performs a single live check for a streamer URL using yt-dlp-utils.
- * @param {object} streamer - Streamer object { id, url, name, platform }
- * @returns {Promise<object>} Check result with isLive and cachedInfo
+ * Performs a single live check for a single URL using yt-dlp-utils.
+ * @param {string} url
+ * @param {string} [streamerName]
+ * @returns {Promise<object>}
  */
-async function checkStreamerLiveTask(streamer) {
-  const timestamp = new Date().toLocaleTimeString();
-  const streamerName = streamer.name || extractStreamerName(streamer.url);
-  const platform = streamer.platform || detectPlatform(streamer.url);
-  const targetUrl = normalizeUrl(streamer.url);
-
-  console.log(
-    `[${timestamp}] [Background Live Check] Checking ${platform.toUpperCase()} streamer "${streamerName}" (${targetUrl})...`,
-  );
+async function checkSingleUrlLive(url, streamerName = "Streamer") {
+  const targetUrl = normalizeUrl(url);
+  const platform = detectPlatform(targetUrl);
 
   try {
     const metadata = await getStreamMetadata(targetUrl);
 
-    // Determine live status
     const isLive = Boolean(
       metadata &&
       (metadata.isLive === true ||
@@ -117,19 +111,12 @@ async function checkStreamerLiveTask(streamer) {
       };
     }
 
-    console.log(
-      `[${timestamp}] [Background Live Check] Result for "${streamerName}": ${
-        isLive
-          ? `LIVE (${cachedInfo.viewerCount ?? "?"} viewers - ${cachedInfo.title})`
-          : "OFFLINE"
-      }`,
-    );
-
     return {
       success: true,
       isLive,
       cachedInfo,
-      lastChecked: new Date().toISOString(),
+      url: targetUrl,
+      platform,
       error: null,
     };
   } catch (err) {
@@ -140,38 +127,248 @@ async function checkStreamerLiveTask(streamer) {
       );
 
     if (isOfflineIndicator) {
-      console.log(
-        `[${timestamp}] [Background Live Check] "${streamerName}" is currently OFFLINE.`,
-      );
       return {
         success: true,
         isLive: false,
         cachedInfo: null,
-        lastChecked: new Date().toISOString(),
+        url: targetUrl,
+        platform,
         error: null,
       };
     }
-
-    console.warn(
-      `[${timestamp}] [Background Live Check] Warning/Error checking "${streamerName}": ${errMsg}`,
-    );
 
     return {
       success: false,
       isLive: false,
       cachedInfo: null,
-      lastChecked: new Date().toISOString(),
+      url: targetUrl,
+      platform,
       error: errMsg,
     };
   }
 }
 
 /**
- * Background Scheduler Class to check streamer links once a minute.
+ * Evaluates trigger rules against previous status and detects triggers.
+ * Triggers supported:
+ * 1. Going Live (offline -> live)
+ * 2. Stream Title Change (live -> new title)
+ * 3. Viewer count above X (and bigger than last status)
+ * 4. Category/Game change
+ *
+ * @param {object} streamer - Streamer config with triggers
+ * @param {object} current - Current check result
+ * @param {object} [previous] - Previous status record
+ * @returns {object|null} Fired trigger info or null
+ */
+function evaluateTriggers(streamer, current, previous = null) {
+  const triggers = streamer.triggers || {};
+  const prev = previous || {};
+  const prevInfo = prev.cachedInfo || {};
+  const currInfo = current.cachedInfo || {};
+  const nowIso = new Date().toISOString();
+
+  // 1. Going Live Trigger
+  if (triggers.goingLive !== false) {
+    if (!prev.isLive && current.isLive) {
+      return {
+        type: "going_live",
+        label: "Going Live",
+        message: `${streamer.name || "Streamer"} went live on ${current.activePlatform.toUpperCase()}!`,
+        timestamp: nowIso,
+      };
+    }
+  }
+
+  // If both current and previous were live, check in-stream triggers
+  if (current.isLive && prev.isLive) {
+    // 2. Stream Title Change Trigger
+    if (triggers.titleChange !== false) {
+      const prevTitle = (prevInfo.title || "").trim();
+      const currTitle = (currInfo.title || "").trim();
+      if (prevTitle && currTitle && prevTitle !== currTitle) {
+        return {
+          type: "title_change",
+          label: "Title Changed",
+          message: `Title: "${currTitle}"`,
+          timestamp: nowIso,
+        };
+      }
+    }
+
+    // 3. Category / Game Change Trigger
+    if (triggers.categoryChange !== false) {
+      const prevCat = (prevInfo.game || prevInfo.category || "").trim();
+      const currCat = (currInfo.game || currInfo.category || "").trim();
+      if (
+        prevCat &&
+        currCat &&
+        prevCat.toLowerCase() !== currCat.toLowerCase()
+      ) {
+        return {
+          type: "category_change",
+          label: "Category Changed",
+          message: `Switched to: ${currCat}`,
+          timestamp: nowIso,
+        };
+      }
+    }
+
+    // 4. Viewer count above X (and bigger than last status)
+    if (triggers.viewerCountEnabled) {
+      const threshold = Number(triggers.viewerCountThreshold) || 0;
+      const currViewers = Number(currInfo.viewerCount) || 0;
+      const prevViewers = Number(prevInfo.viewerCount) || 0;
+
+      if (currViewers >= threshold && currViewers > prevViewers) {
+        return {
+          type: "viewer_spike",
+          label: "Viewer Spike",
+          message: `Viewers surged to ${currViewers.toLocaleString()} (+${(currViewers - prevViewers).toLocaleString()})`,
+          timestamp: nowIso,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Checks a streamer across their list of URLs in order.
+ * SHORT-CIRCUITS immediately upon finding the first live URL.
+ *
+ * @param {object} streamer - Streamer config with urls array
+ * @param {object} [previousStatus] - Previous status record
+ * @returns {Promise<object>} Full status result
+ */
+async function checkStreamerLiveTask(streamer, previousStatus = null) {
+  const timestamp = new Date().toLocaleTimeString();
+  const streamerName = streamer.name || "Streamer";
+  const urls =
+    Array.isArray(streamer.urls) && streamer.urls.length > 0
+      ? streamer.urls
+      : streamer.url
+        ? [streamer.url]
+        : [];
+
+  if (urls.length === 0) {
+    return {
+      success: false,
+      streamerId: streamer.id,
+      isLive: false,
+      activeUrl: "",
+      activePlatform: "other",
+      checkedUrlsCount: 0,
+      cachedInfo: null,
+      lastChecked: new Date().toISOString(),
+      lastError: "No URLs configured for this streamer",
+      lastTrigger: previousStatus?.lastTrigger || null,
+      lastTriggeredAt: previousStatus?.lastTriggeredAt || null,
+    };
+  }
+
+  console.log(
+    `[${timestamp}] [Background Live Check] Checking streamer "${streamerName}" (${urls.length} configured URL${urls.length > 1 ? "s" : ""})...`,
+  );
+
+  let firstLiveResult = null;
+  let lastCheckedUrl = urls[0];
+  let lastPlatform = detectPlatform(urls[0]);
+  let accumulatedErrors = [];
+  let checkedCount = 0;
+
+  // Check each URL sequentially, stopping at first live stream
+  for (let i = 0; i < urls.length; i++) {
+    const rawUrl = urls[i];
+    checkedCount++;
+    const plat = detectPlatform(rawUrl);
+    console.log(
+      `[${timestamp}] [Background Live Check] [${streamerName}] [Link ${i + 1}/${urls.length}] Checking ${plat.toUpperCase()}: ${rawUrl}...`,
+    );
+
+    const singleResult = await checkSingleUrlLive(rawUrl, streamerName);
+    lastCheckedUrl = singleResult.url;
+    lastPlatform = singleResult.platform;
+
+    if (singleResult.isLive) {
+      console.log(
+        `[${timestamp}] [Background Live Check] [${streamerName}] Link ${i + 1} (${plat.toUpperCase()}) is LIVE! Short-circuiting remaining ${urls.length - i - 1} link(s).`,
+      );
+      firstLiveResult = singleResult;
+      break; // Short-circuit: no need to check other links
+    }
+
+    if (!singleResult.success && singleResult.error) {
+      accumulatedErrors.push(`${plat}: ${singleResult.error}`);
+    }
+  }
+
+  const isLive = Boolean(firstLiveResult && firstLiveResult.isLive);
+  const activeUrl = firstLiveResult
+    ? firstLiveResult.url
+    : normalizeUrl(urls[0]);
+  const activePlatform = firstLiveResult
+    ? firstLiveResult.platform
+    : detectPlatform(urls[0]);
+  const cachedInfo =
+    isLive && firstLiveResult ? firstLiveResult.cachedInfo : null;
+  const nowIso = new Date().toISOString();
+
+  // Construct current check result
+  const currentResult = {
+    streamerId: streamer.id,
+    success: true,
+    isLive,
+    activeUrl,
+    activePlatform,
+    checkedUrlsCount: checkedCount,
+    cachedInfo,
+    lastChecked: nowIso,
+    lastError: isLive
+      ? null
+      : accumulatedErrors.length > 0
+        ? accumulatedErrors.join(" | ")
+        : null,
+  };
+
+  // Trigger evaluation
+  const firedTrigger = evaluateTriggers(
+    streamer,
+    currentResult,
+    previousStatus,
+  );
+  let lastTrigger = previousStatus?.lastTrigger || null;
+  let lastTriggeredAt = previousStatus?.lastTriggeredAt || null;
+
+  if (firedTrigger) {
+    lastTrigger = firedTrigger;
+    lastTriggeredAt = firedTrigger.timestamp;
+    console.log(
+      `[${timestamp}] [Trigger Alert] [${streamerName}] ⚡ ${firedTrigger.label}: ${firedTrigger.message}`,
+    );
+  }
+
+  currentResult.lastTrigger = lastTrigger;
+  currentResult.lastTriggeredAt = lastTriggeredAt;
+  currentResult.newTriggerFired = Boolean(firedTrigger);
+
+  return currentResult;
+}
+
+/**
+ * Background Scheduler Class to check streamer links periodically.
  */
 class StreamLiveCheckerService {
-  constructor({ getStreamers, onStatusUpdate, onLog, intervalMs = 60000 }) {
+  constructor({
+    getStreamers,
+    getStatusMap,
+    onStatusUpdate,
+    onLog,
+    intervalMs = 60000,
+  }) {
     this.getStreamers = getStreamers;
+    this.getStatusMap = getStatusMap;
     this.onStatusUpdate = onStatusUpdate;
     this.onLog = onLog || console.log;
     this.intervalMs = intervalMs;
@@ -181,20 +378,20 @@ class StreamLiveCheckerService {
   }
 
   /**
-   * Starts the background checking loop (runs once a minute).
+   * Starts the background checking loop.
    */
   start() {
     if (this.isRunning) return;
     this.isRunning = true;
     this.onLog(
       "StreamChecker",
-      `Background Live Checker started (Interval: ${this.intervalMs / 1000}s per link).`,
+      `Background Live Checker started (Interval: ${this.intervalMs / 1000}s).`,
     );
 
-    // Run initial check immediately
+    // Initial check
     this.checkAll();
 
-    // Schedule regular 1-minute interval checks
+    // Regular interval
     this.timer = setInterval(() => {
       this.checkAll();
     }, this.intervalMs);
@@ -222,19 +419,18 @@ class StreamLiveCheckerService {
     }
 
     for (const streamer of streamers) {
-      if (!streamer || !streamer.url) continue;
-      // Stagger or run checks without duplicate active checks
+      if (!streamer || !streamer.id) continue;
       this.checkSingleStreamer(streamer);
     }
   }
 
   /**
-   * Checks a single streamer and notifies callback.
+   * Checks a single streamer and notifies callback with status update.
    * @param {object} streamer
    * @returns {Promise<object>}
    */
   async checkSingleStreamer(streamer) {
-    const streamerId = streamer.id || streamer.url;
+    const streamerId = streamer.id;
     if (this.activeChecks.has(streamerId)) {
       return;
     }
@@ -248,19 +444,19 @@ class StreamLiveCheckerService {
     }
 
     try {
-      const result = await checkStreamerLiveTask(streamer);
+      const statusMap = this.getStatusMap ? this.getStatusMap() : {};
+      const previousStatus = statusMap[streamerId] || null;
+
+      const result = await checkStreamerLiveTask(streamer, previousStatus);
+
       if (this.onStatusUpdate) {
         this.onStatusUpdate({
-          streamerId,
+          ...result,
           checkStatus: result.isLive
             ? "live"
             : result.success
               ? "offline"
               : "error",
-          isLive: result.isLive,
-          cachedInfo: result.cachedInfo,
-          lastChecked: result.lastChecked,
-          lastError: result.error,
         });
       }
       return result;
@@ -284,6 +480,8 @@ module.exports = {
   detectPlatform,
   normalizeUrl,
   extractStreamerName,
+  checkSingleUrlLive,
+  evaluateTriggers,
   checkStreamerLiveTask,
   StreamLiveCheckerService,
 };

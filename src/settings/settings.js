@@ -1,18 +1,41 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  // UI Elements - Form & Streamers List
-  const addStreamerForm = document.getElementById("add-streamer-form");
-  const newStreamerUrlInput = document.getElementById("new-streamer-url");
-  const newStreamerNameInput = document.getElementById("new-streamer-name");
-  const newStreamerPlatformSelect = document.getElementById(
-    "new-streamer-platform",
+  // Sorting Strategy UI
+  const sortRadios = document.querySelectorAll('input[name="sort-order"]');
+
+  // Streamer Form Elements
+  const streamerForm = document.getElementById("streamer-form");
+  const editStreamerIdInput = document.getElementById("edit-streamer-id");
+  const formSectionTitle = document.getElementById("form-section-title");
+  const btnCancelEdit = document.getElementById("btn-cancel-edit");
+  const btnSubmitText = document.getElementById("btn-submit-text");
+
+  const streamerNameInput = document.getElementById("streamer-name-input");
+  const streamerAvatarInput = document.getElementById("streamer-avatar-input");
+  const btnBrowseAvatar = document.getElementById("btn-browse-avatar");
+  const avatarFormPreview = document.getElementById("avatar-form-preview");
+  const avatarPreviewFallback = document.getElementById(
+    "avatar-preview-fallback",
   );
+  const avatarPreviewImg = document.getElementById("avatar-preview-img");
+
+  const urlsInputList = document.getElementById("urls-input-list");
+  const btnAddUrlRow = document.getElementById("btn-add-url-row");
+
+  // Trigger Form Elements
+  const trigGoingLive = document.getElementById("trig-going-live");
+  const trigTitleChange = document.getElementById("trig-title-change");
+  const trigCategoryChange = document.getElementById("trig-category-change");
+  const trigViewerEnabled = document.getElementById("trig-viewer-enabled");
+  const trigViewerThreshold = document.getElementById("trig-viewer-threshold");
+
+  // Streamers List Elements
   const streamersListEl = document.getElementById("streamers-list");
   const streamerCountLabel = document.getElementById("streamer-count-label");
   const btnResetDefaults = document.getElementById("btn-reset-defaults");
   const btnCheckAll = document.getElementById("btn-check-all");
   const presetButtons = document.querySelectorAll(".btn-preset");
 
-  // UI Elements - Controls
+  // Window Controls
   const chkShowOverlay = document.getElementById("chk-show-overlay");
   const chkAlwaysOnTop = document.getElementById("chk-always-on-top");
   const chkClickThrough = document.getElementById("chk-click-through");
@@ -26,26 +49,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   const logTerminal = document.getElementById("log-terminal");
 
   let localStreamers = [];
-  // Track pet task states for each user: null | 'running' | 'success' | 'error'
   const petTaskStates = new Map();
 
-  // Logging helper: logs to UI log terminal, browser DevTools console, and Node CLI terminal
+  // Logging helper
   function appendLog(message, type = "info", tag = "LiveCheck") {
     const timestamp = new Date().toLocaleTimeString();
 
-    // 1. Browser DevTools console
     if (type === "error") {
       console.error(`[${tag} ${timestamp}]`, message);
     } else {
       console.log(`[${tag} ${timestamp}]`, message);
     }
 
-    // 2. Main process Node CLI terminal via IPC
     if (window.electronAPI && window.electronAPI.logTerminal) {
       window.electronAPI.logTerminal(tag, message, type === "error");
     }
 
-    // 3. In-app UI log terminal
     if (logTerminal) {
       const entry = document.createElement("div");
       entry.className = `log-entry log-${type}`;
@@ -70,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Clear log terminal
+  // Clear logs
   if (btnClearLogs) {
     btnClearLogs.addEventListener("click", () => {
       if (logTerminal) {
@@ -112,76 +131,362 @@ document.addEventListener("DOMContentLoaded", async () => {
     return "other";
   }
 
-  // Format number of viewers (e.g. 1.5k)
+  // Format viewer count
   function formatViewerCount(num) {
     if (num === null || num === undefined) return "";
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-    return String(num);
+    return Number(num).toLocaleString();
   }
 
-  // Platform badges styling
-  function getPlatformBadge(platform) {
-    const plat = (platform || "other").toLowerCase();
+  function getPlatformPillClass(plat) {
     switch (plat) {
       case "youtube":
-        return `<span class="platform-pill pill-youtube">YouTube</span>`;
+        return "pill-youtube";
       case "twitch":
-        return `<span class="platform-pill pill-twitch">Twitch</span>`;
+        return "pill-twitch";
       case "kick":
-        return `<span class="platform-pill pill-kick">Kick</span>`;
+        return "pill-kick";
       default:
-        return `<span class="platform-pill pill-other">Web</span>`;
+        return "pill-other";
     }
   }
 
-  // Pet Avatar Task - Executed on Node.js Side
-  async function runPetAvatarTask(userName, itemElement) {
-    petTaskStates.set(userName, "running");
-    updateItemPetTaskUI(itemElement, userName);
+  // Avatar Preview Updater
+  function updateAvatarPreview() {
+    const name = streamerNameInput.value.trim();
+    let imgPath = streamerAvatarInput.value.trim();
+
+    avatarPreviewFallback.textContent = getInitials(name);
+
+    if (imgPath) {
+      if (
+        !/^https?:\/\//i.test(imgPath) &&
+        !imgPath.startsWith("data:") &&
+        !imgPath.startsWith("file://")
+      ) {
+        // Local path
+        imgPath = `file:///${imgPath.replace(/\\/g, "/")}`;
+      }
+      avatarPreviewImg.src = imgPath;
+      avatarPreviewImg.style.display = "block";
+      avatarPreviewFallback.style.display = "none";
+
+      avatarPreviewImg.onerror = () => {
+        avatarPreviewImg.style.display = "none";
+        avatarPreviewFallback.style.display = "block";
+      };
+    } else {
+      avatarPreviewImg.style.display = "none";
+      avatarPreviewFallback.style.display = "block";
+    }
+  }
+
+  streamerNameInput.addEventListener("input", updateAvatarPreview);
+  streamerAvatarInput.addEventListener("input", updateAvatarPreview);
+
+  // Browse local avatar image button
+  if (btnBrowseAvatar) {
+    btnBrowseAvatar.addEventListener("click", async () => {
+      if (window.electronAPI && window.electronAPI.selectAvatarImage) {
+        const filePath = await window.electronAPI.selectAvatarImage();
+        if (filePath) {
+          streamerAvatarInput.value = filePath;
+          updateAvatarPreview();
+        }
+      }
+    });
+  }
+
+  // URL builder row management
+  function createUrlRow(url = "") {
+    const row = document.createElement("div");
+    row.className = "url-input-row";
+
+    const orderChip = document.createElement("span");
+    orderChip.className = "url-order-chip";
+    orderChip.textContent = "#1";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder =
+      "e.g. https://kick.com/streamer or https://youtube.com/@channel/live";
+    input.value = url;
+    input.required = true;
+
+    const platTag = document.createElement("span");
+    platTag.className = "url-platform-tag pill-other";
+    platTag.textContent = "URL";
+
+    function updatePlatTag() {
+      const plat = detectPlatform(input.value);
+      platTag.className = `url-platform-tag ${getPlatformPillClass(plat)}`;
+      platTag.textContent = plat.toUpperCase();
+    }
+    input.addEventListener("input", updatePlatTag);
+    updatePlatTag();
+
+    const actions = document.createElement("div");
+    actions.className = "url-row-actions";
+
+    const btnUp = document.createElement("button");
+    btnUp.type = "button";
+    btnUp.className = "btn-url-order";
+    btnUp.title = "Check this platform earlier (Move Up)";
+    btnUp.innerHTML = "▲";
+    btnUp.addEventListener("click", () => {
+      const prev = row.previousElementSibling;
+      if (prev) {
+        urlsInputList.insertBefore(row, prev);
+        updateUrlsOrderChips();
+      }
+    });
+
+    const btnDown = document.createElement("button");
+    btnDown.type = "button";
+    btnDown.className = "btn-url-order";
+    btnDown.title = "Check this platform later (Move Down)";
+    btnDown.innerHTML = "▼";
+    btnDown.addEventListener("click", () => {
+      const next = row.nextElementSibling;
+      if (next) {
+        urlsInputList.insertBefore(next, row);
+        updateUrlsOrderChips();
+      }
+    });
+
+    const btnDel = document.createElement("button");
+    btnDel.type = "button";
+    btnDel.className = "btn-url-remove";
+    btnDel.title = "Remove this URL";
+    btnDel.innerHTML = "✕";
+    btnDel.addEventListener("click", () => {
+      if (urlsInputList.children.length > 1) {
+        row.remove();
+        updateUrlsOrderChips();
+      } else {
+        input.value = "";
+        updatePlatTag();
+      }
+    });
+
+    actions.appendChild(btnUp);
+    actions.appendChild(btnDown);
+    actions.appendChild(btnDel);
+
+    row.appendChild(orderChip);
+    row.appendChild(input);
+    row.appendChild(platTag);
+    row.appendChild(actions);
+
+    return row;
+  }
+
+  function updateUrlsOrderChips() {
+    Array.from(urlsInputList.children).forEach((row, idx) => {
+      const chip = row.querySelector(".url-order-chip");
+      if (chip) chip.textContent = `#${idx + 1}`;
+      const btnUp = row.querySelector(
+        ".url-row-actions .btn-url-order:first-child",
+      );
+      const btnDown = row.querySelector(
+        ".url-row-actions .btn-url-order:nth-child(2)",
+      );
+      if (btnUp) btnUp.disabled = idx === 0;
+      if (btnDown) btnDown.disabled = idx === urlsInputList.children.length - 1;
+    });
+  }
+
+  function setFormUrls(urls = []) {
+    urlsInputList.innerHTML = "";
+    if (urls.length === 0) {
+      urlsInputList.appendChild(createUrlRow(""));
+    } else {
+      urls.forEach((u) => urlsInputList.appendChild(createUrlRow(u)));
+    }
+    updateUrlsOrderChips();
+  }
+
+  function getFormUrls() {
+    const inputs = urlsInputList.querySelectorAll("input");
+    return Array.from(inputs)
+      .map((inp) => inp.value.trim())
+      .filter((val) => val.length > 0);
+  }
+
+  if (btnAddUrlRow) {
+    btnAddUrlRow.addEventListener("click", () => {
+      urlsInputList.appendChild(createUrlRow(""));
+      updateUrlsOrderChips();
+      const lastInput = urlsInputList.lastElementChild.querySelector("input");
+      if (lastInput) lastInput.focus();
+    });
+  }
+
+  // Reset form to Add mode
+  function resetStreamerForm() {
+    editStreamerIdInput.value = "";
+    formSectionTitle.textContent = "Add Streamer Profile";
+    btnSubmitText.textContent = "Save Streamer";
+    btnCancelEdit.style.display = "none";
+
+    streamerNameInput.value = "";
+    streamerAvatarInput.value = "";
+    setFormUrls([""]);
+
+    trigGoingLive.checked = true;
+    trigTitleChange.checked = true;
+    trigCategoryChange.checked = true;
+    trigViewerEnabled.checked = false;
+    trigViewerThreshold.value = "5000";
+
+    updateAvatarPreview();
+  }
+
+  // Populate form for Editing an existing streamer
+  function populateEditForm(streamer) {
+    if (!streamer) return;
+    editStreamerIdInput.value = streamer.id;
+    formSectionTitle.textContent = `Edit Streamer: ${streamer.name}`;
+    btnSubmitText.textContent = "Update Streamer";
+    btnCancelEdit.style.display = "inline-flex";
+
+    streamerNameInput.value = streamer.name || "";
+    streamerAvatarInput.value = streamer.avatarImage || "";
+    setFormUrls(streamer.urls || [streamer.url]);
+
+    const trig = streamer.triggers || {};
+    trigGoingLive.checked = trig.goingLive !== false;
+    trigTitleChange.checked = trig.titleChange !== false;
+    trigCategoryChange.checked = trig.categoryChange !== false;
+    trigViewerEnabled.checked = Boolean(trig.viewerCountEnabled);
+    trigViewerThreshold.value = String(trig.viewerCountThreshold || 5000);
+
+    updateAvatarPreview();
+    streamerForm.scrollIntoView({ behavior: "smooth" });
+  }
+
+  if (btnCancelEdit) {
+    btnCancelEdit.addEventListener("click", () => {
+      resetStreamerForm();
+    });
+  }
+
+  // Submit Streamer Form
+  streamerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = streamerNameInput.value.trim();
+    const avatarImage = streamerAvatarInput.value.trim();
+    const urls = getFormUrls();
+
+    if (!name || urls.length === 0) {
+      alert("Please provide a name and at least one stream URL.");
+      return;
+    }
+
+    const triggers = {
+      goingLive: trigGoingLive.checked,
+      titleChange: trigTitleChange.checked,
+      categoryChange: trigCategoryChange.checked,
+      viewerCountEnabled: trigViewerEnabled.checked,
+      viewerCountThreshold: Number(trigViewerThreshold.value) || 5000,
+    };
+
+    const editingId = editStreamerIdInput.value;
+
+    if (editingId) {
+      // Update in place
+      const updatedList = localStreamers.map((s) => {
+        if (s.id === editingId) {
+          return {
+            ...s,
+            name,
+            avatarImage,
+            urls,
+            triggers,
+          };
+        }
+        return s;
+      });
+
+      appendLog(
+        `Updated streamer "${name}" with ${urls.length} URLs.`,
+        "info",
+        "Streamer",
+      );
+      if (window.electronAPI && window.electronAPI.updateStreamers) {
+        const result = await window.electronAPI.updateStreamers(updatedList);
+        renderStreamersList(result);
+      }
+    } else {
+      // Add new
+      appendLog(
+        `Adding new streamer "${name}" with ${urls.length} check URLs...`,
+        "info",
+        "Streamer",
+      );
+      if (window.electronAPI && window.electronAPI.addStreamer) {
+        const result = await window.electronAPI.addStreamer({
+          name,
+          avatarImage,
+          urls,
+          triggers,
+        });
+        renderStreamersList(result);
+      }
+    }
+
+    resetStreamerForm();
+  });
+
+  // Pet Avatar Task
+  async function runPetAvatarTask(streamer, itemElement) {
+    const streamerName = streamer.name || "Streamer";
+    petTaskStates.set(streamer.id, "running");
+    updateItemPetTaskUI(itemElement, streamer.id);
 
     appendLog(
-      `[${userName}] Start Sleep - Dispatched to Node.js backend (2s async task)...`,
+      `[${streamerName}] Start Sleep - Dispatched to Node.js backend (2s async task)...`,
       "info",
       "PetTask",
     );
 
     try {
       if (window.electronAPI && window.electronAPI.runPetAvatarTask) {
-        const result = await window.electronAPI.runPetAvatarTask(userName);
-
+        const result = await window.electronAPI.runPetAvatarTask(streamerName);
         if (result.success) {
-          petTaskStates.set(userName, "success");
-          updateItemPetTaskUI(itemElement, userName);
+          petTaskStates.set(streamer.id, "success");
+          updateItemPetTaskUI(itemElement, streamer.id);
           appendLog(
-            `[${userName}] End Sleep - Success! [Node.js Crypto Random: ${result.cryptoRandom}]`,
+            `[${streamerName}] End Sleep - Success! [Node.js Crypto: ${result.cryptoRandom}]`,
             "success",
             "PetTask",
           );
         } else {
-          petTaskStates.set(userName, "error");
-          updateItemPetTaskUI(itemElement, userName);
+          petTaskStates.set(streamer.id, "error");
+          updateItemPetTaskUI(itemElement, streamer.id);
           appendLog(
-            `[${userName}] Error sleep - ${result.error} [Node.js Crypto Random: ${result.cryptoRandom}]`,
+            `[${streamerName}] Error sleep - ${result.error}`,
             "error",
             "PetTask",
           );
         }
       }
     } catch (err) {
-      petTaskStates.set(userName, "error");
-      updateItemPetTaskUI(itemElement, userName);
+      petTaskStates.set(streamer.id, "error");
+      updateItemPetTaskUI(itemElement, streamer.id);
       appendLog(
-        `[${userName}] Error sleep - ${err.message}`,
+        `[${streamerName}] Error sleep - ${err.message}`,
         "error",
         "PetTask",
       );
     }
   }
 
-  function updateItemPetTaskUI(itemElement, userName) {
+  function updateItemPetTaskUI(itemElement, streamerId) {
     if (!itemElement) return;
-    const state = petTaskStates.get(userName);
+    const state = petTaskStates.get(streamerId);
     const petIndicatorEl = itemElement.querySelector(".pet-task-indicator");
     const petBtn = itemElement.querySelector(".btn-pet");
 
@@ -205,10 +510,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Check live status for single streamer
+  // Check single streamer live
   async function checkStreamerLive(streamer, itemElement) {
     appendLog(
-      `Checking ${streamer.name || streamer.url} via yt-dlp-utils...`,
+      `Checking ${streamer.name} across ${streamer.urls?.length || 1} URL(s)...`,
       "info",
       "LiveCheck",
     );
@@ -233,18 +538,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Render the list of streamers with full controls
+  // Move streamer up/down in manual order
+  async function moveStreamerOrder(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= localStreamers.length) return;
+
+    const reordered = [...localStreamers];
+    const temp = reordered[index];
+    reordered[index] = reordered[newIndex];
+    reordered[newIndex] = temp;
+
+    if (window.electronAPI && window.electronAPI.updateStreamers) {
+      const result = await window.electronAPI.updateStreamers(reordered);
+      renderStreamersList(result);
+    }
+  }
+
+  // Render Streamers List
   function renderStreamersList(streamers) {
     localStreamers = Array.isArray(streamers) ? streamers : [];
     const liveCount = localStreamers.filter((s) => s.isLive).length;
-    streamerCountLabel.textContent = `Streamers (${localStreamers.length}) • ${liveCount} Live`;
+    streamerCountLabel.textContent = `Configured Streamers (${localStreamers.length}) • ${liveCount} Live`;
     streamersListEl.innerHTML = "";
 
     if (localStreamers.length === 0) {
       const emptyLi = document.createElement("li");
       emptyLi.className = "empty-list-message";
-      emptyLi.textContent =
-        "No streamers added yet. Add a Kick, Twitch, or YouTube URL above.";
+      emptyLi.textContent = "No streamers added yet. Add streamer URLs above.";
       streamersListEl.appendChild(emptyLi);
       return;
     }
@@ -259,18 +579,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const avatarDiv = document.createElement("div");
       avatarDiv.className = "streamer-avatar-mini";
-      avatarDiv.textContent = getInitials(streamer.name || streamer.url);
 
-      // Distinct color hash
-      let hash = 0;
-      const strToHash = streamer.name || streamer.url || "streamer";
-      for (let i = 0; i < strToHash.length; i++) {
-        hash = strToHash.charCodeAt(i) + ((hash << 5) - hash);
+      let imgPath = streamer.avatarImage;
+      if (imgPath) {
+        if (
+          !/^https?:\/\//i.test(imgPath) &&
+          !imgPath.startsWith("data:") &&
+          !imgPath.startsWith("file://")
+        ) {
+          imgPath = `file:///${imgPath.replace(/\\/g, "/")}`;
+        }
+        const img = document.createElement("img");
+        img.src = imgPath;
+        img.alt = streamer.name;
+        img.onerror = () => {
+          img.remove();
+          avatarDiv.textContent = getInitials(streamer.name);
+        };
+        avatarDiv.appendChild(img);
+      } else {
+        avatarDiv.textContent = getInitials(streamer.name);
       }
-      const hue1 = Math.abs(hash % 360);
-      const hue2 = (hue1 + 40) % 360;
-      avatarDiv.style.background = `linear-gradient(135deg, hsl(${hue1}, 70%, 55%), hsl(${hue2}, 75%, 45%))`;
 
+      // Details
       const detailsDiv = document.createElement("div");
       detailsDiv.className = "streamer-details";
 
@@ -280,19 +611,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       const nameSpan = document.createElement("span");
       nameSpan.className = "streamer-name-text";
       nameSpan.textContent = streamer.name || "Streamer";
-
-      const platformBadge = document.createElement("span");
-      platformBadge.innerHTML = getPlatformBadge(streamer.platform);
-
       titleRow.appendChild(nameSpan);
-      titleRow.appendChild(platformBadge);
 
-      const urlSpan = document.createElement("div");
-      urlSpan.className = "streamer-url-text";
-      urlSpan.title = streamer.url;
-      urlSpan.textContent = streamer.url;
+      // URL chips showing checking order
+      const urlsContainer = document.createElement("div");
+      urlsContainer.className = "streamer-urls-chips";
 
-      // Live status info banner (if live or cached)
+      const urls = Array.isArray(streamer.urls)
+        ? streamer.urls
+        : [streamer.url || ""];
+      urls.forEach((url, uIdx) => {
+        const plat = detectPlatform(url);
+        const chip = document.createElement("span");
+        const isActive = streamer.isLive && streamer.activeUrl === url;
+        chip.className = `url-order-badge ${isActive ? "active-url-badge" : ""}`;
+        chip.title = `${uIdx + 1}. [${plat.toUpperCase()}] ${url}`;
+        chip.textContent = `${uIdx + 1}.${plat.toUpperCase()}${isActive ? " (LIVE)" : ""}`;
+        urlsContainer.appendChild(chip);
+      });
+      titleRow.appendChild(urlsContainer);
+
+      // Status Row
       const statusRow = document.createElement("div");
       statusRow.className = "streamer-status-row";
 
@@ -301,87 +640,113 @@ document.addEventListener("DOMContentLoaded", async () => {
         statusBadgeHtml = `<span class="status-indicator status-checking"><span class="task-spinner-sm"></span> Checking...</span>`;
       } else if (streamer.isLive) {
         const viewers =
-          streamer.cachedInfo && streamer.cachedInfo.viewerCount != null
+          streamer.cachedInfo?.viewerCount != null
             ? ` • 👁️ ${formatViewerCount(streamer.cachedInfo.viewerCount)}`
             : "";
         const game =
-          streamer.cachedInfo &&
-          (streamer.cachedInfo.game || streamer.cachedInfo.category)
+          streamer.cachedInfo?.game || streamer.cachedInfo?.category
             ? ` • 🎮 ${streamer.cachedInfo.game || streamer.cachedInfo.category}`
             : "";
-        statusBadgeHtml = `<span class="status-indicator status-live">🔴 LIVE${viewers}${game}</span>`;
+        statusBadgeHtml = `<span class="status-indicator status-live">🔴 LIVE on ${streamer.activePlatform?.toUpperCase() || "WEB"}${viewers}${game}</span>`;
       } else {
         const lastCheckedStr = streamer.lastChecked
-          ? `Last checked: ${new Date(streamer.lastChecked).toLocaleTimeString()}`
+          ? `Last check: ${new Date(streamer.lastChecked).toLocaleTimeString()}`
           : "Not checked yet";
         statusBadgeHtml = `<span class="status-indicator status-offline">⚪ Offline (${lastCheckedStr})</span>`;
       }
-
       statusRow.innerHTML = statusBadgeHtml;
 
-      // Optional cached stream title on second line if live
-      if (streamer.isLive && streamer.cachedInfo && streamer.cachedInfo.title) {
-        const streamTitle = document.createElement("div");
-        streamTitle.className = "cached-stream-title";
-        streamTitle.textContent = `"${streamer.cachedInfo.title}"`;
-        statusRow.appendChild(streamTitle);
+      // Trigger Badge (if fired recently)
+      if (streamer.lastTrigger) {
+        const trigBadge = document.createElement("div");
+        trigBadge.className = "trigger-event-badge";
+        trigBadge.title = `Triggered at ${new Date(streamer.lastTrigger.timestamp).toLocaleTimeString()}`;
+        trigBadge.innerHTML = `⚡ ${streamer.lastTrigger.label || "Trigger"}: ${streamer.lastTrigger.message || ""}`;
+        statusRow.appendChild(trigBadge);
       }
 
       detailsDiv.appendChild(titleRow);
-      detailsDiv.appendChild(urlSpan);
       detailsDiv.appendChild(statusRow);
 
       infoDiv.appendChild(avatarDiv);
       infoDiv.appendChild(detailsDiv);
 
-      // Right Column: Actions (Check Now, Pet, Remove)
+      // Right Column: Actions
       const actionsDiv = document.createElement("div");
       actionsDiv.className = "streamer-item-actions";
 
-      // Pet indicator
+      // Move Up/Down buttons for manual order
+      const btnUp = document.createElement("button");
+      btnUp.type = "button";
+      btnUp.className = "btn-icon-action";
+      btnUp.title = "Move Up in list";
+      btnUp.innerHTML = "▲";
+      btnUp.disabled = index === 0;
+      btnUp.addEventListener("click", () => moveStreamerOrder(index, -1));
+
+      const btnDown = document.createElement("button");
+      btnDown.type = "button";
+      btnDown.className = "btn-icon-action";
+      btnDown.title = "Move Down in list";
+      btnDown.innerHTML = "▼";
+      btnDown.disabled = index === localStreamers.length - 1;
+      btnDown.addEventListener("click", () => moveStreamerOrder(index, 1));
+
+      // Edit Button
+      const btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.className = "btn-icon-action";
+      btnEdit.title = "Edit Streamer URLs & Triggers";
+      btnEdit.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      `;
+      btnEdit.addEventListener("click", () => populateEditForm(streamer));
+
+      // Pet Indicator
       const petIndicator = document.createElement("span");
       petIndicator.className = "pet-task-indicator";
 
-      // Check Live Button
+      // Check Button
       const checkBtn = document.createElement("button");
       checkBtn.type = "button";
       checkBtn.className = "btn-check";
-      checkBtn.title = `Check live status now for ${streamer.name || streamer.url}`;
-      checkBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-        </svg>
-        Check
-      `;
-      checkBtn.addEventListener("click", () => {
-        checkStreamerLive(streamer, li);
-      });
+      checkBtn.title = "Check live status now";
+      checkBtn.innerHTML = `Check`;
+      checkBtn.addEventListener("click", () => checkStreamerLive(streamer, li));
 
-      // Pet Task Button
+      // Pet Button
       const petBtn = document.createElement("button");
       petBtn.type = "button";
       petBtn.className = "btn-pet";
-      petBtn.title = `Run Node.js async pet task for ${streamer.name || streamer.url}`;
+      petBtn.title = "Run async Pet task";
       petBtn.innerHTML = `🐾 Pet`;
-      petBtn.addEventListener("click", () => {
-        runPetAvatarTask(streamer.name || streamer.url, li);
-      });
+      petBtn.addEventListener("click", () => runPetAvatarTask(streamer, li));
 
       // Delete Button
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
-      deleteBtn.className = "btn-icon-action";
-      deleteBtn.title = `Remove ${streamer.name || streamer.url}`;
+      deleteBtn.className = "btn-icon-action btn-delete";
+      deleteBtn.title = `Remove ${streamer.name}`;
       deleteBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       `;
-      deleteBtn.addEventListener("click", () => {
-        removeStreamer(streamer.id);
+      deleteBtn.addEventListener("click", async () => {
+        if (window.electronAPI && window.electronAPI.removeStreamer) {
+          const updated = await window.electronAPI.removeStreamer(streamer.id);
+          renderStreamersList(updated);
+          appendLog(`Removed streamer: ${streamer.name}`, "info", "Streamer");
+        }
       });
 
+      actionsDiv.appendChild(btnUp);
+      actionsDiv.appendChild(btnDown);
+      actionsDiv.appendChild(btnEdit);
       actionsDiv.appendChild(petIndicator);
       actionsDiv.appendChild(checkBtn);
       actionsDiv.appendChild(petBtn);
@@ -391,58 +756,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       li.appendChild(actionsDiv);
       streamersListEl.appendChild(li);
 
-      // Restore existing pet task state if present
-      updateItemPetTaskUI(li, streamer.name || streamer.url);
+      updateItemPetTaskUI(li, streamer.id);
     });
   }
 
-  // Add Streamer handler
-  addStreamerForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const url = newStreamerUrlInput.value.trim();
-    if (!url) return;
-
-    let selectedPlatform = newStreamerPlatformSelect.value;
-    if (selectedPlatform === "auto") {
-      selectedPlatform = detectPlatform(url);
-    }
-
-    const name = newStreamerNameInput.value.trim();
-
-    appendLog(
-      `Adding streamer: ${name || url} (${selectedPlatform})...`,
-      "info",
-      "Streamer",
-    );
-
-    if (window.electronAPI && window.electronAPI.addStreamer) {
-      const updatedList = await window.electronAPI.addStreamer({
-        url,
-        name: name || undefined,
-        platform: selectedPlatform,
-      });
-      renderStreamersList(updatedList);
-    }
-
-    newStreamerUrlInput.value = "";
-    newStreamerNameInput.value = "";
-    newStreamerPlatformSelect.value = "auto";
-  });
-
-  // Remove Streamer handler
-  async function removeStreamer(streamerId) {
-    if (window.electronAPI && window.electronAPI.removeStreamer) {
-      const updatedList = await window.electronAPI.removeStreamer(streamerId);
-      renderStreamersList(updatedList);
-      appendLog(`Removed streamer ID: ${streamerId}`, "info", "Streamer");
-    }
-  }
-
-  // Check All Now handler
+  // Check All Now
   if (btnCheckAll) {
     btnCheckAll.addEventListener("click", async () => {
       appendLog(
-        "Triggering manual live check for all streamers...",
+        "Triggering live checks for all streamers...",
         "info",
         "LiveCheck",
       );
@@ -456,55 +778,83 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Preset example buttons
+  // Preset buttons
   presetButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const url = btn.getAttribute("data-url");
-      const name = btn.getAttribute("data-name");
-      const platform = btn.getAttribute("data-platform");
-
-      newStreamerUrlInput.value = url;
-      newStreamerNameInput.value = name;
-      newStreamerPlatformSelect.value = platform;
-      newStreamerUrlInput.focus();
+      const preset = btn.getAttribute("data-preset");
+      if (preset === "lofi") {
+        streamerNameInput.value = "Lofi Girl";
+        streamerAvatarInput.value = "";
+        setFormUrls(["https://www.youtube.com/@LofiGirl/live"]);
+      } else if (preset === "shroud") {
+        streamerNameInput.value = "Shroud";
+        streamerAvatarInput.value = "";
+        setFormUrls([
+          "https://www.twitch.tv/shroud",
+          "https://www.youtube.com/@shroud/live",
+        ]);
+      } else if (preset === "xqc") {
+        streamerNameInput.value = "xQc";
+        streamerAvatarInput.value = "";
+        setFormUrls([
+          "https://kick.com/xqc",
+          "https://www.twitch.tv/xqcow",
+          "https://www.youtube.com/@xQcOW/live",
+        ]);
+      }
+      updateAvatarPreview();
+      streamerNameInput.focus();
     });
   });
 
-  // Reset to defaults
+  // Reset defaults
   btnResetDefaults.addEventListener("click", async () => {
     const defaultStreamers = [
       {
         id: "yt-lofigirl",
         name: "Lofi Girl",
-        url: "https://www.youtube.com/@LofiGirl/live",
-        platform: "youtube",
-        isLive: false,
-        cachedInfo: null,
-        lastChecked: null,
-        checkStatus: "idle",
-        lastError: null,
+        avatarImage: "",
+        urls: ["https://www.youtube.com/@LofiGirl/live"],
+        triggers: {
+          titleChange: true,
+          viewerCountEnabled: false,
+          viewerCountThreshold: 5000,
+          goingLive: true,
+          categoryChange: true,
+        },
       },
       {
         id: "tw-shroud",
         name: "Shroud",
-        url: "https://www.twitch.tv/shroud",
-        platform: "twitch",
-        isLive: false,
-        cachedInfo: null,
-        lastChecked: null,
-        checkStatus: "idle",
-        lastError: null,
+        avatarImage: "",
+        urls: [
+          "https://www.twitch.tv/shroud",
+          "https://www.youtube.com/@shroud/live",
+        ],
+        triggers: {
+          titleChange: true,
+          viewerCountEnabled: false,
+          viewerCountThreshold: 10000,
+          goingLive: true,
+          categoryChange: true,
+        },
       },
       {
         id: "kc-xqc",
         name: "xQc",
-        url: "https://kick.com/xqc",
-        platform: "kick",
-        isLive: false,
-        cachedInfo: null,
-        lastChecked: null,
-        checkStatus: "idle",
-        lastError: null,
+        avatarImage: "",
+        urls: [
+          "https://kick.com/xqc",
+          "https://www.twitch.tv/xqcow",
+          "https://www.youtube.com/@xQcOW/live",
+        ],
+        triggers: {
+          titleChange: true,
+          viewerCountEnabled: true,
+          viewerCountThreshold: 20000,
+          goingLive: true,
+          categoryChange: true,
+        },
       },
     ];
 
@@ -514,11 +864,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         await window.electronAPI.updateStreamers(defaultStreamers);
       renderStreamersList(updated);
       appendLog(
-        "Reset streamers to defaults (YouTube, Twitch, Kick).",
+        "Reset streamers to defaults (Lofi Girl, Shroud, xQc).",
         "info",
         "Streamer",
       );
     }
+  });
+
+  // Sort Radio Handlers
+  sortRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (
+        radio.checked &&
+        window.electronAPI &&
+        window.electronAPI.updateSettings
+      ) {
+        window.electronAPI.updateSettings({ sortBy: radio.value });
+        appendLog(
+          `Sort strategy updated to: ${radio.value}`,
+          "info",
+          "Sorting",
+        );
+      }
+    });
   });
 
   // Checkbox handlers
@@ -546,7 +914,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Opacity radio handlers
+  // Opacity radios
   opacityRadios.forEach((radio) => {
     radio.addEventListener("change", () => {
       if (
@@ -554,8 +922,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.electronAPI &&
         window.electronAPI.updateSettings
       ) {
-        const opacityVal = parseFloat(radio.value);
-        window.electronAPI.updateSettings({ currentOpacity: opacityVal });
+        window.electronAPI.updateSettings({
+          currentOpacity: parseFloat(radio.value),
+        });
       }
     });
   });
@@ -578,9 +947,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Sync state from main process
+  // Sync settings
   function applySettingsToUI(settings) {
     if (!settings) return;
+
+    if (settings.sortBy) {
+      sortRadios.forEach((radio) => {
+        radio.checked = radio.value === settings.sortBy;
+      });
+    }
 
     if (typeof settings.overlayVisible === "boolean") {
       chkShowOverlay.checked = settings.overlayVisible;
@@ -602,19 +977,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Load initial streamers and settings
+  // Initial load
+  setFormUrls([""]);
   if (window.electronAPI) {
     try {
-      if (window.electronAPI.getStreamers) {
-        const streamers = await window.electronAPI.getStreamers();
-        renderStreamersList(streamers);
-      }
       if (window.electronAPI.getSettings) {
         const initialSettings = await window.electronAPI.getSettings();
         applySettingsToUI(initialSettings);
       }
     } catch (err) {
-      console.error("Failed to load initial settings/streamers:", err);
+      console.error("Failed to load initial settings:", err);
     }
   }
 

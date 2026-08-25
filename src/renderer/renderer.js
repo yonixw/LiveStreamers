@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnOpenSettings = document.getElementById("btn-open-settings");
   const btnRefresh = document.getElementById("btn-refresh");
   const headerLiveBadge = document.getElementById("header-live-badge");
+  const headerSortBadge = document.getElementById("header-sort-badge");
 
   // Banner elements
   const streamInfoBanner = document.getElementById("stream-info-banner");
@@ -18,11 +19,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const bannerViewers = document.getElementById("banner-viewers");
   const bannerGame = document.getElementById("banner-game");
   const bannerUptime = document.getElementById("banner-uptime");
+  const bannerTriggerTag = document.getElementById("banner-trigger-tag");
   const bannerOpenBtn = document.getElementById("banner-open-btn");
   const bannerTitleLine = document.getElementById("banner-title-line");
 
   let streamersList = [];
   let currentHoveredStreamerId = null;
+  let currentSortBy = "last-triggered";
 
   // Helper to get initials
   function getInitials(name) {
@@ -49,7 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (num === null || num === undefined) return null;
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-    return String(num);
+    return Number(num).toLocaleString();
   }
 
   // Format relative time (e.g. "45m ago", "2h ago")
@@ -87,7 +90,37 @@ document.addEventListener("DOMContentLoaded", async () => {
       case "kick":
         return { text: "KICK", className: "badge-kc" };
       default:
-        return { text: "LIVE", className: "badge-web" };
+        return { text: "WEB", className: "badge-web" };
+    }
+  }
+
+  // Update Sort Mode Badge
+  function updateSortBadge(sortBy) {
+    currentSortBy = sortBy || "last-triggered";
+    if (!headerSortBadge) return;
+
+    switch (currentSortBy) {
+      case "last-triggered":
+        headerSortBadge.textContent = "⚡ Triggered";
+        headerSortBadge.title = "Sorted by Last Triggered / Live events";
+        break;
+      case "longest-live":
+        headerSortBadge.textContent = "⏱️ Longest Live";
+        headerSortBadge.title = "Sorted by Longest Active Live Uptime";
+        break;
+      case "last-started":
+        headerSortBadge.textContent = "🆕 Last Started";
+        headerSortBadge.title = "Sorted by Most Recently Started Live";
+        break;
+      case "name":
+        headerSortBadge.textContent = "🔤 A-Z";
+        headerSortBadge.title = "Sorted Alphabetically by Nickname";
+        break;
+      case "manual":
+      default:
+        headerSortBadge.textContent = "📋 Custom";
+        headerSortBadge.title = "Sorted by Manual List Order";
+        break;
     }
   }
 
@@ -97,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       headerLiveBadge.textContent = "0 Live";
       headerLiveBadge.className = "header-live-badge";
       bannerDefaultText.textContent =
-        "No streamers added yet. Click ⚙️ to add.";
+        "No streamers configured. Click ⚙️ to add.";
       return;
     }
 
@@ -106,22 +139,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (liveCount > 0) {
       headerLiveBadge.className = "header-live-badge badge-active";
-      bannerDefaultText.innerHTML = `🟢 <strong>${liveCount} Live Now</strong> • Hover any avatar to view live details • Click to open stream`;
+      bannerDefaultText.innerHTML = `🟢 <strong>${liveCount} Live Now</strong> • Hover any avatar for details • Click to open`;
     } else {
       headerLiveBadge.className = "header-live-badge";
       bannerDefaultText.textContent = `⚪ All streamers offline • Hover an avatar for details • Drag top bar to move`;
     }
   }
 
-  // Show hovered streamer info in the shared top banner
+  // Show hovered streamer info in the top banner
   function showStreamerHoverBanner(streamer) {
     if (!streamer) return;
-    currentHoveredStreamerId = String(streamer.id || streamer.url);
+    currentHoveredStreamerId = String(streamer.id);
 
     bannerDefaultView.classList.remove("active");
     bannerHoverView.classList.add("active");
 
-    const platData = getPlatformBadgeData(streamer.platform);
+    const plat =
+      streamer.activePlatform ||
+      (streamer.urls && streamer.urls[0] ? streamer.platform : "other");
+    const platData = getPlatformBadgeData(plat);
     bannerPlatformPill.textContent = platData.text;
     bannerPlatformPill.className = `banner-platform-pill ${platData.className}`;
 
@@ -161,7 +197,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         bannerTitleLine.textContent = `"${cached.title}"`;
         bannerTitleLine.className = "banner-title-line title-live";
       } else {
-        bannerTitleLine.textContent = `${streamer.name || "Streamer"} is currently streaming live!`;
+        bannerTitleLine.textContent = `${streamer.name || "Streamer"} is streaming live on ${plat.toUpperCase()}!`;
         bannerTitleLine.className = "banner-title-line title-live";
       }
     } else {
@@ -174,18 +210,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       const lastCheckedStr = streamer.lastChecked
         ? `Last checked: ${new Date(streamer.lastChecked).toLocaleTimeString()}`
         : "Not checked yet";
-      bannerTitleLine.textContent = `${lastCheckedStr} • Target URL: ${streamer.url || "N/A"}`;
+      const primaryUrl =
+        (streamer.urls && streamer.urls[0]) || streamer.url || "N/A";
+      bannerTitleLine.textContent = `${lastCheckedStr} • Primary: ${primaryUrl}`;
       bannerTitleLine.className = "banner-title-line title-offline";
     }
 
+    // Trigger info tag in banner
+    if (streamer.lastTrigger) {
+      bannerTriggerTag.style.display = "inline-flex";
+      bannerTriggerTag.textContent = `⚡ ${streamer.lastTrigger.label || "Trigger"}`;
+      bannerTriggerTag.title = `${streamer.lastTrigger.message || ""} (${new Date(streamer.lastTrigger.timestamp).toLocaleTimeString()})`;
+    } else {
+      bannerTriggerTag.style.display = "none";
+    }
+
+    // Open stream in browser
+    const targetUrl =
+      streamer.activeUrl || (streamer.urls && streamer.urls[0]) || streamer.url;
     bannerOpenBtn.onclick = (e) => {
       e.stopPropagation();
-      if (
-        streamer.url &&
-        window.electronAPI &&
-        window.electronAPI.openExternal
-      ) {
-        window.electronAPI.openExternal(streamer.url);
+      if (targetUrl && window.electronAPI && window.electronAPI.openExternal) {
+        window.electronAPI.openExternal(targetUrl);
       }
     };
   }
@@ -198,15 +244,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateDefaultBannerSummary();
   }
 
-  // Perform In-Place Reconciliation to avoid DOM flashes & repaints
+  // Format image URL or file path for <img> src
+  function formatImageSrc(pathOrUrl) {
+    if (!pathOrUrl || typeof pathOrUrl !== "string") return null;
+    const trimmed = pathOrUrl.trim();
+    if (!trimmed) return null;
+    if (
+      /^https?:\/\//i.test(trimmed) ||
+      trimmed.startsWith("data:") ||
+      trimmed.startsWith("file://")
+    ) {
+      return trimmed;
+    }
+    // Local absolute path
+    return `file:///${trimmed.replace(/\\/g, "/")}`;
+  }
+
+  // Render Avatars in Exact Sorted Order
   function renderAvatarsInPlace(streamers) {
     streamersList = Array.isArray(streamers) ? streamers : [];
     updateDefaultBannerSummary();
 
-    // If currently hovered streamer exists, update hover banner with fresh data
+    // If currently hovered streamer exists, refresh hover banner
     if (currentHoveredStreamerId) {
       const freshHovered = streamersList.find(
-        (s) => String(s.id || s.url) === currentHoveredStreamerId,
+        (s) => String(s.id) === currentHoveredStreamerId,
       );
       if (freshHovered) {
         showStreamerHoverBanner(freshHovered);
@@ -224,28 +286,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const newIds = new Set();
 
-    streamersList.forEach((item, index) => {
-      const streamer =
-        typeof item === "string"
-          ? {
-              id: `user-${index}`,
-              name: item,
-              url: "",
-              platform: "other",
-              isLive: false,
-              cachedInfo: null,
-            }
-          : item;
-
-      const streamerId = String(
-        streamer.id || streamer.url || `streamer-${index}`,
-      );
+    streamersList.forEach((streamer, index) => {
+      const streamerId = String(streamer.id || `streamer-${index}`);
       newIds.add(streamerId);
 
       let card = existingMap.get(streamerId);
 
       if (!card) {
-        // Create new card node
         card = document.createElement("div");
         card.className = "avatar-card";
         card.setAttribute("data-id", streamerId);
@@ -260,11 +307,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const platformBadge = document.createElement("div");
         platformBadge.className = "avatar-platform-corner";
 
+        const triggerBadge = document.createElement("div");
+        triggerBadge.className = "avatar-trigger-corner";
+
         const statusBadge = document.createElement("div");
         statusBadge.className = "status-badge";
 
         frame.appendChild(inner);
         frame.appendChild(platformBadge);
+        frame.appendChild(triggerBadge);
         frame.appendChild(statusBadge);
 
         const nameTag = document.createElement("div");
@@ -273,7 +324,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         card.appendChild(frame);
         card.appendChild(nameTag);
 
-        // Hover events - ALWAYS fetch latest streamer object from card._streamer
+        // Hover & Click events
         card.addEventListener("mouseenter", () => {
           showStreamerHoverBanner(card._streamer || streamer);
         });
@@ -282,29 +333,32 @@ document.addEventListener("DOMContentLoaded", async () => {
           hideStreamerHoverBanner();
         });
 
-        // Click opens stream URL
         card.addEventListener("click", (e) => {
           e.stopPropagation();
           const target = card._streamer || streamer;
+          const urlToOpen =
+            target.activeUrl || (target.urls && target.urls[0]) || target.url;
           if (
-            target.url &&
+            urlToOpen &&
             window.electronAPI &&
             window.electronAPI.openExternal
           ) {
-            window.electronAPI.openExternal(target.url);
+            window.electronAPI.openExternal(urlToOpen);
           }
         });
 
         avatarsContainer.appendChild(card);
+      } else {
+        // Ensure DOM ordering matches the current sorted list position
+        avatarsContainer.appendChild(card);
       }
 
-      // Always update card's stored live data reference
+      // Store fresh reference
       card._streamer = streamer;
 
-      // Update Card In-Place
       const isLive = Boolean(streamer.isLive);
       card.className = `avatar-card ${isLive ? "card-live" : "card-offline"}`;
-      card.title = `${streamer.name || "Streamer"} - Click to open stream (${isLive ? "LIVE" : "Offline"})`;
+      card.title = `${streamer.name || "Streamer"} - Click to open (${isLive ? `LIVE on ${(streamer.activePlatform || "stream").toUpperCase()}` : "Offline"})`;
 
       const frame = card.querySelector(".circle-frame");
       if (frame) {
@@ -313,14 +367,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const inner = card.querySelector(".avatar-inner");
       if (inner) {
-        inner.style.background = getAvatarGradient(streamer.name);
-        inner.textContent = getInitials(streamer.name);
+        const imgSrc = formatImageSrc(streamer.avatarImage);
+        if (imgSrc) {
+          inner.style.background = "#18181b";
+          inner.innerHTML = `<img src="${imgSrc}" alt="${streamer.name}" />`;
+          const imgEl = inner.querySelector("img");
+          if (imgEl) {
+            imgEl.onerror = () => {
+              inner.style.background = getAvatarGradient(streamer.name);
+              inner.textContent = getInitials(streamer.name);
+            };
+          }
+        } else {
+          inner.style.background = getAvatarGradient(streamer.name);
+          inner.textContent = getInitials(streamer.name);
+        }
       }
 
       const platformBadge = card.querySelector(".avatar-platform-corner");
       if (platformBadge) {
-        const platData = getPlatformBadgeData(streamer.platform);
+        const plat =
+          streamer.activePlatform ||
+          (streamer.urls && streamer.urls[0] ? streamer.platform : "other");
+        const platData = getPlatformBadgeData(plat);
         platformBadge.innerHTML = `<span class="platform-mini-badge ${platData.className}">${platData.text}</span>`;
+      }
+
+      const triggerBadge = card.querySelector(".avatar-trigger-corner");
+      if (triggerBadge) {
+        if (streamer.lastTrigger) {
+          triggerBadge.innerHTML = `<span class="trigger-mini-badge" title="${streamer.lastTrigger.label}: ${streamer.lastTrigger.message}">⚡</span>`;
+          triggerBadge.style.display = "block";
+        } else {
+          triggerBadge.innerHTML = "";
+          triggerBadge.style.display = "none";
+        }
       }
 
       const statusBadge = card.querySelector(".status-badge");
@@ -336,7 +417,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    // Remove any old cards that are no longer in the list
+    // Remove deleted cards
     existingCards.forEach((card) => {
       const id = card.getAttribute("data-id");
       if (!newIds.has(id)) {
@@ -345,7 +426,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Refresh live status button
+  // Refresh live button
   if (btnRefresh) {
     btnRefresh.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -369,7 +450,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Double click header to toggle pin / always on top
+  // Double-click header toggles always on top
   overlayRoot.addEventListener("dblclick", async (e) => {
     if (e.target.closest("button") || e.target.closest(".avatar-card")) return;
     if (window.electronAPI && window.electronAPI.toggleAlwaysOnTop) {
@@ -381,7 +462,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Right-click opens the Settings window
+  // Right-click opens Settings
   overlayRoot.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     if (window.electronAPI && window.electronAPI.openSettings) {
@@ -392,29 +473,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Initial load
   if (window.electronAPI) {
     try {
+      if (window.electronAPI.getSettings) {
+        const initialSettings = await window.electronAPI.getSettings();
+        if (initialSettings.sortBy) {
+          updateSortBadge(initialSettings.sortBy);
+        }
+      }
       if (window.electronAPI.getStreamers) {
         const streamers = await window.electronAPI.getStreamers();
         renderAvatarsInPlace(streamers);
-      } else if (window.electronAPI.getUsers) {
-        const users = await window.electronAPI.getUsers();
-        renderAvatarsInPlace(users);
       }
     } catch (err) {
-      console.error("Failed to load initial streamers/users:", err);
+      console.error("Failed to load initial overlay state:", err);
     }
   }
 
-  // Listen for live updates
+  // Live Listeners
   if (window.electronAPI && window.electronAPI.onStreamersUpdated) {
     window.electronAPI.onStreamersUpdated((updatedStreamers) => {
       renderAvatarsInPlace(updatedStreamers);
     });
   }
 
-  if (window.electronAPI && window.electronAPI.onUsersUpdated) {
-    window.electronAPI.onUsersUpdated((updatedUsers) => {
-      if (!streamersList || streamersList.length === 0) {
-        renderAvatarsInPlace(updatedUsers);
+  if (window.electronAPI && window.electronAPI.onSettingsUpdated) {
+    window.electronAPI.onSettingsUpdated((newSettings) => {
+      if (newSettings && newSettings.sortBy) {
+        updateSortBadge(newSettings.sortBy);
       }
     });
   }

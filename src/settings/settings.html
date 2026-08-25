@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;" />
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: file: blob:; connect-src 'self' data: https: file:;" />
     <title>LiveStreamers Settings</title>
     <link rel="stylesheet" href="settings.css" />
 </head>
@@ -26,70 +26,188 @@
         </header>
 
         <main class="settings-content">
-            <!-- Section 1: Streamer URL Configuration & Management -->
+            <!-- Section 1: Avatar Display & Sorting Strategy -->
             <section class="settings-card">
                 <div class="card-header flex-between">
                     <div>
-                        <h2>Tracked Streamers (Kick, Twitch, YouTube)</h2>
-                        <span class="card-subtitle">Add streamer URLs to monitor live status every minute in
-                            background</span>
+                        <h2>Avatar Ordering Strategy</h2>
+                        <span class="card-subtitle">Choose how avatar circles are prioritized & sorted on screen</span>
                     </div>
                 </div>
 
-                <form id="add-streamer-form" class="streamer-input-form">
-                    <div class="form-inputs-row">
-                        <div class="input-with-icon">
-                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                            </svg>
-                            <input type="text" id="new-streamer-url"
-                                placeholder="Streamer URL (e.g. https://twitch.tv/shroud, kick.com/xqc, youtube.com/@LofiGirl)"
-                                autocomplete="off" required />
+                <div class="sort-options-grid">
+                    <label class="sort-card">
+                        <input type="radio" name="sort-order" value="last-triggered" checked />
+                        <div class="sort-card-content">
+                            <span class="sort-title">⚡ Last Triggered</span>
+                            <span class="sort-desc">Priority to avatars with latest events (Going live, Title change,
+                                Viewer spike)</span>
+                        </div>
+                    </label>
+
+                    <label class="sort-card">
+                        <input type="radio" name="sort-order" value="longest-live" />
+                        <div class="sort-card-content">
+                            <span class="sort-title">⏱️ Longest Live</span>
+                            <span class="sort-desc">Started earliest (longest active uptime) first</span>
+                        </div>
+                    </label>
+
+                    <label class="sort-card">
+                        <input type="radio" name="sort-order" value="last-started" />
+                        <div class="sort-card-content">
+                            <span class="sort-title">🆕 Last to Start</span>
+                            <span class="sort-desc">Most recently went live first</span>
+                        </div>
+                    </label>
+
+                    <label class="sort-card">
+                        <input type="radio" name="sort-order" value="manual" />
+                        <div class="sort-card-content">
+                            <span class="sort-title">📋 Manual Order</span>
+                            <span class="sort-desc">Exact list position configured below</span>
+                        </div>
+                    </label>
+
+                    <label class="sort-card">
+                        <input type="radio" name="sort-order" value="name" />
+                        <div class="sort-card-content">
+                            <span class="sort-title">🔤 Alphabetical</span>
+                            <span class="sort-desc">A to Z by custom nickname</span>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Section 2: Streamer Profile & Multi-URL Configuration -->
+            <section class="settings-card">
+                <div class="card-header flex-between">
+                    <div>
+                        <h2 id="form-section-title">Add Streamer Profile</h2>
+                        <span class="card-subtitle">Configure custom nickname, avatar image, multi-platform URL checks,
+                            and triggers</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" id="btn-cancel-edit"
+                        style="display: none;">Cancel Edit</button>
+                </div>
+
+                <form id="streamer-form" class="streamer-config-form">
+                    <input type="hidden" id="edit-streamer-id" value="" />
+
+                    <!-- Nickname and Avatar Image Row -->
+                    <div class="form-grid-two">
+                        <div class="form-group">
+                            <label for="streamer-name-input">Nickname / Display Name <span class="req">*</span></label>
+                            <input type="text" id="streamer-name-input" placeholder="e.g. My Favorite Streamer"
+                                maxlength="40" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="streamer-avatar-input">Avatar Image (Path or URL)</label>
+                            <div class="avatar-input-wrapper">
+                                <input type="text" id="streamer-avatar-input"
+                                    placeholder="Leave empty for initials (e.g. C:\avatar.png, https://...)" />
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-avatar"
+                                    title="Browse local file">Browse...</button>
+                                <div id="avatar-form-preview" class="avatar-form-preview" title="Avatar preview">
+                                    <span id="avatar-preview-fallback">?</span>
+                                    <img id="avatar-preview-img" style="display: none;" alt="Preview" />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-inputs-subrow">
-                        <input type="text" id="new-streamer-name" placeholder="Display Name (optional)"
-                            autocomplete="off" maxlength="40" />
-                        <select id="new-streamer-platform" class="select-platform">
-                            <option value="auto">Auto Platform</option>
-                            <option value="youtube">YouTube</option>
-                            <option value="twitch">Twitch</option>
-                            <option value="kick">Kick</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary" id="btn-add-streamer">
+
+                    <!-- Multi-URL List Section -->
+                    <div class="form-urls-section">
+                        <div class="flex-between urls-section-header">
+                            <label>Multi-Platform Stream URLs <span class="req">*</span></label>
+                            <span class="urls-hint-badge">Checked top-to-bottom • Stops at 1st live link</span>
+                        </div>
+
+                        <div id="urls-input-list" class="urls-input-list">
+                            <!-- Dynamic URL input rows added via JS -->
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-secondary btn-add-url" id="btn-add-url-row">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            + Add Another Platform URL (Kick, Twitch, YouTube)
+                        </button>
+                    </div>
+
+                    <!-- Trigger Rules Configuration -->
+                    <div class="triggers-config-box">
+                        <div class="triggers-title-row">
+                            <span class="triggers-heading">⚡ Priority Triggers</span>
+                            <span class="triggers-subtitle">Fired events boost avatar priority when sorted by Last
+                                Triggered</span>
+                        </div>
+
+                        <div class="triggers-grid">
+                            <label class="trigger-checkbox">
+                                <input type="checkbox" id="trig-going-live" checked />
+                                <span class="trigger-custom-check"></span>
+                                <span class="trigger-label">🔴 Going Live</span>
+                            </label>
+
+                            <label class="trigger-checkbox">
+                                <input type="checkbox" id="trig-title-change" checked />
+                                <span class="trigger-custom-check"></span>
+                                <span class="trigger-label">📝 Title Change</span>
+                            </label>
+
+                            <label class="trigger-checkbox">
+                                <input type="checkbox" id="trig-category-change" checked />
+                                <span class="trigger-custom-check"></span>
+                                <span class="trigger-label">🎮 Category/Game Change</span>
+                            </label>
+
+                            <div class="trigger-viewer-row">
+                                <label class="trigger-checkbox">
+                                    <input type="checkbox" id="trig-viewer-enabled" />
+                                    <span class="trigger-custom-check"></span>
+                                    <span class="trigger-label">👁️ Viewers ></span>
+                                </label>
+                                <input type="number" id="trig-viewer-threshold" min="1" step="100" value="5000"
+                                    class="input-threshold" />
+                                <span class="trigger-hint">(and increased from last status)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions-row">
+                        <button type="submit" class="btn btn-primary" id="btn-submit-streamer">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                 class="btn-icon">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
-                            Add Streamer
+                            <span id="btn-submit-text">Save Streamer</span>
                         </button>
                     </div>
                 </form>
 
                 <!-- Quick Preset Streamers -->
                 <div class="presets-row">
-                    <span class="presets-label">Quick Examples:</span>
-                    <button type="button" class="btn-preset" data-url="https://www.youtube.com/@LofiGirl/live"
-                        data-name="Lofi Girl" data-platform="youtube">
-                        <span class="platform-dot dot-youtube"></span> + YouTube Lofi
+                    <span class="presets-label">Quick Presets:</span>
+                    <button type="button" class="btn-preset" data-preset="lofi">
+                        <span class="platform-dot dot-youtube"></span> + YouTube Lofi Girl
                     </button>
-                    <button type="button" class="btn-preset" data-url="https://www.twitch.tv/shroud" data-name="Shroud"
-                        data-platform="twitch">
-                        <span class="platform-dot dot-twitch"></span> + Twitch Shroud
+                    <button type="button" class="btn-preset" data-preset="shroud">
+                        <span class="platform-dot dot-twitch"></span> + Shroud (Twitch + YT)
                     </button>
-                    <button type="button" class="btn-preset" data-url="https://kick.com/xqc" data-name="xQc"
-                        data-platform="kick">
-                        <span class="platform-dot dot-kick"></span> + Kick xQc
+                    <button type="button" class="btn-preset" data-preset="xqc">
+                        <span class="platform-dot dot-kick"></span> + xQc (Kick + Twitch + YT)
                     </button>
                 </div>
 
                 <!-- Streamers List -->
                 <div class="users-list-wrapper">
                     <div class="users-list-header">
-                        <span id="streamer-count-label">Streamers (0)</span>
+                        <span id="streamer-count-label">Configured Streamers (0)</span>
                         <div class="list-header-actions">
                             <button type="button" class="btn-sm-action" id="btn-check-all">
                                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
@@ -102,18 +220,18 @@
                         </div>
                     </div>
                     <ul id="streamers-list" class="streamers-list">
-                        <!-- Dynamic items rendered by settings.js with platform tags, live status, check & pet buttons -->
+                        <!-- Dynamic items rendered by settings.js -->
                     </ul>
                 </div>
             </section>
 
-            <!-- Section 2: Task Activity & Live Checker Logs Console -->
+            <!-- Section 3: Live Status & Background Task Logs Console -->
             <section class="settings-card log-card">
                 <div class="card-header flex-between">
                     <div>
                         <h2>Live Status & Background Task Logs</h2>
-                        <span class="card-subtitle">Real-time background crawler outputs from yt-dlp-utils & async
-                            tasks</span>
+                        <span class="card-subtitle">Real-time crawler outputs, multi-URL short-circuiting & triggered
+                            events</span>
                     </div>
                     <div class="log-actions">
                         <button type="button" class="btn btn-sm btn-secondary" id="btn-open-devtools">
@@ -131,16 +249,16 @@
                 <div id="log-terminal" class="log-terminal">
                     <div class="log-entry system-log">
                         <span class="log-time">[System]</span>
-                        <span class="log-msg">Ready. Monitoring streamer links once a minute via yt-dlp-utils.</span>
+                        <span class="log-msg">Ready. Multi-URL live tracking with auto short-circuiting active.</span>
                     </div>
                 </div>
             </section>
 
-            <!-- Section 3: Window Behavior & Checkboxes -->
+            <!-- Section 4: Window Behavior & Controls -->
             <section class="settings-card">
                 <div class="card-header">
                     <h2>Overlay Window Controls</h2>
-                    <span class="card-subtitle">Toggle display behavior and click properties</span>
+                    <span class="card-subtitle">Toggle display behavior and transparency</span>
                 </div>
 
                 <div class="checkbox-group">
@@ -159,8 +277,7 @@
                         <span class="toggle-track"><span class="toggle-thumb"></span></span>
                         <div class="toggle-label-group">
                             <span class="toggle-title">Always on Top</span>
-                            <span class="toggle-description">Keep the avatar circles above other application
-                                windows</span>
+                            <span class="toggle-description">Keep avatar circles above other application windows</span>
                         </div>
                     </label>
 
@@ -169,14 +286,13 @@
                         <span class="toggle-track"><span class="toggle-thumb"></span></span>
                         <div class="toggle-label-group">
                             <span class="toggle-title">Click-Through Mode</span>
-                            <span class="toggle-description">Pass mouse clicks directly through the overlay to windows
-                                underneath</span>
+                            <span class="toggle-description">Pass mouse clicks directly through the overlay</span>
                         </div>
                     </label>
                 </div>
             </section>
 
-            <!-- Section 4: Opacity Radio Selection -->
+            <!-- Section 5: Opacity Radio Selection -->
             <section class="settings-card">
                 <div class="card-header">
                     <h2>Opacity / Transparency</h2>
@@ -212,7 +328,7 @@
                 </div>
             </section>
 
-            <!-- Section 5: Quick Action Buttons -->
+            <!-- Section 6: Quick Action Buttons -->
             <section class="settings-card actions-card">
                 <div class="card-header">
                     <h2>Quick Actions</h2>
@@ -247,7 +363,7 @@
         </main>
 
         <footer class="settings-footer">
-            <span>LiveStreamers Overlay • Kick, Twitch, YouTube Live Tracking via yt-dlp-utils</span>
+            <span>LiveStreamers Overlay • Multi-URL Check • Priority Triggers • Dynamic Sorting</span>
         </footer>
     </div>
 

@@ -4,8 +4,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Settings & State
   getSettings: () => ipcRenderer.invoke("settings:get"),
   updateSettings: (settings) => ipcRenderer.invoke("settings:update", settings),
-  getUsers: () => ipcRenderer.invoke("users:get"),
-  updateUsers: (users) => ipcRenderer.invoke("users:update", users),
+  getStatus: () => ipcRenderer.invoke("status:get"),
 
   // Streamers Management & Live Info
   getStreamers: () => ipcRenderer.invoke("streamers:get"),
@@ -16,6 +15,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("streamers:remove", streamerId),
   checkStreamerLive: (streamerId) =>
     ipcRenderer.invoke("streamers:check-now", streamerId),
+  selectAvatarImage: () => ipcRenderer.invoke("dialog:select-avatar-image"),
 
   // Node.js Side Tasks
   runPetAvatarTask: (userName) =>
@@ -29,15 +29,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("settings:updated", handler);
     return () => ipcRenderer.removeListener("settings:updated", handler);
   },
-  onUsersUpdated: (callback) => {
-    const handler = (_event, data) => callback(data);
-    ipcRenderer.on("users:updated", handler);
-    return () => ipcRenderer.removeListener("users:updated", handler);
-  },
   onStreamersUpdated: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on("streamers:updated", handler);
     return () => ipcRenderer.removeListener("streamers:updated", handler);
+  },
+  onStatusUpdated: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on("status:updated", handler);
+    return () => ipcRenderer.removeListener("status:updated", handler);
   },
 
   // Overlay & System actions

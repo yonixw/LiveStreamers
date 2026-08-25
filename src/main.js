@@ -7,11 +7,20 @@ const {
   ipcMain,
   screen,
   shell,
+  dialog,
 } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
 const { petTask } = require("./tasks/example");
+const {
+  loadSettings,
+  saveSettings,
+  loadStatus,
+  saveStatus,
+  defaultStreamers,
+  normalizeStreamerConfig,
+} = require("./tasks/storage");
 const {
   StreamLiveCheckerService,
   checkStreamerLiveTask,
@@ -25,51 +34,21 @@ let settingsWindow = null;
 let tray = null;
 let liveCheckerService = null;
 
-// Initial default streamers list (Kick, Twitch, YouTube)
-const defaultStreamers = [
-  {
-    id: "yt-lofigirl",
-    name: "Lofi Girl",
-    url: "https://www.youtube.com/@LofiGirl/live",
-    platform: "youtube",
-    isLive: false,
-    cachedInfo: null,
-    lastChecked: null,
-    checkStatus: "idle",
-    lastError: null,
-  },
-  {
-    id: "tw-shroud",
-    name: "Shroud",
-    url: "https://www.twitch.tv/shroud",
-    platform: "twitch",
-    isLive: false,
-    cachedInfo: null,
-    lastChecked: null,
-    checkStatus: "idle",
-    lastError: null,
-  },
-  {
-    id: "kc-xqc",
-    name: "xQc",
-    url: "https://kick.com/xqc",
-    platform: "kick",
-    isLive: false,
-    cachedInfo: null,
-    lastChecked: null,
-    checkStatus: "idle",
-    lastError: null,
-  },
-];
+// Load persisted configuration and latest status on startup
+const persistedSettings = loadSettings();
+const persistedStatus = loadStatus();
 
 // Application state
 const state = {
-  streamers: defaultStreamers,
-  users: defaultStreamers.map((s) => s.name),
-  isAlwaysOnTop: true,
-  isIgnoringMouseEvents: false,
-  currentOpacity: 1.0,
-  overlayVisible: true,
+  sortBy: persistedSettings.sortBy || "last-triggered",
+  isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
+  isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
+  currentOpacity: persistedSettings.currentOpacity ?? 1.0,
+  overlayVisible: persistedSettings.overlayVisible ?? true,
+  streamers: Array.isArray(persistedSettings.streamers)
+    ? persistedSettings.streamers
+    : defaultStreamers,
+  statusMap: persistedStatus || {},
 };
 
 function createDefaultTrayIcon() {
@@ -78,7 +57,7 @@ function createDefaultTrayIcon() {
     return nativeImage.createFromPath(iconPath);
   }
 
-  // 16x16 fallback RGBA icon buffer (simple circle) if image file is missing
+  // 16x16 fallback RGBA icon buffer
   const size = 16;
   const buffer = Buffer.alloc(size * size * 4);
   const radius = size / 2;
@@ -103,17 +82,16 @@ function createDefaultTrayIcon() {
 
 function calculateOverlayDimensions(itemCount) {
   const count = Math.max(1, itemCount || 1);
-  const width = Math.max(380, Math.min(1600, count * 150 + 60));
-  const height = 260;
+  const width = Math.max(400, Math.min(1800, count * 155 + 60));
+  const height = 270;
   return { width, height };
 }
 
 function updateOverlayBounds() {
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
-  const count = state.streamers ? state.streamers.length : state.users.length;
+  const count = state.streamers ? state.streamers.length : 1;
   const { width, height } = calculateOverlayDimensions(count);
   const bounds = overlayWindow.getBounds();
-  // Only resize if dimensions have actually changed to avoid window repaints/flicker
   if (bounds.width !== width || bounds.height !== height) {
     overlayWindow.setBounds({
       x: bounds.x,
@@ -124,8 +102,111 @@ function updateOverlayBounds() {
   }
 }
 
+/**
+ * Merges streamer config with its live status record.
+ */
+function getEnrichedStreamer(streamer) {
+  const status = state.statusMap[streamer.id] || {};
+  const primaryUrl = (streamer.urls && streamer.urls[0]) || "";
+  const activeUrl = status.activeUrl || primaryUrl;
+  const activePlatform = status.activePlatform || detectPlatform(activeUrl);
+
+  return {
+    ...streamer,
+    isLive: Boolean(status.isLive),
+    activeUrl,
+    activePlatform,
+    platform: activePlatform,
+    url: activeUrl, // compatibility
+    checkStatus: status.checkStatus || "idle",
+    cachedInfo: status.cachedInfo || null,
+    lastChecked: status.lastChecked || null,
+    lastError: status.lastError || null,
+    lastTrigger: status.lastTrigger || null,
+    lastTriggeredAt: status.lastTriggeredAt || null,
+    checkedUrlsCount: status.checkedUrlsCount || 0,
+  };
+}
+
+/**
+ * Returns streamers list enriched with status and sorted according to current sortBy mode.
+ */
+function getSortedEnrichedStreamers(sortBy = state.sortBy) {
+  const enriched = state.streamers.map((s) => getEnrichedStreamer(s));
+
+  switch (sortBy) {
+    case "last-triggered": {
+      // Sort priority:
+      // 1. Streamers with lastTriggeredAt (most recent first)
+      // 2. Currently live streamers
+      // 3. Offline streamers
+      return [...enriched].sort((a, b) => {
+        const timeA = a.lastTriggeredAt
+          ? new Date(a.lastTriggeredAt).getTime()
+          : 0;
+        const timeB = b.lastTriggeredAt
+          ? new Date(b.lastTriggeredAt).getTime()
+          : 0;
+        if (timeA !== timeB) return timeB - timeA;
+        if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+        return (a.name || "").localeCompare(b.name || "");
+      });
+    }
+
+    case "longest-live": {
+      // Sort priority:
+      // 1. Live streamers with earliest startTime (longest live uptime first)
+      // 2. Offline streamers
+      return [...enriched].sort((a, b) => {
+        if (a.isLive && !b.isLive) return -1;
+        if (!a.isLive && b.isLive) return 1;
+        if (a.isLive && b.isLive) {
+          const startA = a.cachedInfo?.startTime
+            ? new Date(a.cachedInfo.startTime).getTime()
+            : Date.now();
+          const startB = b.cachedInfo?.startTime
+            ? new Date(b.cachedInfo.startTime).getTime()
+            : Date.now();
+          return startA - startB; // Earliest start = longest live uptime
+        }
+        return (a.name || "").localeCompare(b.name || "");
+      });
+    }
+
+    case "last-started": {
+      // Sort priority:
+      // 1. Live streamers with latest startTime (most recently went live first)
+      // 2. Offline streamers
+      return [...enriched].sort((a, b) => {
+        if (a.isLive && !b.isLive) return -1;
+        if (!a.isLive && b.isLive) return 1;
+        if (a.isLive && b.isLive) {
+          const startA = a.cachedInfo?.startTime
+            ? new Date(a.cachedInfo.startTime).getTime()
+            : 0;
+          const startB = b.cachedInfo?.startTime
+            ? new Date(b.cachedInfo.startTime).getTime()
+            : 0;
+          return startB - startA; // Latest start = most recently started
+        }
+        return (a.name || "").localeCompare(b.name || "");
+      });
+    }
+
+    case "name": {
+      return [...enriched].sort((a, b) =>
+        (a.name || "").localeCompare(b.name || ""),
+      );
+    }
+
+    case "manual":
+    default:
+      return enriched;
+  }
+}
+
 function createOverlayWindow() {
-  const count = state.streamers ? state.streamers.length : state.users.length;
+  const count = state.streamers ? state.streamers.length : 1;
   const { width, height } = calculateOverlayDimensions(count);
 
   overlayWindow = new BrowserWindow({
@@ -170,10 +251,10 @@ function createSettingsWindow() {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 680,
-    height: 840,
-    minWidth: 500,
-    minHeight: 600,
+    width: 740,
+    height: 880,
+    minWidth: 540,
+    minHeight: 650,
     autoHideMenuBar: true,
     title: "LiveStreamers Settings",
     backgroundColor: "#0f172a",
@@ -212,10 +293,11 @@ function buildTrayMenu() {
   const isOverlayOpen =
     overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible();
 
-  const liveCount = state.streamers.filter((s) => s.isLive).length;
+  const sortedList = getSortedEnrichedStreamers();
+  const liveCount = sortedList.filter((s) => s.isLive).length;
   const statusSummary =
-    state.streamers.length > 0
-      ? `${liveCount}/${state.streamers.length} Live`
+    sortedList.length > 0
+      ? `${liveCount}/${sortedList.length} Live`
       : "No Streamers";
 
   const contextMenu = Menu.buildFromTemplate([
@@ -265,15 +347,17 @@ function buildTrayMenu() {
 }
 
 function broadcastStateUpdate() {
+  const sortedStreamers = getSortedEnrichedStreamers();
+
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.webContents.send("settings:updated", state);
-    overlayWindow.webContents.send("users:updated", state.users);
-    overlayWindow.webContents.send("streamers:updated", state.streamers);
+    overlayWindow.webContents.send("streamers:updated", sortedStreamers);
+    overlayWindow.webContents.send("status:updated", state.statusMap);
   }
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.webContents.send("settings:updated", state);
-    settingsWindow.webContents.send("users:updated", state.users);
-    settingsWindow.webContents.send("streamers:updated", state.streamers);
+    settingsWindow.webContents.send("streamers:updated", sortedStreamers);
+    settingsWindow.webContents.send("status:updated", state.statusMap);
   }
   buildTrayMenu();
 }
@@ -289,6 +373,7 @@ function toggleOverlayVisibility() {
     overlayWindow.show();
     state.overlayVisible = true;
   }
+  saveSettings(state);
   broadcastStateUpdate();
 }
 
@@ -305,37 +390,39 @@ function logToWindows(tag, message, isError = false) {
 function initBackgroundChecker() {
   liveCheckerService = new StreamLiveCheckerService({
     getStreamers: () => state.streamers,
+    getStatusMap: () => state.statusMap,
     onStatusUpdate: (update) => {
-      const {
+      const { streamerId } = update;
+      if (!streamerId) return;
+
+      const current = state.statusMap[streamerId] || {};
+      state.statusMap[streamerId] = {
+        ...current,
         streamerId,
-        checkStatus,
-        isLive,
-        cachedInfo,
-        lastChecked,
-        lastError,
-      } = update;
-      const index = state.streamers.findIndex(
-        (s) => s.id === streamerId || s.url === streamerId,
-      );
+        isLive: update.isLive !== undefined ? update.isLive : current.isLive,
+        activeUrl: update.activeUrl || current.activeUrl,
+        activePlatform: update.activePlatform || current.activePlatform,
+        checkStatus: update.checkStatus || current.checkStatus,
+        cachedInfo: update.isLive
+          ? update.cachedInfo
+          : update.cachedInfo || current.cachedInfo,
+        lastChecked: update.lastChecked || current.lastChecked,
+        lastError:
+          update.lastError !== undefined ? update.lastError : current.lastError,
+        lastTrigger: update.lastTrigger || current.lastTrigger || null,
+        lastTriggeredAt:
+          update.lastTriggeredAt || current.lastTriggeredAt || null,
+        checkedUrlsCount: update.checkedUrlsCount ?? current.checkedUrlsCount,
+      };
 
-      if (index !== -1) {
-        const current = state.streamers[index];
-        state.streamers[index] = {
-          ...current,
-          checkStatus: checkStatus ?? current.checkStatus,
-          isLive: isLive !== undefined ? isLive : current.isLive,
-          cachedInfo: isLive ? cachedInfo : cachedInfo || current.cachedInfo,
-          lastChecked: lastChecked || current.lastChecked,
-          lastError: lastError !== undefined ? lastError : current.lastError,
-        };
-
-        broadcastStateUpdate();
-      }
+      // Persist status updates to status.json
+      saveStatus(state.statusMap);
+      broadcastStateUpdate();
     },
     onLog: (tag, msg, isError) => {
       logToWindows(tag, msg, isError);
     },
-    intervalMs: 60000, // Check once a minute per link
+    intervalMs: 60000,
   });
 
   liveCheckerService.start();
@@ -343,75 +430,92 @@ function initBackgroundChecker() {
 
 // IPC Handlers
 ipcMain.handle("settings:get", () => {
-  return state;
+  return {
+    ...state,
+    streamers: getSortedEnrichedStreamers(),
+  };
+});
+
+ipcMain.handle("status:get", () => {
+  return state.statusMap;
 });
 
 ipcMain.handle("streamers:get", () => {
-  return state.streamers;
+  return getSortedEnrichedStreamers();
 });
 
 ipcMain.handle("streamers:update", (_event, newStreamers) => {
   if (Array.isArray(newStreamers)) {
-    state.streamers = newStreamers;
-    state.users = newStreamers.map((s) => s.name || s.url);
+    state.streamers = newStreamers.map((s, idx) =>
+      normalizeStreamerConfig(s, idx),
+    );
+    saveSettings(state);
     updateOverlayBounds();
     broadcastStateUpdate();
   }
-  return state.streamers;
+  return getSortedEnrichedStreamers();
 });
 
 ipcMain.handle("streamers:add", (_event, streamerData) => {
-  if (!streamerData || !streamerData.url) return state.streamers;
+  if (!streamerData) return getSortedEnrichedStreamers();
 
-  const url = normalizeUrl(streamerData.url);
-  const platform = streamerData.platform || detectPlatform(url);
+  const urls = Array.isArray(streamerData.urls)
+    ? streamerData.urls.map((u) => normalizeUrl(u)).filter(Boolean)
+    : streamerData.url
+      ? [normalizeUrl(streamerData.url)]
+      : [];
+
+  if (urls.length === 0) return getSortedEnrichedStreamers();
+
   const name =
     streamerData.name && streamerData.name.trim()
       ? streamerData.name.trim()
-      : extractStreamerName(url);
+      : extractStreamerName(urls[0]);
+
   const id = `streamer-${Date.now()}-${crypto.randomInt(100, 999)}`;
 
-  const newStreamer = {
+  const newStreamer = normalizeStreamerConfig({
     id,
     name,
-    url,
-    platform,
-    isLive: false,
-    cachedInfo: null,
-    lastChecked: null,
-    checkStatus: "idle",
-    lastError: null,
-  };
+    avatarImage: streamerData.avatarImage || "",
+    urls,
+    triggers: streamerData.triggers || {
+      titleChange: true,
+      viewerCountEnabled: false,
+      viewerCountThreshold: 5000,
+      goingLive: true,
+      categoryChange: true,
+    },
+  });
 
   state.streamers.push(newStreamer);
-  state.users = state.streamers.map((s) => s.name);
+  saveSettings(state);
 
   updateOverlayBounds();
   broadcastStateUpdate();
 
-  // Trigger immediate check in background for newly added streamer
   if (liveCheckerService) {
     liveCheckerService.checkSingleStreamer(newStreamer);
   }
 
-  return state.streamers;
+  return getSortedEnrichedStreamers();
 });
 
 ipcMain.handle("streamers:remove", (_event, streamerId) => {
-  state.streamers = state.streamers.filter(
-    (s) => s.id !== streamerId && s.url !== streamerId,
-  );
-  state.users = state.streamers.map((s) => s.name);
+  state.streamers = state.streamers.filter((s) => s.id !== streamerId);
+  delete state.statusMap[streamerId];
+
+  saveSettings(state);
+  saveStatus(state.statusMap);
+
   updateOverlayBounds();
   broadcastStateUpdate();
-  return state.streamers;
+  return getSortedEnrichedStreamers();
 });
 
 ipcMain.handle("streamers:check-now", async (_event, streamerId) => {
   if (streamerId) {
-    const streamer = state.streamers.find(
-      (s) => s.id === streamerId || s.url === streamerId,
-    );
+    const streamer = state.streamers.find((s) => s.id === streamerId);
     if (streamer && liveCheckerService) {
       return await liveCheckerService.checkSingleStreamer(streamer);
     }
@@ -422,43 +526,12 @@ ipcMain.handle("streamers:check-now", async (_event, streamerId) => {
   return false;
 });
 
-ipcMain.handle("users:get", () => {
-  return state.users;
-});
-
-ipcMain.handle("users:update", (_event, newUsers) => {
-  if (Array.isArray(newUsers)) {
-    if (typeof newUsers[0] === "string") {
-      state.users = newUsers;
-      state.streamers = newUsers.map((name, i) => {
-        const existing = state.streamers[i];
-        if (existing) {
-          return { ...existing, name };
-        }
-        return {
-          id: `streamer-${Date.now()}-${i}`,
-          name,
-          url: `https://www.youtube.com/@${name}`,
-          platform: "youtube",
-          isLive: false,
-          cachedInfo: null,
-          lastChecked: null,
-          checkStatus: "idle",
-          lastError: null,
-        };
-      });
-    } else if (typeof newUsers[0] === "object") {
-      state.streamers = newUsers;
-      state.users = newUsers.map((s) => s.name || s.url);
-    }
-    updateOverlayBounds();
-    broadcastStateUpdate();
-  }
-  return state.users;
-});
-
 ipcMain.handle("settings:update", (_event, partialSettings) => {
   if (!partialSettings || typeof partialSettings !== "object") return state;
+
+  if (typeof partialSettings.sortBy === "string") {
+    state.sortBy = partialSettings.sortBy;
+  }
 
   if (typeof partialSettings.isAlwaysOnTop === "boolean") {
     state.isAlwaysOnTop = partialSettings.isAlwaysOnTop;
@@ -500,16 +573,38 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
   }
 
   if (Array.isArray(partialSettings.streamers)) {
-    state.streamers = partialSettings.streamers;
-    state.users = state.streamers.map((s) => s.name || s.url);
-    updateOverlayBounds();
-  } else if (Array.isArray(partialSettings.users)) {
-    state.users = partialSettings.users;
+    state.streamers = partialSettings.streamers.map((s, idx) =>
+      normalizeStreamerConfig(s, idx),
+    );
     updateOverlayBounds();
   }
 
+  saveSettings(state);
   broadcastStateUpdate();
-  return state;
+  return {
+    ...state,
+    streamers: getSortedEnrichedStreamers(),
+  };
+});
+
+// File picker for selecting local avatar image
+ipcMain.handle("dialog:select-avatar-image", async () => {
+  const result = await dialog.showOpenDialog({
+    title: "Select Avatar Image",
+    properties: ["openFile"],
+    filters: [
+      {
+        name: "Images",
+        extensions: ["png", "jpg", "jpeg", "webp", "gif", "svg"],
+      },
+      { name: "All Files", extensions: ["*"] },
+    ],
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
 });
 
 ipcMain.handle("settings:open", () => {
@@ -543,12 +638,10 @@ ipcMain.handle("app:open-external", async (_event, url) => {
   return false;
 });
 
-// Single Streamer Check Task Execution
 ipcMain.handle("task:run-streamer-check", async (_event, streamer) => {
-  return await checkStreamerLiveTask(streamer);
+  return await checkStreamerLiveTask(streamer, state.statusMap[streamer?.id]);
 });
 
-// Node.js Side Pet Avatar Task Execution
 ipcMain.handle("task:run-pet-avatar", async (_event, userName) => {
   return await petTask({ userName });
 });
@@ -570,6 +663,7 @@ ipcMain.handle("window:toggle-always-on-top", () => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.setAlwaysOnTop(state.isAlwaysOnTop);
   }
+  saveSettings(state);
   broadcastStateUpdate();
   return state.isAlwaysOnTop;
 });
@@ -581,6 +675,7 @@ ipcMain.handle("window:toggle-click-through", () => {
       forward: true,
     });
   }
+  saveSettings(state);
   broadcastStateUpdate();
   return state.isIgnoringMouseEvents;
 });
@@ -590,6 +685,7 @@ ipcMain.handle("window:set-opacity", (_event, opacity) => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.setOpacity(state.currentOpacity);
   }
+  saveSettings(state);
   broadcastStateUpdate();
   return state.currentOpacity;
 });
@@ -606,6 +702,7 @@ ipcMain.handle("window:hide", (event) => {
     if (win === overlayWindow) {
       state.overlayVisible = false;
     }
+    saveSettings(state);
     broadcastStateUpdate();
   }
 });

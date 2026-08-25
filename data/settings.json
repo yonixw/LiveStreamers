@@ -1,0 +1,57 @@
+{
+  "sortBy": "last-triggered",
+  "isAlwaysOnTop": true,
+  "isIgnoringMouseEvents": false,
+  "currentOpacity": 1,
+  "overlayVisible": true,
+  "streamers": [
+    {
+      "id": "yt-lofigirl",
+      "name": "Lofi Girl",
+      "avatarImage": "",
+      "urls": [
+        "https://www.youtube.com/@LofiGirl/live"
+      ],
+      "triggers": {
+        "titleChange": true,
+        "viewerCountEnabled": false,
+        "viewerCountThreshold": 5000,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    },
+    {
+      "id": "tw-shroud",
+      "name": "Shroud",
+      "avatarImage": "",
+      "urls": [
+        "https://www.twitch.tv/shroud",
+        "https://www.youtube.com/@shroud/live"
+      ],
+      "triggers": {
+        "titleChange": true,
+        "viewerCountEnabled": false,
+        "viewerCountThreshold": 10000,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    },
+    {
+      "id": "kc-xqc",
+      "name": "xQc",
+      "avatarImage": "",
+      "urls": [
+        "https://kick.com/xqc",
+        "https://www.twitch.tv/xqcow",
+        "https://www.youtube.com/@xQcOW/live"
+      ],
+      "triggers": {
+        "titleChange": true,
+        "viewerCountEnabled": true,
+        "viewerCountThreshold": 20000,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    }
+  ]
+}
