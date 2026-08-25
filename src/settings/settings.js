@@ -72,47 +72,87 @@ document.addEventListener("DOMContentLoaded", async () => {
   let localStreamers = [];
   const petTaskStates = new Map();
 
-  // Logging helper
-  function appendLog(message, type = "info", tag = "LiveCheck") {
-    const timestamp = new Date().toLocaleTimeString();
-
+  // Output a log entry to browser DevTools console
+  function logToDevToolsConsole(entry) {
+    if (!entry) return;
+    const { timestamp, tag, message, type } = entry;
+    const prefix = `[${timestamp || new Date().toLocaleTimeString()}] [${tag || "System"}]`;
     if (type === "error") {
-      console.error(`[${tag} ${timestamp}]`, message);
+      console.error(prefix, message);
+    } else if (type === "warn") {
+      console.warn(prefix, message);
     } else {
-      console.log(`[${tag} ${timestamp}]`, message);
+      console.log(prefix, message);
     }
+  }
 
+  // Display only the latest log entry in the Settings UI
+  function displayLatestLogUI(entry) {
+    if (!logTerminal || !entry) return;
+
+    const { timestamp, tag, message, type } = entry;
+    const logType = type || "info";
+
+    logTerminal.innerHTML = "";
+
+    const entryEl = document.createElement("div");
+    entryEl.className = `log-entry log-${logType}`;
+
+    const timeSpan = document.createElement("span");
+    timeSpan.className = "log-time";
+    timeSpan.textContent = `[${timestamp || new Date().toLocaleTimeString()}]`;
+
+    const tagSpan = document.createElement("span");
+    tagSpan.className = "log-tag";
+    tagSpan.textContent = `[${tag || "System"}]`;
+
+    const msgSpan = document.createElement("span");
+    msgSpan.className = "log-msg";
+    msgSpan.textContent =
+      typeof message === "object"
+        ? JSON.stringify(message)
+        : String(message || "");
+
+    entryEl.appendChild(timeSpan);
+    entryEl.appendChild(tagSpan);
+    entryEl.appendChild(msgSpan);
+    logTerminal.appendChild(entryEl);
+  }
+
+  // Process an incoming log entry: print to page console + update latest log in UI
+  function handleLogEntry(entry, updateUI = true) {
+    logToDevToolsConsole(entry);
+    if (updateUI) {
+      displayLatestLogUI(entry);
+    }
+  }
+
+  // Logging helper for renderer user actions
+  function appendLog(message, type = "info", tag = "Settings") {
     if (window.electronAPI && window.electronAPI.logTerminal) {
       window.electronAPI.logTerminal(tag, message, type === "error");
-    }
-
-    if (logTerminal) {
-      const entry = document.createElement("div");
-      entry.className = `log-entry log-${type}`;
-
-      const timeSpan = document.createElement("span");
-      timeSpan.className = "log-time";
-      timeSpan.textContent = `[${timestamp}]`;
-
-      const tagSpan = document.createElement("span");
-      tagSpan.className = "log-tag";
-      tagSpan.textContent = `[${tag}]`;
-
-      const msgSpan = document.createElement("span");
-      msgSpan.className = "log-msg";
-      msgSpan.textContent = message;
-
-      entry.appendChild(timeSpan);
-      entry.appendChild(tagSpan);
-      entry.appendChild(msgSpan);
-      logTerminal.appendChild(entry);
-      logTerminal.scrollTop = logTerminal.scrollHeight;
+    } else {
+      handleLogEntry(
+        {
+          timestamp: new Date().toLocaleTimeString(),
+          tag,
+          message,
+          type,
+        },
+        true,
+      );
     }
   }
 
   // Clear logs
   if (btnClearLogs) {
-    btnClearLogs.addEventListener("click", () => {
+    btnClearLogs.addEventListener("click", async () => {
+      if (window.electronAPI && window.electronAPI.clearLogs) {
+        await window.electronAPI.clearLogs();
+      }
+      try {
+        console.clear();
+      } catch (_e) {}
       if (logTerminal) {
         logTerminal.innerHTML = `
           <div class="log-entry system-log">
@@ -531,41 +571,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     petTaskStates.set(streamer.id, "running");
     updateItemPetTaskUI(itemElement, streamer.id);
 
-    appendLog(
-      `[${streamerName}] Start Sleep - Dispatched to Node.js backend (2s async task)...`,
-      "info",
-      "PetTask",
-    );
-
     try {
       if (window.electronAPI && window.electronAPI.runPetAvatarTask) {
         const result = await window.electronAPI.runPetAvatarTask(streamerName);
         if (result.success) {
           petTaskStates.set(streamer.id, "success");
           updateItemPetTaskUI(itemElement, streamer.id);
-          appendLog(
-            `[${streamerName}] End Sleep - Success! [Node.js Crypto: ${result.cryptoRandom}]`,
-            "success",
-            "PetTask",
-          );
         } else {
           petTaskStates.set(streamer.id, "error");
           updateItemPetTaskUI(itemElement, streamer.id);
-          appendLog(
-            `[${streamerName}] Error sleep - ${result.error}`,
-            "error",
-            "PetTask",
-          );
         }
       }
     } catch (err) {
       petTaskStates.set(streamer.id, "error");
       updateItemPetTaskUI(itemElement, streamer.id);
-      appendLog(
-        `[${streamerName}] Error sleep - ${err.message}`,
-        "error",
-        "PetTask",
-      );
     }
   }
 
@@ -1289,6 +1308,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (err) {
       console.error("Failed to load initial settings:", err);
     }
+
+    try {
+      if (window.electronAPI.getLogHistory) {
+        const history = await window.electronAPI.getLogHistory();
+        if (Array.isArray(history) && history.length > 0) {
+          history.forEach((entry) => logToDevToolsConsole(entry));
+          displayLatestLogUI(history[history.length - 1]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load initial log history:", err);
+    }
+  }
+
+  // Listen for live backend logs
+  if (window.electronAPI && window.electronAPI.onLogEntry) {
+    window.electronAPI.onLogEntry((entry) => {
+      handleLogEntry(entry, true);
+    });
   }
 
   // Listen for live updates

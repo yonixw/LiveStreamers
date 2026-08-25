@@ -12,6 +12,98 @@ const {
 const path = require("node:path");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
+const util = require("node:util");
+
+// Centralized log capture & history
+const logHistory = [];
+const MAX_LOG_HISTORY = 500;
+let logCounter = 0;
+
+const originalConsole = {
+  log: console.log.bind(console),
+  error: console.error.bind(console),
+  warn: console.warn.bind(console),
+  info: console.info.bind(console),
+  debug: (console.debug || console.log).bind(console),
+};
+
+function parseLogMessage(level, formattedText) {
+  let timestamp = new Date().toLocaleTimeString();
+  let tag = level === "error" ? "Error" : level === "warn" ? "Warn" : "System";
+  let message = formattedText;
+  let type = level === "error" ? "error" : level === "warn" ? "warn" : "info";
+
+  // Match pattern 1: "[12:34:56 PM] [Some Tag] message content..."
+  const fullMatch = formattedText.match(
+    /^\[([\d: APMapm]+)\]\s*\[([^\]]+)\]\s*([\s\S]*)$/,
+  );
+  if (fullMatch) {
+    timestamp = fullMatch[1].trim();
+    tag = fullMatch[2].trim();
+    message = fullMatch[3].trim();
+  } else {
+    // Match pattern 2: "[Some Tag] message content..."
+    const tagMatch = formattedText.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
+    if (tagMatch) {
+      tag = tagMatch[1].trim();
+      message = tagMatch[2].trim();
+    }
+  }
+
+  // Detect success type if not already error/warn
+  if (type === "info") {
+    if (
+      message.includes("is LIVE!") ||
+      message.includes("Success!") ||
+      message.includes("Successfully downloaded")
+    ) {
+      type = "success";
+    }
+  }
+
+  return { timestamp, tag, message, type };
+}
+
+function captureLog(level, args) {
+  // Always invoke original console for terminal / cmd visibility
+  if (originalConsole[level]) {
+    originalConsole[level](...args);
+  }
+
+  try {
+    const formatted = util.format(...args);
+    const parsed = parseLogMessage(level, formatted);
+    const entry = {
+      id: ++logCounter,
+      timestamp: parsed.timestamp,
+      tag: parsed.tag,
+      message: parsed.message,
+      type: parsed.type,
+    };
+
+    logHistory.push(entry);
+    if (logHistory.length > MAX_LOG_HISTORY) {
+      logHistory.shift();
+    }
+
+    if (
+      settingsWindow &&
+      !settingsWindow.isDestroyed() &&
+      !settingsWindow.webContents.isDestroyed()
+    ) {
+      settingsWindow.webContents.send("log:entry", entry);
+    }
+  } catch (_e) {
+    // Prevent recursive logging failures
+  }
+}
+
+// Global console hook across all backend tasks and modules
+console.log = (...args) => captureLog("log", args);
+console.error = (...args) => captureLog("error", args);
+console.warn = (...args) => captureLog("warn", args);
+console.info = (...args) => captureLog("info", args);
+console.debug = (...args) => captureLog("debug", args);
 const { petTask } = require("./tasks/example");
 const {
   loadSettings,
@@ -898,6 +990,15 @@ ipcMain.handle("task:run-pet-avatar", async (_event, userName) => {
 
 ipcMain.handle("log:terminal", (_event, { tag, message, isError }) => {
   logToWindows(tag, message, isError);
+  return true;
+});
+
+ipcMain.handle("log:get-history", () => {
+  return logHistory;
+});
+
+ipcMain.handle("log:clear", () => {
+  logHistory.length = 0;
   return true;
 });
 

@@ -44,12 +44,19 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on("status:updated", handler);
     return () => ipcRenderer.removeListener("status:updated", handler);
   },
+  onLogEntry: (callback) => {
+    const handler = (_event, entry) => callback(entry);
+    ipcRenderer.on("log:entry", handler);
+    return () => ipcRenderer.removeListener("log:entry", handler);
+  },
 
   // Overlay & System actions
   openExternal: (url) => ipcRenderer.invoke("app:open-external", url),
   centerOverlay: () => ipcRenderer.invoke("window:center-overlay"),
   openSettings: () => ipcRenderer.invoke("settings:open"),
   toggleDevTools: () => ipcRenderer.invoke("settings:toggle-devtools"),
+  getLogHistory: () => ipcRenderer.invoke("log:get-history"),
+  clearLogs: () => ipcRenderer.invoke("log:clear"),
   logTerminal: (tag, message, isError = false) =>
     ipcRenderer.invoke("log:terminal", { tag, message, isError }),
   toggleAlwaysOnTop: () => ipcRenderer.invoke("window:toggle-always-on-top"),
