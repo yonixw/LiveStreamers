@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Wired form reset, population for editing, submission, and quick presets in [`src/settings/settings.js`](src/settings/settings.js:456).
   - Rendered "Followed" badge (`📅 Followed: YYYY-MM-DD`) and "Note" tag (`💬 <text>`) in the Settings streamer list with tooltips and truncation in [`src/settings/settings.js:renderStreamersList()`](src/settings/settings.js:740) and styled in [`src/settings/settings.css`](src/settings/settings.css:928).
 
+### Changed
+- **Title trigger if contains**:
+  - Updated to check also game/category and also split the keyword by ',' comma. [`src\tasks\stream-checker.js`](src/tasks/stream-checker.js:249)
+
 ## [1.8.0] - 2026-08-26
 
 ### Added
