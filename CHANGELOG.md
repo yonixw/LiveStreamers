@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Twitch Stream Metadata Normalization & Extraction**:
+  - Fixed Twitch stream title and description extraction in [`extractStreamMetadata()`](src/tasks/yt-dlp-utils.js:186) by mapping the broadcast status from `description` to `title` instead of the generic `<user> (live)` placeholder.
+  - Added [`fetchTwitchLiveDetails()`](src/tasks/yt-dlp-utils.js:412) in [`src/tasks/yt-dlp-utils.js`](src/tasks/yt-dlp-utils.js:1) as a lightweight fallback using Node.js built-in `fetch` to retrieve Twitch live viewer count, game/category, and stream status when omitted by yt-dlp.
+  - Enhanced category and game detection for Twitch streams across `game`, `game_name`, `categories`, `category`, `tags`, and embedded query token parameters in `manifest_url`.
+  - Added robust viewer count resolution supporting multiple yt-dlp metric fields (`concurrent_view_count`, `live_viewers`, `viewer_count`, `viewers`, `live_viewer_count`, `view_count`).
+  - Added debug logging in [`getStreamMetadata()`](src/tasks/yt-dlp-utils.js:456) printing the parsed metadata JSON structure on each stream check.
+
 ## [1.5.1] - 2026-08-25
 
 ### Removed

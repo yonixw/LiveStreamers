@@ -387,7 +387,6 @@ async function getRawStreamInfo(targetUrl, options = {}) {
     "--dump-single-json",
     "--no-playlist",
     "--no-warnings",
-    "--no-call-home",
     "--skip-download",
   ];
 
@@ -410,6 +409,55 @@ async function getRawStreamInfo(targetUrl, options = {}) {
 }
 
 /**
+ * Fallback fetcher for Twitch.tv stream details (viewerCount, game/category, title)
+ * using public Twitch web client GraphQL API.
+ * @param {string} channelLogin
+ * @returns {Promise<{ viewerCount: number|null, game: string|null, category: string|null, title: string|null }|null>}
+ */
+async function fetchTwitchLiveDetails(channelLogin) {
+  if (!channelLogin || typeof channelLogin !== "string") return null;
+  const cleanLogin = channelLogin.trim().toLowerCase().replace(/^@+/, "");
+  try {
+    const res = await fetch("https://gql.twitch.tv/gql", {
+      method: "POST",
+      headers: {
+        "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `query { user(login: "${cleanLogin}") { stream { title viewersCount game { name } } } }`,
+      }),
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    const stream = data?.data?.user?.stream;
+    if (!stream) return null;
+
+    const viewerCount =
+      typeof stream.viewersCount === "number" ? stream.viewersCount : null;
+    const gameName =
+      typeof stream.game?.name === "string" && stream.game.name.trim()
+        ? stream.game.name.trim()
+        : null;
+    const title =
+      typeof stream.title === "string" && stream.title.trim()
+        ? stream.title.trim()
+        : null;
+
+    return {
+      viewerCount,
+      game: gameName,
+      category: gameName,
+      title,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Gets normalized metadata for a live stream, video, or channel.
  * Returns null for missing properties.
  * @param {string} targetUrl - Stream URL, channel URL, or video ID
@@ -419,6 +467,39 @@ async function getRawStreamInfo(targetUrl, options = {}) {
 async function getStreamMetadata(targetUrl, options = {}) {
   const rawInfo = await getRawStreamInfo(targetUrl, options);
   const metadata = extractStreamMetadata(rawInfo);
+
+  // If Twitch stream has null game or null viewer count, supplement using native fetch
+  const isTwitch =
+    (typeof targetUrl === "string" && targetUrl.includes("twitch.tv")) ||
+    (typeof metadata.url === "string" && metadata.url.includes("twitch.tv")) ||
+    (typeof metadata.channelUrl === "string" &&
+      metadata.channelUrl.includes("twitch.tv"));
+
+  if (isTwitch && (metadata.game === null || metadata.viewerCount === null)) {
+    const channelName =
+      metadata.channel ||
+      metadata.channelId ||
+      targetUrl.split("/").filter(Boolean).pop() ||
+      "";
+
+    const twitchDetails = await fetchTwitchLiveDetails(channelName);
+    if (twitchDetails) {
+      if (metadata.viewerCount === null && twitchDetails.viewerCount !== null) {
+        metadata.viewerCount = twitchDetails.viewerCount;
+      }
+      if (metadata.game === null && twitchDetails.game) {
+        metadata.game = twitchDetails.game;
+        metadata.category = twitchDetails.category;
+      }
+      if (!metadata.title && twitchDetails.title) {
+        metadata.title = twitchDetails.title;
+      }
+      if (twitchDetails.viewerCount !== null && !metadata.isLive) {
+        metadata.isLive = true;
+        metadata.liveStatus = "is_live";
+      }
+    }
+  }
 
   // Print structured metadata JSON (the schema saved in status.json) for debugging
   console.log(
