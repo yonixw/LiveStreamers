@@ -1,0 +1,1 @@
+can you summerize this chat into changelog format and add it to CHANGELOG.md (with date from this chat) - but write it from changelog POV - whats modiefied if existed etc.
