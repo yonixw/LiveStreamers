@@ -179,6 +179,16 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
       });
     }
 
+    case "viewers": {
+      return [...enriched].sort((a, b) => {
+        if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+        const viewersA = Number(a.cachedInfo?.viewerCount) || 0;
+        const viewersB = Number(b.cachedInfo?.viewerCount) || 0;
+        if (viewersA !== viewersB) return viewersB - viewersA;
+        return (a.name || "").localeCompare(b.name || "");
+      });
+    }
+
     case "longest-live": {
       return [...enriched].sort((a, b) => {
         if (a.isLive && !b.isLive) return -1;

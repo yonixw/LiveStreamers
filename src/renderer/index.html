@@ -12,7 +12,7 @@
 
 <body>
     <div id="overlay-root" class="overlay-root">
-        <!-- Always-Visible Drag & Anchor Header Bar -->
+        <!-- Always-Visible Drag & Anchor Header Bar (Clean "LS v1.0") -->
         <header class="overlay-header" title="Drag to move overlay | Double-click to pin | Right-click for settings">
             <div class="header-drag-zone">
                 <svg class="drag-grip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -23,45 +23,31 @@
                     <circle cx="9" cy="18" r="1.5"></circle>
                     <circle cx="15" cy="18" r="1.5"></circle>
                 </svg>
-                <span class="header-title">Live</span>
-                <span id="header-live-badge" class="header-live-badge">0 Live</span>
-            </div>
-
-            <div class="header-actions">
-                <!-- Quick Sort Action Buttons on Drag Anchor Bar -->
-                <div class="header-sort-buttons" title="Avatar Sort Order">
-                    <button id="btn-sort-triggered" class="header-sort-btn active" data-sort="last-triggered"
-                        title="Sort by Last Triggered / Events">
-                        ⚡
-                    </button>
-                    <button id="btn-sort-live" class="header-sort-btn" data-sort="longest-live"
-                        title="Sort by Longest Live / Last Live">
-                        ⏱️
-                    </button>
-                    <button id="btn-sort-az" class="header-sort-btn" data-sort="name" title="Sort Alphabetically (A-Z)">
-                        🔤
-                    </button>
-                </div>
-
-                <button id="btn-refresh" class="header-action-btn" title="Check Live Status Now">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-                    </svg>
-                </button>
-                <button id="btn-open-settings" class="header-action-btn" title="Open Settings">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path
-                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                        </path>
-                    </svg>
-                </button>
+                <span class="header-title">LS v1.0</span>
             </div>
         </header>
 
         <!-- Vertical Avatars List Container -->
         <div id="avatars-container" class="avatars-container align-left">
             <!-- Dynamic avatar circle cards rendered in vertical order by renderer.js -->
+        </div>
+
+        <!-- Stream Links Selection Popup Modal -->
+        <div id="links-popup" class="links-popup" style="display: none;">
+            <div class="links-popup-backdrop" id="links-popup-backdrop"></div>
+            <div class="links-popup-content">
+                <div class="links-popup-header">
+                    <div class="links-popup-title-group">
+                        <span id="links-popup-name" class="links-popup-streamer-name">Streamer</span>
+                        <span class="links-popup-sub">Select link to open:</span>
+                    </div>
+                    <button type="button" id="btn-close-links-popup" class="links-popup-close-btn"
+                        title="Close">✕</button>
+                </div>
+                <div id="links-popup-list" class="links-popup-list">
+                    <!-- Dynamic URL option buttons rendered on avatar click -->
+                </div>
+            </div>
         </div>
     </div>
 

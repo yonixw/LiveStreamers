@@ -586,10 +586,28 @@ body {
   font-weight: 500;
 }
 
+.trigger-title-contains-row,
 .trigger-viewer-row {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+}
+
+.input-title-contains {
+  width: 140px;
+  background: #090d16;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: #facc15;
+  font-weight: 600;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  outline: none;
+}
+
+.input-title-contains:focus {
+  border-color: var(--accent);
 }
 
 .input-threshold {

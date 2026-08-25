@@ -2,20 +2,40 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const overlayRoot = document.getElementById("overlay-root");
   const avatarsContainer = document.getElementById("avatars-container");
-  const btnOpenSettings = document.getElementById("btn-open-settings");
-  const btnRefresh = document.getElementById("btn-refresh");
-  const headerLiveBadge = document.getElementById("header-live-badge");
 
-  // Sort buttons on header
-  const btnSortTriggered = document.getElementById("btn-sort-triggered");
-  const btnSortLive = document.getElementById("btn-sort-live");
-  const btnSortAz = document.getElementById("btn-sort-az");
-  const sortButtons = [btnSortTriggered, btnSortLive, btnSortAz].filter(
-    Boolean,
-  );
+  // Multi-URL Popup Modal Elements
+  const linksPopup = document.getElementById("links-popup");
+  const linksPopupBackdrop = document.getElementById("links-popup-backdrop");
+  const linksPopupName = document.getElementById("links-popup-name");
+  const linksPopupList = document.getElementById("links-popup-list");
+  const btnCloseLinksPopup = document.getElementById("btn-close-links-popup");
 
   let streamersList = [];
-  let currentSortBy = "last-triggered";
+
+  // Helper to detect platform
+  function detectPlatform(url) {
+    if (!url || typeof url !== "string") return "other";
+    const lower = url.toLowerCase();
+    if (lower.includes("kick.com")) return "kick";
+    if (lower.includes("twitch.tv")) return "twitch";
+    if (lower.includes("youtube.com") || lower.includes("youtu.be"))
+      return "youtube";
+    return "other";
+  }
+
+  // Helper to get platform badge class
+  function getPlatformBadgeClass(plat) {
+    switch (plat) {
+      case "youtube":
+        return "badge-youtube";
+      case "twitch":
+        return "badge-twitch";
+      case "kick":
+        return "badge-kick";
+      default:
+        return "badge-other";
+    }
+  }
 
   // Helper to get initials
   function getInitials(name) {
@@ -107,63 +127,110 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Update Sort Button Active States
-  function updateSortButtonsUI(sortBy) {
-    currentSortBy = sortBy || "last-triggered";
-    sortButtons.forEach((btn) => {
-      const sortMode = btn.getAttribute("data-sort");
-      if (
-        sortMode === currentSortBy ||
-        (sortMode === "longest-live" &&
-          (currentSortBy === "longest-live" ||
-            currentSortBy === "last-started"))
-      ) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
+  // Close Links Popup
+  function closeLinksPopup() {
+    if (linksPopup) {
+      linksPopup.style.display = "none";
+    }
+  }
+
+  if (linksPopupBackdrop) {
+    linksPopupBackdrop.addEventListener("click", closeLinksPopup);
+  }
+  if (btnCloseLinksPopup) {
+    btnCloseLinksPopup.addEventListener("click", closeLinksPopup);
+  }
+
+  // Open Multi-URL Popup
+  function showLinksPopup(streamer, urls) {
+    if (!linksPopup || !linksPopupList) return;
+    const name = streamer.name || "Streamer";
+    if (linksPopupName) linksPopupName.textContent = name;
+    linksPopupList.innerHTML = "";
+
+    const activeUrl = streamer.activeUrl;
+    const isLive = Boolean(streamer.isLive);
+
+    urls.forEach((entry, idx) => {
+      const urlStr = typeof entry === "string" ? entry : entry?.url || "";
+      const plat = detectPlatform(urlStr);
+      const isActiveLiveLink = isLive && activeUrl === urlStr;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `links-popup-item-btn ${isActiveLiveLink ? "is-active-live" : ""}`;
+
+      const platBadge = document.createElement("span");
+      platBadge.className = `links-platform-badge ${getPlatformBadgeClass(plat)}`;
+      platBadge.textContent = plat.toUpperCase();
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "links-item-title";
+      textSpan.textContent = `#${idx + 1} ${plat.toUpperCase()}`;
+
+      btn.appendChild(platBadge);
+      btn.appendChild(textSpan);
+
+      if (isActiveLiveLink) {
+        const livePill = document.createElement("span");
+        livePill.className = "links-live-pill";
+        livePill.textContent = "LIVE 🔴";
+        btn.appendChild(livePill);
       }
+
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeLinksPopup();
+        if (urlStr && window.electronAPI && window.electronAPI.openExternal) {
+          window.electronAPI.openExternal(urlStr);
+        }
+      });
+
+      linksPopupList.appendChild(btn);
+    });
+
+    linksPopup.style.display = "flex";
+  }
+
+  // Extract clean URL list from streamer object
+  function getStreamerUrlsList(streamer) {
+    if (!streamer) return [];
+    let list = [];
+    if (Array.isArray(streamer.urls) && streamer.urls.length > 0) {
+      list = streamer.urls;
+    } else if (streamer.url) {
+      list = [{ url: streamer.url }];
+    }
+    return list.filter((u) => {
+      const str = typeof u === "string" ? u : u?.url;
+      return str && str.trim().length > 0;
     });
   }
 
-  // Header quick sort button click handlers
-  sortButtons.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const newSort = btn.getAttribute("data-sort");
-      updateSortButtonsUI(newSort);
-      if (window.electronAPI && window.electronAPI.updateSettings) {
-        window.electronAPI.updateSettings({ sortBy: newSort });
+  // Handle avatar click logic: direct open if 1 link, popup modal if multiple links
+  function handleAvatarClick(streamer) {
+    if (!streamer) return;
+    const urls = getStreamerUrlsList(streamer);
+
+    if (urls.length <= 1) {
+      const targetUrl =
+        streamer.activeUrl ||
+        (urls[0]
+          ? typeof urls[0] === "string"
+            ? urls[0]
+            : urls[0].url
+          : streamer.url);
+      if (targetUrl && window.electronAPI && window.electronAPI.openExternal) {
+        window.electronAPI.openExternal(targetUrl);
       }
-    });
-  });
-
-  // Update Header Live Badge
-  function updateHeaderBadge() {
-    if (!streamersList || streamersList.length === 0) {
-      if (headerLiveBadge.textContent !== "0 Live") {
-        headerLiveBadge.textContent = "0 Live";
-        headerLiveBadge.className = "header-live-badge";
-      }
-      return;
-    }
-
-    const liveCount = streamersList.filter((s) => s.isLive).length;
-    const badgeText = `${liveCount}/${streamersList.length} Live`;
-    if (headerLiveBadge.textContent !== badgeText) {
-      headerLiveBadge.textContent = badgeText;
-    }
-
-    if (liveCount > 0) {
-      headerLiveBadge.className = "header-live-badge badge-active";
     } else {
-      headerLiveBadge.className = "header-live-badge";
+      showLinksPopup(streamer, urls);
     }
   }
 
   // Fine-grained Non-Flashing In-Place Reconciliation (Vertical Stack)
   function renderAvatarsInPlace(streamers) {
     streamersList = Array.isArray(streamers) ? streamers : [];
-    updateHeaderBadge();
 
     const existingChildren = Array.from(avatarsContainer.children);
     const existingMap = new Map();
@@ -209,29 +276,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         frame.appendChild(inner);
         frame.appendChild(viewerTag);
 
-        // 2 info lines under avatar
+        // 2 info lines under avatar (Line 1: Category, Line 2: Live time / run time)
         const infoLines = document.createElement("div");
         infoLines.className = "streamer-info-lines";
 
         const line1 = document.createElement("div");
         line1.className = "streamer-line-1";
 
-        const nicknameSpan = document.createElement("span");
-        nicknameSpan.className = "streamer-nickname";
+        const categorySpan = document.createElement("span");
+        categorySpan.className = "streamer-category";
 
-        const runtimeSpan = document.createElement("span");
-        runtimeSpan.className = "streamer-runtime";
-
-        line1.appendChild(nicknameSpan);
-        line1.appendChild(runtimeSpan);
+        line1.appendChild(categorySpan);
 
         const line2 = document.createElement("div");
         line2.className = "streamer-line-2";
 
-        const categorySpan = document.createElement("span");
-        categorySpan.className = "streamer-category";
+        const runtimeSpan = document.createElement("span");
+        runtimeSpan.className = "streamer-runtime";
 
-        line2.appendChild(categorySpan);
+        line2.appendChild(runtimeSpan);
 
         infoLines.appendChild(line1);
         infoLines.appendChild(line2);
@@ -242,15 +305,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         card.addEventListener("click", (e) => {
           e.stopPropagation();
           const target = card._streamer || streamer;
-          const urlToOpen =
-            target.activeUrl || (target.urls && target.urls[0]) || target.url;
-          if (
-            urlToOpen &&
-            window.electronAPI &&
-            window.electronAPI.openExternal
-          ) {
-            window.electronAPI.openExternal(urlToOpen);
-          }
+          handleAvatarClick(target);
         });
       }
 
@@ -347,32 +402,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Line 1: Nickname + Run time (live time)
-      const nicknameSpan = card.querySelector(".streamer-nickname");
-      if (nicknameSpan) {
-        const nameText = streamer.name || "Streamer";
-        if (nicknameSpan.textContent !== nameText) {
-          nicknameSpan.textContent = nameText;
-        }
-      }
-
-      const runtimeSpan = card.querySelector(".streamer-runtime");
-      if (runtimeSpan) {
-        if (isLive) {
-          const startTime = cached ? cached.startTime || cached.liveTime : null;
-          const duration = formatLiveDuration(startTime);
-          const runtimeText = duration ? `• ${duration}` : "";
-          if (runtimeSpan.textContent !== runtimeText) {
-            runtimeSpan.textContent = runtimeText;
-          }
-          runtimeSpan.style.display = duration ? "inline" : "none";
-        } else {
-          runtimeSpan.textContent = "";
-          runtimeSpan.style.display = "none";
-        }
-      }
-
-      // Line 2: Category or "(no game)"
+      // Line 1: Category or "(no game)"
       const categorySpan = card.querySelector(".streamer-category");
       if (categorySpan) {
         let categoryText = "(no game)";
@@ -388,29 +418,22 @@ document.addEventListener("DOMContentLoaded", async () => {
           categorySpan.textContent = categoryText;
         }
       }
-    });
-  }
 
-  // Refresh live button
-  if (btnRefresh) {
-    btnRefresh.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      btnRefresh.classList.add("spinning");
-      if (window.electronAPI && window.electronAPI.checkStreamerLive) {
-        await window.electronAPI.checkStreamerLive();
-      }
-      setTimeout(() => {
-        btnRefresh.classList.remove("spinning");
-      }, 1500);
-    });
-  }
-
-  // Open settings button
-  if (btnOpenSettings) {
-    btnOpenSettings.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (window.electronAPI && window.electronAPI.openSettings) {
-        window.electronAPI.openSettings();
+      // Line 2: Live time / run time
+      const runtimeSpan = card.querySelector(".streamer-runtime");
+      if (runtimeSpan) {
+        if (isLive) {
+          const startTime = cached ? cached.startTime || cached.liveTime : null;
+          const duration = formatLiveDuration(startTime);
+          const runtimeText = duration ? duration : "Live";
+          if (runtimeSpan.textContent !== runtimeText) {
+            runtimeSpan.textContent = runtimeText;
+          }
+        } else {
+          if (runtimeSpan.textContent !== "Offline") {
+            runtimeSpan.textContent = "Offline";
+          }
+        }
       }
     });
   }
@@ -440,9 +463,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       if (window.electronAPI.getSettings) {
         const initialSettings = await window.electronAPI.getSettings();
-        if (initialSettings.sortBy) {
-          updateSortButtonsUI(initialSettings.sortBy);
-        }
         applyLayoutSettings(initialSettings);
       }
       if (window.electronAPI.getStreamers) {
@@ -464,9 +484,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.electronAPI && window.electronAPI.onSettingsUpdated) {
     window.electronAPI.onSettingsUpdated((newSettings) => {
       if (newSettings) {
-        if (newSettings.sortBy) {
-          updateSortButtonsUI(newSettings.sortBy);
-        }
         applyLayoutSettings(newSettings);
       }
     });

@@ -4,13 +4,13 @@
   "avatarAlignment": "left",
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
-  "currentOpacity": 0.5,
+  "currentOpacity": 1,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 1,
-    "y": 21,
-    "width": 200,
-    "height": 475
+    "x": 8,
+    "y": 24,
+    "width": 112,
+    "height": 416
   },
   "streamers": [
     {
@@ -25,86 +25,8 @@
       ],
       "triggers": {
         "titleChange": true,
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
-      "id": "kc-xqc",
-      "name": "xQc",
-      "avatarImage": "https://yt3.ggpht.com/tecmayBItTkHHuJQiu1WQ5XCBRXYFOcmTh2KLD0b5RTbgI5gRLUyhmZ54MF5QZMC2EFzOkq0=s48-c-k-c0x00ffffff-no-rj",
-      "urls": [
-        {
-          "url": "https://kick.com/xqc",
-          "freqMinutes": 1
-        },
-        {
-          "url": "https://www.twitch.tv/xqcow",
-          "freqMinutes": 1
-        },
-        {
-          "url": "https://www.youtube.com/@xQcOW/live",
-          "freqMinutes": 1
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "viewerCountEnabled": true,
-        "viewerCountThreshold": 6500,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
-      "id": "streamer-1787622950994-538",
-      "name": "44",
-      "avatarImage": "",
-      "urls": [
-        {
-          "url": "https://kick.com/xqc4",
-          "freqMinutes": 1
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
-      "id": "streamer-1787623014380-193",
-      "name": "55",
-      "avatarImage": "",
-      "urls": [
-        {
-          "url": "https://kick.com/xqc3",
-          "freqMinutes": 1
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
-      "id": "streamer-1787623024538-960",
-      "name": "A6",
-      "avatarImage": "",
-      "urls": [
-        {
-          "url": "https://kick.com/xqc6",
-          "freqMinutes": 1
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
+        "titleContainsEnabled": false,
+        "titleContainsText": "",
         "viewerCountEnabled": false,
         "viewerCountThreshold": 5000,
         "goingLive": true,
@@ -122,11 +44,13 @@
         },
         {
           "url": "https://www.youtube.com/@shroud/live",
-          "freqMinutes": 1
+          "freqMinutes": 2
         }
       ],
       "triggers": {
         "titleChange": true,
+        "titleContainsEnabled": false,
+        "titleContainsText": "",
         "viewerCountEnabled": false,
         "viewerCountThreshold": 10000,
         "goingLive": true,
@@ -134,55 +58,29 @@
       }
     },
     {
-      "id": "streamer-1787622930244-439",
-      "name": "xQc2",
+      "id": "kc-xqc",
+      "name": "xQc",
       "avatarImage": "",
       "urls": [
         {
-          "url": "https://kick.com/xqc2",
+          "url": "https://kick.com/xqc",
           "freqMinutes": 1
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
-      "id": "streamer-1787622940202-653",
-      "name": "xQc3",
-      "avatarImage": "",
-      "urls": [
+        },
         {
-          "url": "https://kick.com/xqc3",
+          "url": "https://www.twitch.tv/xqcow",
           "freqMinutes": 1
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
-      "id": "streamer-1787624908521-619",
-      "name": "PR",
-      "avatarImage": "",
-      "urls": [
+        },
         {
-          "url": "https://kick.com/prsek",
-          "freqMinutes": 5
+          "url": "https://www.youtube.com/@xQcOW/live",
+          "freqMinutes": 3
         }
       ],
       "triggers": {
         "titleChange": true,
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
+        "titleContainsEnabled": false,
+        "titleContainsText": "",
+        "viewerCountEnabled": true,
+        "viewerCountThreshold": 20000,
         "goingLive": true,
         "categoryChange": true
       }

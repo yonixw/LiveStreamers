@@ -31,6 +31,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Trigger Form Elements
   const trigGoingLive = document.getElementById("trig-going-live");
   const trigTitleChange = document.getElementById("trig-title-change");
+  const trigTitleContainsEnabled = document.getElementById(
+    "trig-title-contains-enabled",
+  );
+  const trigTitleContainsText = document.getElementById(
+    "trig-title-contains-text",
+  );
   const trigCategoryChange = document.getElementById("trig-category-change");
   const trigViewerEnabled = document.getElementById("trig-viewer-enabled");
   const trigViewerThreshold = document.getElementById("trig-viewer-threshold");
@@ -381,6 +387,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     trigGoingLive.checked = true;
     trigTitleChange.checked = true;
+    if (trigTitleContainsEnabled) trigTitleContainsEnabled.checked = false;
+    if (trigTitleContainsText) trigTitleContainsText.value = "";
     trigCategoryChange.checked = true;
     trigViewerEnabled.checked = false;
     trigViewerThreshold.value = "5000";
@@ -403,6 +411,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const trig = streamer.triggers || {};
     trigGoingLive.checked = trig.goingLive !== false;
     trigTitleChange.checked = trig.titleChange !== false;
+    if (trigTitleContainsEnabled) {
+      trigTitleContainsEnabled.checked = Boolean(trig.titleContainsEnabled);
+    }
+    if (trigTitleContainsText) {
+      trigTitleContainsText.value = trig.titleContainsText || "";
+    }
     trigCategoryChange.checked = trig.categoryChange !== false;
     trigViewerEnabled.checked = Boolean(trig.viewerCountEnabled);
     trigViewerThreshold.value = String(trig.viewerCountThreshold || 5000);
@@ -433,6 +447,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const triggers = {
       goingLive: trigGoingLive.checked,
       titleChange: trigTitleChange.checked,
+      titleContainsEnabled: trigTitleContainsEnabled
+        ? trigTitleContainsEnabled.checked
+        : false,
+      titleContainsText: trigTitleContainsText
+        ? trigTitleContainsText.value.trim()
+        : "",
       categoryChange: trigCategoryChange.checked,
       viewerCountEnabled: trigViewerEnabled.checked,
       viewerCountThreshold: Number(trigViewerThreshold.value) || 5000,

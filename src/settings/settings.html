@@ -41,7 +41,15 @@
                         <div class="sort-card-content">
                             <span class="sort-title">⚡ Last Triggered</span>
                             <span class="sort-desc">Priority to avatars with latest events (Going live, Title change,
-                                Viewer spike)</span>
+                                Keyword match, Viewer spike)</span>
+                        </div>
+                    </label>
+
+                    <label class="sort-card">
+                        <input type="radio" name="sort-order" value="viewers" />
+                        <div class="sort-card-content">
+                            <span class="sort-title">👁️ Viewer Count</span>
+                            <span class="sort-desc">Highest live viewer count first, then offline</span>
                         </div>
                     </label>
 
@@ -208,8 +216,19 @@
                             <label class="trigger-checkbox">
                                 <input type="checkbox" id="trig-category-change" checked />
                                 <span class="trigger-custom-check"></span>
-                                <span class="trigger-label">🎮 Category/Game Change</span>
+                                <span class="trigger-label">🎮 Category Change</span>
                             </label>
+
+                            <div class="trigger-title-contains-row">
+                                <label class="trigger-checkbox">
+                                    <input type="checkbox" id="trig-title-contains-enabled" />
+                                    <span class="trigger-custom-check"></span>
+                                    <span class="trigger-label">🔍 Title contains:</span>
+                                </label>
+                                <input type="text" id="trig-title-contains-text" placeholder="e.g. drops, tournament"
+                                    class="input-title-contains" />
+                                <span class="trigger-hint">(case insensitive)</span>
+                            </div>
 
                             <div class="trigger-viewer-row">
                                 <label class="trigger-checkbox">
@@ -219,7 +238,7 @@
                                 </label>
                                 <input type="number" id="trig-viewer-threshold" min="0" step="1" value="5000"
                                     class="input-threshold" />
-                                <span class="trigger-hint">(and increased from last status)</span>
+                                <span class="trigger-hint">(and increased)</span>
                             </div>
                         </div>
                     </div>

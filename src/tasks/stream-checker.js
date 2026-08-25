@@ -245,9 +245,41 @@ function evaluateTriggers(streamer, current, previous = null) {
     }
   }
 
-  // If both current and previous were live, check in-stream triggers
+  // If streamer is live, evaluate title keyword and in-stream triggers
+  if (current.isLive) {
+    // 2. Title Contains Text Trigger (case-insensitive)
+    if (
+      triggers.titleContainsEnabled &&
+      triggers.titleContainsText &&
+      triggers.titleContainsText.trim()
+    ) {
+      const keyword = triggers.titleContainsText.trim().toLowerCase();
+      const currTitle = (currInfo.title || "").toLowerCase();
+      const prevTitle = (prevInfo.title || "").toLowerCase();
+
+      // Check if current title contains keyword and it was not previously matching (or just went live)
+      if (
+        currTitle.includes(keyword) &&
+        (!prev.isLive || !prevTitle.includes(keyword))
+      ) {
+        const rawKeyword = triggers.titleContainsText.trim();
+        return {
+          type: "title_keyword",
+          label: `Title: "${rawKeyword}"`,
+          message: `Stream title contains "${rawKeyword}": "${currInfo.title || ""}"`,
+          diff: {
+            from: prevInfo.title || "Offline",
+            to: currInfo.title || rawKeyword,
+          },
+          timestamp: nowIso,
+        };
+      }
+    }
+  }
+
+  // If both current and previous were live, check in-stream changes
   if (current.isLive && prev.isLive) {
-    // 2. Stream Title Change Trigger (comparing cleaned titles)
+    // 3. Stream Title Change Trigger (comparing cleaned titles)
     if (triggers.titleChange !== false) {
       const prevTitle = cleanStreamTitle(prevInfo.title || "") || "";
       const currTitle = cleanStreamTitle(currInfo.title || "") || "";

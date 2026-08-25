@@ -148,6 +148,11 @@ function normalizeStreamerConfig(streamer, index = 0) {
 
   const triggers = {
     titleChange: streamer.triggers?.titleChange ?? true,
+    titleContainsEnabled: streamer.triggers?.titleContainsEnabled ?? false,
+    titleContainsText:
+      typeof streamer.triggers?.titleContainsText === "string"
+        ? streamer.triggers.titleContainsText.trim()
+        : "",
     viewerCountEnabled: streamer.triggers?.viewerCountEnabled ?? false,
     viewerCountThreshold: streamer.triggers?.viewerCountThreshold ?? 5000,
     goingLive: streamer.triggers?.goingLive ?? true,

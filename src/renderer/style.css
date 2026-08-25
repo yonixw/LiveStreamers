@@ -33,13 +33,13 @@ body {
   gap: 8px;
 }
 
-/* Always-Visible Top Drag & Anchor Header */
+/* Always-Visible Top Drag & Anchor Header (Only "LS v1.0") */
 .overlay-header {
   width: 100%;
   max-width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(8px);
   padding: 4px 10px;
@@ -65,6 +65,7 @@ body {
 .header-drag-zone {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   pointer-events: none;
 }
@@ -79,104 +80,8 @@ body {
   font-size: 0.72rem;
   font-weight: 700;
   color: #f8fafc;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-}
-
-.header-live-badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transition: all 0.2s;
-}
-
-.header-live-badge.badge-active {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
-  border-color: rgba(34, 197, 94, 0.4);
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  -webkit-app-region: no-drag;
-}
-
-/* Quick Sort Icon Buttons on Drag Anchor Header */
-.header-sort-buttons {
-  display: flex;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  padding: 1px 2px;
-  gap: 2px;
-}
-
-.header-sort-btn {
-  background: transparent;
-  border: none;
-  font-size: 0.7rem;
-  padding: 2px 4px;
-  border-radius: 999px;
-  cursor: pointer;
-  color: #94a3b8;
-  opacity: 0.6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  line-height: 1;
-}
-
-.header-sort-btn:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-}
-
-.header-sort-btn.active {
-  opacity: 1;
-  background: #6366f1;
-  color: #ffffff;
-  box-shadow: 0 0 6px rgba(99, 102, 241, 0.6);
-}
-
-.header-action-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #cbd5e1;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.header-action-btn:hover {
-  background: #6366f1;
-  color: #ffffff;
-  border-color: #6366f1;
-  transform: scale(1.1);
-}
-
-.header-action-btn.spinning svg {
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* Vertical Avatars Container (Scrollbar hidden) */
@@ -188,6 +93,7 @@ body {
   padding: 4px 6px 16px 6px;
   width: 100%;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-app-region: no-drag;
@@ -266,6 +172,8 @@ body {
   position: relative;
   width: var(--avatar-size, 80px);
   height: var(--avatar-size, 80px);
+  min-width: var(--avatar-size, 80px);
+  min-height: var(--avatar-size, 80px);
   border-radius: 50%;
   box-shadow: 0 5px 14px rgba(0, 0, 0, 0.5),
               inset 0 2px 2px rgba(255, 255, 255, 0.35),
