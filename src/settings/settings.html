@@ -188,6 +188,24 @@
                             </div>
                         </label>
                     </div>
+
+                    <div class="appearance-group full-width-group">
+                        <label class="toggle-control">
+                            <input type="checkbox" id="chk-hide-offline-enabled" />
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <div class="toggle-label-group">
+                                <span class="toggle-title">Hide Inactive Offline Streamers</span>
+                                <span class="toggle-description">Hide streamers from the overlay window if offline for
+                                    more than X days (or missing offline timestamp)</span>
+                            </div>
+                        </label>
+                        <div id="hide-offline-days-row" class="hide-offline-days-row">
+                            <span class="hide-offline-label">Hide if offline for more than:</span>
+                            <input type="number" id="input-hide-offline-days" min="1" max="365" step="1" value="7"
+                                class="form-input input-hide-offline-days" />
+                            <span class="hide-offline-label">day(s) (null / unknown is hidden)</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 

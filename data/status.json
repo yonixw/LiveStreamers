@@ -9,7 +9,7 @@
       "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
       "game": "Just Chatting",
       "category": "Just Chatting",
-      "viewerCount": 5738,
+      "viewerCount": 6691,
       "startTime": "2026-08-25T17:34:41.000Z",
       "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -18,9 +18,9 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T23:14:48.267Z"
+      "cachedAt": "2026-08-25T23:42:49.045Z"
     },
-    "lastChecked": "2026-08-25T23:14:48.267Z",
+    "lastChecked": "2026-08-25T23:42:49.046Z",
     "lastError": null,
     "lastTrigger": {
       "type": "category_change",
@@ -33,7 +33,8 @@
       "timestamp": "2026-08-25T23:11:53.736Z"
     },
     "lastTriggeredAt": "2026-08-25T23:11:53.736Z",
-    "checkedUrlsCount": 1
+    "checkedUrlsCount": 1,
+    "offlineSince": null
   },
   "streamer-1787680783492-330": {
     "streamerId": "streamer-1787680783492-330",
@@ -56,7 +57,7 @@
       "platform": "twitch",
       "cachedAt": "2026-08-25T22:30:22.834Z"
     },
-    "lastChecked": "2026-08-25T23:15:13.095Z",
+    "lastChecked": "2026-08-25T23:43:01.447Z",
     "lastError": null,
     "lastTrigger": {
       "type": "title_change",
@@ -69,7 +70,8 @@
       "timestamp": "2026-08-25T22:10:11.153Z"
     },
     "lastTriggeredAt": "2026-08-25T22:10:11.153Z",
-    "checkedUrlsCount": 1
+    "checkedUrlsCount": 1,
+    "offlineSince": "2026-08-20T23:15:13.095Z"
   },
   "tw-shroud": {
     "streamerId": "tw-shroud",
@@ -93,7 +95,7 @@
       "title": "memein' and streamin' and buildin' my dreamin'",
       "game": "Factorio",
       "category": "Factorio",
-      "viewerCount": 4293,
+      "viewerCount": 4243,
       "startTime": "2026-08-25T20:00:40.000Z",
       "liveTime": "2026-08-25T20:00:40.000Z",
       "description": "The premier Internet POLITICS streamer, exploring philosophy, policy analysis, drama farmer and center of the extended orbiter universe.",
@@ -102,9 +104,9 @@
       "channelUrl": "https://kick.com/destiny",
       "url": "https://kick.com/destiny",
       "platform": "kick",
-      "cachedAt": "2026-08-25T23:15:00.588Z"
+      "cachedAt": "2026-08-25T23:42:36.904Z"
     },
-    "lastChecked": "2026-08-25T23:15:00.588Z",
+    "lastChecked": "2026-08-25T23:42:36.904Z",
     "lastError": null,
     "lastTrigger": {
       "type": "going_live",
@@ -117,6 +119,7 @@
       "timestamp": "2026-08-25T22:39:51.705Z"
     },
     "lastTriggeredAt": "2026-08-25T22:39:51.705Z",
-    "checkedUrlsCount": 1
+    "checkedUrlsCount": 1,
+    "offlineSince": null
   }
 }

@@ -75,6 +75,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const chkShowBoundaryCorners = document.getElementById(
     "chk-show-boundary-corners",
   );
+  const chkHideOfflineEnabled = document.getElementById(
+    "chk-hide-offline-enabled",
+  );
+  const inputHideOfflineDays = document.getElementById(
+    "input-hide-offline-days",
+  );
   const inputWindowStatesCount = document.getElementById(
     "input-window-states-count",
   );
@@ -218,6 +224,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000) return (num / 1000).toFixed(1) + "K";
     return Number(num).toLocaleString();
+  }
+
+  // Format offline duration
+  function formatOfflineDuration(isoString) {
+    if (!isoString) return "Offline";
+    try {
+      const start = new Date(isoString).getTime();
+      const now = Date.now();
+      const diffMs = now - start;
+      if (diffMs < 0 || isNaN(diffMs)) return "Offline";
+
+      const totalMins = Math.floor(diffMs / 60000);
+      const days = Math.floor(totalMins / 1440);
+      const hours = Math.floor((totalMins % 1440) / 60);
+      const mins = totalMins % 60;
+      if (days > 0) {
+        return `${days}d ${hours}h`;
+      }
+      if (hours > 0) {
+        return `${hours}h ${mins}m`;
+      }
+      return `${Math.max(1, mins)}m`;
+    } catch {
+      return "Offline";
+    }
+  }
+
+  function isStreamerOfflineHidden(streamer, hideEnabled, maxDays) {
+    if (!hideEnabled) return false;
+    if (streamer.isLive) return false;
+    if (!streamer.offlineSince) return true;
+    try {
+      const offlineTime = new Date(streamer.offlineSince).getTime();
+      if (isNaN(offlineTime)) return true;
+      const diffMs = Date.now() - offlineTime;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      return diffDays > maxDays;
+    } catch {
+      return true;
+    }
   }
 
   function getPlatformPillClass(plat) {
@@ -858,7 +904,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         const lastCheckedStr = streamer.lastChecked
           ? `Last check: ${new Date(streamer.lastChecked).toLocaleTimeString()}`
           : "Not checked yet";
-        statusBadgeHtml = `<span class="status-indicator status-offline">⚪ Offline (${lastCheckedStr})</span>`;
+        const offlineDur = streamer.offlineSince
+          ? ` • Offline: ${formatOfflineDuration(streamer.offlineSince)}`
+          : "";
+        const isHidden = isStreamerOfflineHidden(
+          streamer,
+          chkHideOfflineEnabled?.checked,
+          parseInt(inputHideOfflineDays?.value, 10) || 7,
+        );
+        const hiddenBadge = isHidden
+          ? ` <span class="badge-hidden-offline" title="Hidden from overlay window (> ${inputHideOfflineDays?.value || 7}d offline or unknown timestamp)">👁️‍🗨️ Hidden in Overlay</span>`
+          : "";
+        statusBadgeHtml = `<span class="status-indicator status-offline">⚪ Offline (${lastCheckedStr}${offlineDur})</span>${hiddenBadge}`;
       }
       statusRow.innerHTML = statusBadgeHtml;
 

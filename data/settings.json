@@ -6,10 +6,12 @@
   "layoutOrientation": "vertical",
   "layoutReversed": false,
   "showNicknameTag": true,
-  "isAlwaysOnTop": false,
+  "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
   "smartClickThrough": false,
   "showBoundaryCorners": false,
+  "hideOfflineEnabled": false,
+  "hideOfflineDays": 7,
   "windowStatesCount": 2,
   "currentWindowStateIndex": 1,
   "windowStates": [
@@ -20,8 +22,8 @@
       "height": 484
     },
     {
-      "x": 143,
-      "y": 369,
+      "x": 425,
+      "y": 499,
       "width": 486,
       "height": 467
     }
@@ -29,8 +31,8 @@
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 143,
-    "y": 369,
+    "x": 425,
+    "y": 499,
     "width": 486,
     "height": 467
   },

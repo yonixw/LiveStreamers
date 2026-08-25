@@ -535,11 +535,26 @@ async function checkStreamerLiveTask(
   }
   const nowIso = new Date().toISOString();
 
+  let offlineSince = null;
+  if (!isLive) {
+    if (previousStatus?.isLive) {
+      offlineSince = nowIso;
+    } else if (previousStatus?.offlineSince) {
+      offlineSince = previousStatus.offlineSince;
+    } else {
+      offlineSince =
+        previousStatus?.lastChecked ||
+        previousStatus?.cachedInfo?.cachedAt ||
+        nowIso;
+    }
+  }
+
   // Construct current check result
   const currentResult = {
     streamerId: streamer.id,
     success: true,
     isLive,
+    offlineSince,
     activeUrl,
     activePlatform,
     checkedUrlsCount: checkedCount,

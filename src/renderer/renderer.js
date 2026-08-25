@@ -51,14 +51,43 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (diffMs < 0 || isNaN(diffMs)) return "";
 
       const totalMins = Math.floor(diffMs / 60000);
-      const hours = Math.floor(totalMins / 60);
+      const days = Math.floor(totalMins / 1440);
+      const hours = Math.floor((totalMins % 1440) / 60);
       const mins = totalMins % 60;
+      if (days > 0) {
+        return `${days}d ${hours}h`;
+      }
       if (hours > 0) {
         return `${hours}h ${mins}m`;
       }
       return `${Math.max(1, mins)}m`;
     } catch {
       return "";
+    }
+  }
+
+  // Format offline duration
+  function formatOfflineDuration(isoString) {
+    if (!isoString) return "Offline";
+    try {
+      const start = new Date(isoString).getTime();
+      const now = Date.now();
+      const diffMs = now - start;
+      if (diffMs < 0 || isNaN(diffMs)) return "Offline";
+
+      const totalMins = Math.floor(diffMs / 60000);
+      const days = Math.floor(totalMins / 1440);
+      const hours = Math.floor((totalMins % 1440) / 60);
+      const mins = totalMins % 60;
+      if (days > 0) {
+        return `${days}d ${hours}h`;
+      }
+      if (hours > 0) {
+        return `${hours}h ${mins}m`;
+      }
+      return `${Math.max(1, mins)}m`;
+    } catch {
+      return "Offline";
     }
   }
 
@@ -435,7 +464,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Line 2: Live time / run time
+      // Line 2: Live time / run time or Offline duration
       const runtimeSpan = card.querySelector(".streamer-runtime");
       if (runtimeSpan) {
         if (isLive) {
@@ -446,8 +475,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             runtimeSpan.textContent = runtimeText;
           }
         } else {
-          if (runtimeSpan.textContent !== "Offline") {
-            runtimeSpan.textContent = "Offline";
+          const offlineDurationText = formatOfflineDuration(
+            streamer.offlineSince,
+          );
+          if (runtimeSpan.textContent !== offlineDurationText) {
+            runtimeSpan.textContent = offlineDurationText;
           }
         }
       }

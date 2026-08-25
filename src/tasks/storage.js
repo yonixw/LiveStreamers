@@ -97,6 +97,8 @@ const defaultSettings = {
   isIgnoringMouseEvents: false,
   smartClickThrough: false,
   showBoundaryCorners: false,
+  hideOfflineEnabled: false,
+  hideOfflineDays: 7,
   windowStatesCount: 1,
   currentWindowStateIndex: 0,
   windowStates: [
@@ -267,6 +269,8 @@ function loadSettings() {
         ...data,
         smartClickThrough: Boolean(data.smartClickThrough),
         showBoundaryCorners: Boolean(data.showBoundaryCorners),
+        hideOfflineEnabled: Boolean(data.hideOfflineEnabled),
+        hideOfflineDays: Math.max(1, parseInt(data.hideOfflineDays, 10) || 7),
         windowStatesCount,
         currentWindowStateIndex,
         windowStates,
@@ -318,6 +322,8 @@ function saveSettings(settings) {
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,
       smartClickThrough: settings.smartClickThrough ?? false,
       showBoundaryCorners: settings.showBoundaryCorners ?? false,
+      hideOfflineEnabled: Boolean(settings.hideOfflineEnabled),
+      hideOfflineDays: Math.max(1, parseInt(settings.hideOfflineDays, 10) || 7),
       windowStatesCount: Math.max(
         1,
         parseInt(settings.windowStatesCount, 10) || 1,

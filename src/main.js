@@ -149,6 +149,8 @@ const state = {
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
   smartClickThrough: persistedSettings.smartClickThrough ?? false,
   showBoundaryCorners: persistedSettings.showBoundaryCorners ?? false,
+  hideOfflineEnabled: persistedSettings.hideOfflineEnabled ?? false,
+  hideOfflineDays: persistedSettings.hideOfflineDays || 7,
   windowStatesCount: persistedSettings.windowStatesCount || 1,
   currentWindowStateIndex: persistedSettings.currentWindowStateIndex || 0,
   windowStates:
@@ -365,6 +367,7 @@ function getEnrichedStreamer(streamer) {
   return {
     ...streamer,
     isLive: Boolean(status.isLive),
+    offlineSince: status.isLive ? null : status.offlineSince || null,
     activeUrl,
     activePlatform,
     platform: activePlatform,
@@ -472,6 +475,40 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
     default:
       return enriched;
   }
+}
+
+/**
+ * Checks if an offline streamer should be hidden according to hideOfflineEnabled and hideOfflineDays settings.
+ * If streamer is live -> NOT hidden (false).
+ * If streamer is offline and hideOfflineEnabled is true:
+ *   If no offlineSince / null -> hidden (true, treated as infinite time).
+ *   If offline for > hideOfflineDays -> hidden (true).
+ *   Else -> NOT hidden (false).
+ */
+function isStreamerHiddenByOfflineFilter(streamer) {
+  if (!state.hideOfflineEnabled) return false;
+  if (streamer.isLive) return false;
+
+  if (!streamer.offlineSince) {
+    // No offline time or null is considered infinite time -> hide
+    return true;
+  }
+
+  try {
+    const offlineTime = new Date(streamer.offlineSince).getTime();
+    if (isNaN(offlineTime)) return true;
+    const diffMs = Date.now() - offlineTime;
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    const maxDays = Math.max(1, parseInt(state.hideOfflineDays, 10) || 7);
+    return diffDays > maxDays;
+  } catch {
+    return true;
+  }
+}
+
+function getOverlayFilteredStreamers(sortedStreamers) {
+  if (!state.hideOfflineEnabled) return sortedStreamers;
+  return sortedStreamers.filter((s) => !isStreamerHiddenByOfflineFilter(s));
 }
 
 function createOverlayWindow() {
@@ -698,9 +735,11 @@ function buildTrayMenu() {
 function broadcastStateUpdate() {
   const sortedStreamers = getSortedEnrichedStreamers();
 
+  const overlayStreamers = getOverlayFilteredStreamers(sortedStreamers);
+
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.webContents.send("settings:updated", state);
-    overlayWindow.webContents.send("streamers:updated", sortedStreamers);
+    overlayWindow.webContents.send("streamers:updated", overlayStreamers);
     overlayWindow.webContents.send("status:updated", state.statusMap);
   }
   if (settingsWindow && !settingsWindow.isDestroyed()) {
@@ -745,10 +784,23 @@ function initBackgroundChecker() {
       if (!streamerId) return;
 
       const current = state.statusMap[streamerId] || {};
+      let offlineSince =
+        update.offlineSince !== undefined
+          ? update.offlineSince
+          : current.offlineSince;
+      if (update.isLive === true) {
+        offlineSince = null;
+      } else if (update.isLive === false && current.isLive) {
+        offlineSince = new Date().toISOString();
+      } else if (update.isLive === false && !offlineSince) {
+        offlineSince = current.lastChecked || new Date().toISOString();
+      }
+
       state.statusMap[streamerId] = {
         ...current,
         streamerId,
         isLive: update.isLive !== undefined ? update.isLive : current.isLive,
+        offlineSince,
         activeUrl: update.activeUrl || current.activeUrl,
         activePlatform: update.activePlatform || current.activePlatform,
         checkStatus: update.checkStatus || current.checkStatus,
@@ -966,6 +1018,20 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
 
   if (typeof partialSettings.showBoundaryCorners === "boolean") {
     state.showBoundaryCorners = partialSettings.showBoundaryCorners;
+  }
+
+  if (typeof partialSettings.hideOfflineEnabled === "boolean") {
+    state.hideOfflineEnabled = partialSettings.hideOfflineEnabled;
+  }
+
+  if (
+    typeof partialSettings.hideOfflineDays === "number" ||
+    typeof partialSettings.hideOfflineDays === "string"
+  ) {
+    state.hideOfflineDays = Math.max(
+      1,
+      parseInt(partialSettings.hideOfflineDays, 10) || 7,
+    );
   }
 
   if (

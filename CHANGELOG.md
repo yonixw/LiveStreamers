@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.0] - 2026-08-26
 
 ### Added
+- **Offline Duration Tracking & In-Place Rendering**:
+  - Implemented `offlineSince` timestamp tracking in [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:536), capturing when a streamer transitioned from Live to Offline or maintaining historical offline timestamps across checks and errors.
+  - Enriched streamers with `offlineSince` in [`src/main.js:getEnrichedStreamer()`](src/main.js:357) and preserved offline history in `data/status.json`.
+  - Added [`formatOfflineDuration()`](src/renderer/renderer.js:65) and [`formatLiveDuration()`](src/renderer/renderer.js:45) in [`src/renderer/renderer.js`](src/renderer/renderer.js:1), displaying human-readable offline elapsed time (e.g. `15m`, `3h 40m`, `2d 5h`) or fallback `"Offline"` on avatar Line 2 (`.streamer-runtime`) under the category title.
+  - Added periodic in-place DOM interval in [`src/renderer/renderer.js`](src/renderer/renderer.js:540) to continuously refresh live and offline durations every 30 seconds.
+- **Configurable Inactive Offline Streamer Hiding**:
+  - Added `hideOfflineEnabled` and `hideOfflineDays` settings in [`src/tasks/storage.js:defaultSettings`](src/tasks/storage.js:88) and [`src/main.js`](src/main.js:140).
+  - Added "Hide Inactive Offline Streamers" toggle and configurable threshold input (`input-hide-offline-days`) in [`src/settings/settings.html`](src/settings/settings.html:190) and [`src/settings/settings.js`](src/settings/settings.js:1280).
+  - Implemented [`isStreamerHiddenByOfflineFilter()`](src/main.js:480) and [`getOverlayFilteredStreamers()`](src/main.js:505) in [`src/main.js`](src/main.js:480) to automatically hide streamers from the overlay window who have been offline longer than $X$ days (or with null/missing offline timestamp, treated as infinite time).
+  - Added `👁️‍🗨️ Hidden in Overlay` badge in the Settings streamers list ([`src/settings/settings.js`](src/settings/settings.js:870), [`src/settings/settings.css`](src/settings/settings.css:1005)) to visually indicate when an offline streamer is filtered out of the overlay.
 - **Streamer Profile Metadata (Following Date & Note)**:
   - Added `followingDate` and `note` fields to the streamer schema and normalization logic in [`src/tasks/storage.js:normalizeStreamerConfig()`](src/tasks/storage.js:136) and [`src/main.js`](src/main.js:826).
   - Added "Following Date" (`<input type="date">`) defaulting to `now()` (today's date) and "Note" (`<input type="text">` free single-line text) to the streamer profile form in [`src/settings/settings.html`](src/settings/settings.html:220).

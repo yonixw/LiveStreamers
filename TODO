@@ -1,15 +1,11 @@
+make "offline" remember last live and show it (local storage...)
+let me hide offline from list 
+    offline with no time || last_on_time > 30d
+
 trigger find text -> in game/categ also -> forsen game 
         search trigger allow "," for split for multi search
 
-Settings:
-    add time-> follower time -> so entry id = date+uuid
-    notes feild - how the hell did i find this channel (dgg, otk streamer show etc.)
-    make "offline" remember last live and show it (local storage...)
-
 warning image -> custom "live" image -> alarama etc... for old account becoming live 
-
-let me hide offline from list 
-    offline with no time || last_on_time > 30d
 
 "checking" yellow tag -> icon and status gets stuck... why?
 
