@@ -6,15 +6,15 @@
   "layoutOrientation": "horizontal",
   "layoutReversed": false,
   "showNicknameTag": true,
-  "isAlwaysOnTop": false,
+  "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": 1645,
-    "y": 531,
-    "width": 443,
-    "height": 464
+    "x": 2227,
+    "y": 639,
+    "width": 318,
+    "height": 186
   },
   "popupBounds": {
     "x": 1506,

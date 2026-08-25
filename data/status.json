@@ -7,9 +7,9 @@
     "checkStatus": "live",
     "cachedInfo": {
       "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
-      "game": "Special Events",
-      "category": "Special Events",
-      "viewerCount": 6835,
+      "game": "Just Chatting",
+      "category": "Just Chatting",
+      "viewerCount": 5806,
       "startTime": "2026-08-25T17:34:41.000Z",
       "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -18,21 +18,21 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-25T20:00:47.218Z"
+      "cachedAt": "2026-08-25T20:21:00.675Z"
     },
-    "lastChecked": "2026-08-25T20:00:47.218Z",
+    "lastChecked": "2026-08-25T20:21:52.799Z",
     "lastError": null,
     "lastTrigger": {
       "type": "category_change",
       "label": "Category Changed",
-      "message": "Category changed from \"Just Chatting\" to \"Special Events\"",
+      "message": "Category changed from \"Special Events\" to \"Just Chatting\"",
       "diff": {
-        "from": "Just Chatting",
-        "to": "Special Events"
+        "from": "Special Events",
+        "to": "Just Chatting"
       },
-      "timestamp": "2026-08-25T17:41:10.253Z"
+      "timestamp": "2026-08-25T20:10:47.191Z"
     },
-    "lastTriggeredAt": "2026-08-25T17:41:10.253Z",
+    "lastTriggeredAt": "2026-08-25T20:10:47.191Z",
     "checkedUrlsCount": 1
   },
   "streamer-1787680783492-330": {
@@ -43,9 +43,9 @@
     "checkStatus": "live",
     "cachedInfo": {
       "title": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM",
-      "game": "Special Events",
-      "category": "Special Events",
-      "viewerCount": 235,
+      "game": "Just Chatting",
+      "category": "Just Chatting",
+      "viewerCount": 295,
       "startTime": "2026-08-25T17:26:54.000Z",
       "liveTime": "2026-08-25T17:26:54.000Z",
       "description": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM",
@@ -54,21 +54,21 @@
       "channelUrl": "https://www.twitch.tv/sennyk4",
       "url": "https://www.twitch.tv/sennyk4",
       "platform": "twitch",
-      "cachedAt": "2026-08-25T20:00:40.347Z"
+      "cachedAt": "2026-08-25T20:20:53.680Z"
     },
-    "lastChecked": "2026-08-25T20:00:40.347Z",
+    "lastChecked": "2026-08-25T20:20:53.680Z",
     "lastError": null,
     "lastTrigger": {
-      "type": "title_change",
-      "label": "Title Changed",
-      "message": "Title changed from \"sennyk4 (live)\" to \"[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM\"",
+      "type": "category_change",
+      "label": "Category Changed",
+      "message": "Category changed from \"Special Events\" to \"Just Chatting\"",
       "diff": {
-        "from": "sennyk4 (live)",
-        "to": "[237/365]🌎GAMESCOM WATCH PARTY🌎🔱KAEYFOUR.COM"
+        "from": "Special Events",
+        "to": "Just Chatting"
       },
-      "timestamp": "2026-08-25T18:25:00.649Z"
+      "timestamp": "2026-08-25T20:05:40.373Z"
     },
-    "lastTriggeredAt": "2026-08-25T18:25:00.649Z",
+    "lastTriggeredAt": "2026-08-25T20:05:40.373Z",
     "checkedUrlsCount": 1
   },
   "tw-shroud": {

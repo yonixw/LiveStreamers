@@ -1,1 +1,13 @@
-can you summerize this chat into changelog format and add it to CHANGELOG.md (with date from this chat) - but write it from changelog POV - whats modiefied if existed etc.
+1] 
+can you summerize this chat into changelog format and add it to CHANGELOG.md 
+(with date from this chat) - but write it from changelog POV - 
+whats modiefied if existed etc.
+
+2]
+This project is tracking live streamers and if they are live.
+It's an electron js with native ui html+js for ui (with transparent bg) for avatars. 
+It also uses yt-dlp under the hood to check status and metadata of streams across kick,yt,twitch etc. 
+
+see @/CHANGELOG.md for common structure and feature of this git
+
+-------
