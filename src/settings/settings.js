@@ -68,6 +68,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     "chk-smart-click-through",
   );
   const chkClickThrough = document.getElementById("chk-click-through");
+  const chkShowBoundaryCorners = document.getElementById(
+    "chk-show-boundary-corners",
+  );
   const inputWindowStatesCount = document.getElementById(
     "input-window-states-count",
   );
@@ -1241,6 +1244,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  if (chkShowBoundaryCorners) {
+    chkShowBoundaryCorners.addEventListener("change", () => {
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          showBoundaryCorners: chkShowBoundaryCorners.checked,
+        });
+        appendLog(
+          `Window Boundary Corners set to: ${chkShowBoundaryCorners.checked ? "Visible" : "Hidden"}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  }
+
   // Multiple Window States Handlers
   function renderWindowStatesUI(count, activeIndex) {
     const total = Math.max(1, parseInt(count, 10) || 1);
@@ -1375,6 +1393,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (typeof settings.isIgnoringMouseEvents === "boolean") {
       chkClickThrough.checked = settings.isIgnoringMouseEvents;
+    }
+    if (
+      typeof settings.showBoundaryCorners === "boolean" &&
+      chkShowBoundaryCorners
+    ) {
+      chkShowBoundaryCorners.checked = settings.showBoundaryCorners;
     }
     renderWindowStatesUI(
       settings.windowStatesCount || 1,

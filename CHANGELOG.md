@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added configurable number of states (`> 0` integer) with active state badge and state preset selector buttons in Settings ([`src/settings/settings.html`](src/settings/settings.html:435), [`src/settings/settings.js`](src/settings/settings.js:1235)).
   - Enabled single-click rotation on the drag anchor grip ([`src/renderer/renderer.js`](src/renderer/renderer.js:456)) cycling through saved window states with dynamic header badge indicator (`1/2`, `1/3`, etc.).
   - Moving or resizing the window on screen automatically updates and saves coordinates and dimensions for the currently active state.
+- **Window Boundary Corner Markers (Toggle Setting)**:
+  - Added `showBoundaryCorners` setting to [`src/tasks/storage.js`](src/tasks/storage.js:84) and [`src/main.js`](src/main.js:151).
+  - Added `"Show Window Boundary Corners"` toggle in Settings UI ([`src/settings/settings.html`](src/settings/settings.html:437), [`src/settings/settings.js`](src/settings/settings.js:1244)) that dynamically adds/removes `.show-boundary-corners` class on `document.body` in [`src/renderer/renderer.js`](src/renderer/renderer.js:150).
+  - Configured 4 corner guide dots in [`src/renderer/style.css`](src/renderer/style.css:477) to assist with frameless window edge discovery and exact resizing, which can be hidden for clean everyday use.
 
 ## [1.6.0] - 2026-08-25
 

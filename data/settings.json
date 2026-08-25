@@ -8,14 +8,15 @@
   "showNicknameTag": true,
   "isAlwaysOnTop": true,
   "isIgnoringMouseEvents": false,
-  "smartClickThrough": true,
+  "smartClickThrough": false,
+  "showBoundaryCorners": false,
   "windowStatesCount": 2,
   "currentWindowStateIndex": 0,
   "windowStates": [
     {
-      "x": -133,
-      "y": 10,
-      "width": 710,
+      "x": 153,
+      "y": 383,
+      "width": 125,
       "height": 484
     },
     {
@@ -28,9 +29,9 @@
   "currentOpacity": 0.5,
   "overlayVisible": true,
   "overlayBounds": {
-    "x": -133,
-    "y": 10,
-    "width": 710,
+    "x": 153,
+    "y": 383,
+    "width": 125,
     "height": 484
   },
   "popupBounds": {

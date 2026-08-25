@@ -147,6 +147,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       isStaticClickThroughEnabled = settings.isIgnoringMouseEvents;
     }
 
+    if (typeof settings.showBoundaryCorners === "boolean") {
+      document.body.classList.toggle(
+        "show-boundary-corners",
+        settings.showBoundaryCorners,
+      );
+    }
+
     // Update window state indicator badge in header
     if (headerStateIndicator) {
       const stateCount = Math.max(

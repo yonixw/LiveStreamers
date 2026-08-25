@@ -474,9 +474,9 @@ body {
 
 
 
-/* Base styles for all corner shapes */
-body::before,
-body::after {
+/* Window Boundary Corner Markers (for exact resizing) */
+body.show-boundary-corners::before,
+body.show-boundary-corners::after {
   content: "";
   position: fixed;
   width: 1px;
@@ -485,7 +485,7 @@ body::after {
 }
 
 /* Top-Left and Bottom-Right Corners */
-body::before {
+body.show-boundary-corners::before {
   top: 0px;
   left: 0px;
   border: 2px solid #3498db;
@@ -495,12 +495,11 @@ body::before {
 }
 
 /* Top-Right and Bottom-Left Corners */
-body::after {
+body.show-boundary-corners::after {
   top: 0px;
   right: 0px;
   border: 2px solid #3498db;
 
   /* sum of all of the above px +- ??px */
   filter: drop-shadow(calc(-100vw + 4px) calc(100vh - 4px) 0 #3498db);
-
 }

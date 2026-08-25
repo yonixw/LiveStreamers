@@ -82,6 +82,7 @@ const defaultSettings = {
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
   smartClickThrough: false,
+  showBoundaryCorners: false,
   windowStatesCount: 1,
   currentWindowStateIndex: 0,
   windowStates: [
@@ -242,6 +243,7 @@ function loadSettings() {
         ...defaultSettings,
         ...data,
         smartClickThrough: Boolean(data.smartClickThrough),
+        showBoundaryCorners: Boolean(data.showBoundaryCorners),
         windowStatesCount,
         currentWindowStateIndex,
         windowStates,
@@ -292,6 +294,7 @@ function saveSettings(settings) {
       isAlwaysOnTop: settings.isAlwaysOnTop ?? true,
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,
       smartClickThrough: settings.smartClickThrough ?? false,
+      showBoundaryCorners: settings.showBoundaryCorners ?? false,
       windowStatesCount: Math.max(
         1,
         parseInt(settings.windowStatesCount, 10) || 1,

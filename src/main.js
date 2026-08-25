@@ -148,6 +148,7 @@ const state = {
   isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
   smartClickThrough: persistedSettings.smartClickThrough ?? false,
+  showBoundaryCorners: persistedSettings.showBoundaryCorners ?? false,
   windowStatesCount: persistedSettings.windowStatesCount || 1,
   currentWindowStateIndex: persistedSettings.currentWindowStateIndex || 0,
   windowStates:
@@ -959,6 +960,10 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     console.log(
       `[SmartClickThrough] Setting updated to: ${state.smartClickThrough ? "Enabled" : "Disabled"}`,
     );
+  }
+
+  if (typeof partialSettings.showBoundaryCorners === "boolean") {
+    state.showBoundaryCorners = partialSettings.showBoundaryCorners;
   }
 
   if (
