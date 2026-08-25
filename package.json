@@ -4,6 +4,7 @@
   "description": "Cross-platform Electron app with live streamers overlay for status",
   "main": "src/main.js",
   "type": "commonjs",
+  "author": "Yoni <yoni-common@5gbinbox.com>",
   "scripts": {
     "start": "bun x electron .",
     "dev": "bun x electron .",
@@ -28,7 +29,7 @@
     ],
     "win": {
       "target": [
-        "portable"
+        "zip"
       ]
     },
     "mac": {
@@ -49,7 +50,6 @@
     "overlay",
     "tray"
   ],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "yt-dlp-wrap-plus": "^2.5.0"
