@@ -282,7 +282,7 @@ function createOverlayWindow() {
     resizable: true,
     alwaysOnTop: state.isAlwaysOnTop,
     opacity: state.currentOpacity,
-    skipTaskbar: false,
+    skipTaskbar: true,
     backgroundColor: "#00000000",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -346,26 +346,24 @@ function createSettingsWindow() {
 function createLinksPopupWindow(streamerId) {
   activePopupStreamerId = streamerId;
 
+  const width = 340;
+  const height = 400;
+
   if (linksPopupWindow && !linksPopupWindow.isDestroyed()) {
+    linksPopupWindow.center();
     linksPopupWindow.show();
     linksPopupWindow.focus();
     linksPopupWindow.webContents.reload();
     return linksPopupWindow;
   }
 
-  // Determine spawn position near cursor
-  const cursorPos = screen.getCursorScreenPoint();
-  const width = 340;
-  const height = 400;
-
   linksPopupWindow = new BrowserWindow({
     width,
     height,
-    x: Math.max(10, cursorPos.x - Math.floor(width / 2)),
-    y: Math.max(10, cursorPos.y - 50),
     frame: false,
     resizable: false,
     alwaysOnTop: true,
+    skipTaskbar: true,
     backgroundColor: "#0f172a",
     title: "Stream Links",
     webPreferences: {
@@ -376,6 +374,7 @@ function createLinksPopupWindow(streamerId) {
     },
   });
 
+  linksPopupWindow.center();
   linksPopupWindow.loadFile(path.join(__dirname, "popup", "popup.html"));
 
   linksPopupWindow.on("closed", () => {
@@ -865,14 +864,12 @@ ipcMain.handle("app:quit", () => {
 // App lifecycle
 app.whenReady().then(() => {
   createOverlayWindow();
-  createSettingsWindow();
   createTray();
   initBackgroundChecker();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createOverlayWindow();
-      createSettingsWindow();
     }
   });
 });

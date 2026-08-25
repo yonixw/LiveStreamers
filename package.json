@@ -5,11 +5,45 @@
   "main": "src/main.js",
   "type": "commonjs",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron ."
+    "start": "bun x electron .",
+    "dev": "bun x electron .",
+    "build:win": "bun x electron-builder --win",
+    "build:mac": "bun x electron-builder --mac",
+    "build:linux": "bun x electron-builder --linux",
+    "build:all": "bun x electron-builder -mwl",
+    "dist": "bun x electron-builder"
   },
   "devDependencies": {
-    "electron": "^33.2.1"
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.livestreamers.overlay",
+    "productName": "LiveStreamers",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
   },
   "keywords": [
     "electron",
