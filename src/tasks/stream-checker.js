@@ -2,6 +2,65 @@ const path = require("path");
 const { getStreamMetadata, cleanStreamTitle } = require("./yt-dlp-utils");
 
 /**
+ * Sequential FIFO Execution Queue for yt-dlp with a 5-second cooldown between calls.
+ * Prevents concurrent yt-dlp execution and rate-limiting across all streamers.
+ */
+class YtDlpSequentialQueue {
+  constructor(cooldownMs = 5000) {
+    this.cooldownMs = cooldownMs;
+    this.queue = [];
+    this.isProcessing = false;
+    this.lastExecutedTime = 0;
+  }
+
+  /**
+   * Enqueues an async task and returns a Promise for its result.
+   * @param {() => Promise<any>} taskFn
+   * @returns {Promise<any>}
+   */
+  enqueue(taskFn) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ taskFn, resolve, reject });
+      this.processNext();
+    });
+  }
+
+  async processNext() {
+    if (this.isProcessing || this.queue.length === 0) {
+      return;
+    }
+
+    this.isProcessing = true;
+    const { taskFn, resolve, reject } = this.queue.shift();
+
+    // Enforce 5-second cooldown since last execution completed
+    const now = Date.now();
+    const timeSinceLast = now - this.lastExecutedTime;
+    if (this.lastExecutedTime > 0 && timeSinceLast < this.cooldownMs) {
+      const waitTime = this.cooldownMs - timeSinceLast;
+      await new Promise((r) => setTimeout(r, waitTime));
+    }
+
+    try {
+      const result = await taskFn();
+      resolve(result);
+    } catch (err) {
+      reject(err);
+    } finally {
+      this.lastExecutedTime = Date.now();
+      this.isProcessing = false;
+      // Process next queued task
+      if (this.queue.length > 0) {
+        setTimeout(() => this.processNext(), 50);
+      }
+    }
+  }
+}
+
+// Global shared yt-dlp queue with 5-second cooldown
+const globalYtDlpQueue = new YtDlpSequentialQueue(5000);
+
+/**
  * Detects the streaming platform from a given URL.
  * Supports Kick, Twitch, YouTube, and other web streams.
  * @param {string} url
@@ -71,7 +130,7 @@ function extractStreamerName(url) {
 }
 
 /**
- * Performs a single live check for a single URL using yt-dlp-utils.
+ * Performs a single live check for a single URL using yt-dlp-utils via sequential queue.
  * @param {string} url
  * @param {string} [streamerName]
  * @returns {Promise<object>}
@@ -80,75 +139,78 @@ async function checkSingleUrlLive(url, streamerName = "Streamer") {
   const targetUrl = normalizeUrl(url);
   const platform = detectPlatform(targetUrl);
 
-  try {
-    const metadata = await getStreamMetadata(targetUrl);
+  return await globalYtDlpQueue.enqueue(async () => {
+    try {
+      const metadata = await getStreamMetadata(targetUrl);
 
-    const isLive = Boolean(
-      metadata &&
-      (metadata.isLive === true ||
-        metadata.liveStatus === "is_live" ||
-        (typeof metadata.viewerCount === "number" && metadata.viewerCount > 0)),
-    );
-
-    let cachedInfo = null;
-    if (isLive && metadata) {
-      const cleanTitle =
-        cleanStreamTitle(metadata.title) || `${streamerName} is Live!`;
-
-      cachedInfo = {
-        title: cleanTitle,
-        game: metadata.game || metadata.category || null,
-        category: metadata.category || metadata.game || null,
-        viewerCount: metadata.viewerCount ?? null,
-        startTime:
-          metadata.startTime || metadata.liveTime || new Date().toISOString(),
-        liveTime:
-          metadata.liveTime || metadata.startTime || new Date().toISOString(),
-        description: metadata.description || null,
-        thumbnail: metadata.thumbnail || null,
-        channel: metadata.channel || streamerName,
-        channelUrl: metadata.channelUrl || targetUrl,
-        url: metadata.url || targetUrl,
-        platform,
-        cachedAt: new Date().toISOString(),
-      };
-    }
-
-    return {
-      success: true,
-      isLive,
-      cachedInfo,
-      url: targetUrl,
-      platform,
-      error: null,
-    };
-  } catch (err) {
-    const errMsg = err && err.message ? err.message : String(err);
-    const isOfflineIndicator =
-      /offline|not currently live|no video formats found|is not live|does not exist/i.test(
-        errMsg,
+      const isLive = Boolean(
+        metadata &&
+        (metadata.isLive === true ||
+          metadata.liveStatus === "is_live" ||
+          (typeof metadata.viewerCount === "number" &&
+            metadata.viewerCount > 0)),
       );
 
-    if (isOfflineIndicator) {
+      let cachedInfo = null;
+      if (isLive && metadata) {
+        const cleanTitle =
+          cleanStreamTitle(metadata.title) || `${streamerName} is Live!`;
+
+        cachedInfo = {
+          title: cleanTitle,
+          game: metadata.game || metadata.category || null,
+          category: metadata.category || metadata.game || null,
+          viewerCount: metadata.viewerCount ?? null,
+          startTime:
+            metadata.startTime || metadata.liveTime || new Date().toISOString(),
+          liveTime:
+            metadata.liveTime || metadata.startTime || new Date().toISOString(),
+          description: metadata.description || null,
+          thumbnail: metadata.thumbnail || null,
+          channel: metadata.channel || streamerName,
+          channelUrl: metadata.channelUrl || targetUrl,
+          url: metadata.url || targetUrl,
+          platform,
+          cachedAt: new Date().toISOString(),
+        };
+      }
+
       return {
         success: true,
-        isLive: false,
-        cachedInfo: null,
+        isLive,
+        cachedInfo,
         url: targetUrl,
         platform,
         error: null,
       };
-    }
+    } catch (err) {
+      const errMsg = err && err.message ? err.message : String(err);
+      const isOfflineIndicator =
+        /offline|not currently live|no video formats found|is not live|does not exist/i.test(
+          errMsg,
+        );
 
-    return {
-      success: false,
-      isLive: false,
-      cachedInfo: null,
-      url: targetUrl,
-      platform,
-      error: errMsg,
-    };
-  }
+      if (isOfflineIndicator) {
+        return {
+          success: true,
+          isLive: false,
+          cachedInfo: null,
+          url: targetUrl,
+          platform,
+          error: null,
+        };
+      }
+
+      return {
+        success: false,
+        isLive: false,
+        cachedInfo: null,
+        url: targetUrl,
+        platform,
+        error: errMsg,
+      };
+    }
+  });
 }
 
 /**
@@ -250,24 +312,54 @@ function evaluateTriggers(streamer, current, previous = null) {
 }
 
 /**
- * Checks a streamer across their list of URLs in order.
+ * Normalizes url entries array into uniform objects { url, freqMinutes }.
+ */
+function getNormalizedUrlObjects(streamer) {
+  if (Array.isArray(streamer.urls) && streamer.urls.length > 0) {
+    return streamer.urls
+      .map((entry) => {
+        if (typeof entry === "string")
+          return { url: entry.trim(), freqMinutes: 1 };
+        if (typeof entry === "object" && entry.url) {
+          return {
+            url: entry.url.trim(),
+            freqMinutes: Math.max(1, parseInt(entry.freqMinutes, 10) || 1),
+          };
+        }
+        return null;
+      })
+      .filter((e) => e && e.url.length > 0);
+  }
+  if (streamer.url) {
+    return [{ url: streamer.url.trim(), freqMinutes: 1 }];
+  }
+  return [];
+}
+
+/**
+ * Checks a streamer across their list of URLs in order based on per-link minute frequencies.
  * SHORT-CIRCUITS immediately upon finding the first live URL.
  *
  * @param {object} streamer - Streamer config with urls array
  * @param {object} [previousStatus] - Previous status record
+ * @param {object} [options]
+ * @param {boolean} [options.isManual=false] - If true, checks all links regardless of minute counter
+ * @param {number} [options.minuteCounter=0] - Current global minute counter
  * @returns {Promise<object>} Full status result
  */
-async function checkStreamerLiveTask(streamer, previousStatus = null) {
+async function checkStreamerLiveTask(
+  streamer,
+  previousStatus = null,
+  options = {},
+) {
+  const isManual = Boolean(options.isManual);
+  const minuteCounter =
+    typeof options.minuteCounter === "number" ? options.minuteCounter : 0;
   const timestamp = new Date().toLocaleTimeString();
   const streamerName = streamer.name || "Streamer";
-  const urls =
-    Array.isArray(streamer.urls) && streamer.urls.length > 0
-      ? streamer.urls
-      : streamer.url
-        ? [streamer.url]
-        : [];
+  const urlObjects = getNormalizedUrlObjects(streamer);
 
-  if (urls.length === 0) {
+  if (urlObjects.length === 0) {
     return {
       success: false,
       streamerId: streamer.id,
@@ -283,35 +375,56 @@ async function checkStreamerLiveTask(streamer, previousStatus = null) {
     };
   }
 
+  // Filter links to check based on per-link frequency (counter % freqMinutes === 0)
+  // If isManual or streamer is currently live, ensure at least active link is checked
+  const linksToCheck = urlObjects.filter((linkObj, idx) => {
+    if (isManual) return true;
+    const freq = linkObj.freqMinutes || 1;
+    const isDue = minuteCounter % freq === 0;
+    // If streamer was live on this specific link, check it on schedule or every minute
+    const isCurrentlyActiveLiveLink =
+      previousStatus?.isLive && previousStatus.activeUrl === linkObj.url;
+    return isDue || isCurrentlyActiveLiveLink;
+  });
+
+  // If no links for this streamer meet their frequency this minute, maintain previous status
+  if (linksToCheck.length === 0) {
+    return {
+      ...previousStatus,
+      streamerId: streamer.id,
+      skippedThisMinute: true,
+    };
+  }
+
   console.log(
-    `[${timestamp}] [Background Live Check] Checking streamer "${streamerName}" (${urls.length} configured URL${urls.length > 1 ? "s" : ""})...`,
+    `[${timestamp}] [Background Live Check] Checking streamer "${streamerName}" (${linksToCheck.length}/${urlObjects.length} link(s) due at minute #${minuteCounter})...`,
   );
 
   let firstLiveResult = null;
-  let lastCheckedUrl = urls[0];
-  let lastPlatform = detectPlatform(urls[0]);
+  let lastCheckedUrl = linksToCheck[0].url;
+  let lastPlatform = detectPlatform(linksToCheck[0].url);
   let accumulatedErrors = [];
   let checkedCount = 0;
 
-  // Check each URL sequentially, stopping at first live stream
-  for (let i = 0; i < urls.length; i++) {
-    const rawUrl = urls[i];
+  // Check each due URL sequentially (with 5s cooldown handled by queue)
+  for (let i = 0; i < linksToCheck.length; i++) {
+    const linkObj = linksToCheck[i];
     checkedCount++;
-    const plat = detectPlatform(rawUrl);
+    const plat = detectPlatform(linkObj.url);
     console.log(
-      `[${timestamp}] [Background Live Check] [${streamerName}] [Link ${i + 1}/${urls.length}] Checking ${plat.toUpperCase()}: ${rawUrl}...`,
+      `[${timestamp}] [Background Live Check] [${streamerName}] [Link ${i + 1}/${linksToCheck.length}] Checking ${plat.toUpperCase()} (freq: ${linkObj.freqMinutes}m): ${linkObj.url}...`,
     );
 
-    const singleResult = await checkSingleUrlLive(rawUrl, streamerName);
+    const singleResult = await checkSingleUrlLive(linkObj.url, streamerName);
     lastCheckedUrl = singleResult.url;
     lastPlatform = singleResult.platform;
 
     if (singleResult.isLive) {
       console.log(
-        `[${timestamp}] [Background Live Check] [${streamerName}] Link ${i + 1} (${plat.toUpperCase()}) is LIVE! Short-circuiting remaining ${urls.length - i - 1} link(s).`,
+        `[${timestamp}] [Background Live Check] [${streamerName}] Link ${i + 1} (${plat.toUpperCase()}) is LIVE! Short-circuiting remaining ${linksToCheck.length - i - 1} due link(s).`,
       );
       firstLiveResult = singleResult;
-      break; // Short-circuit: no need to check other links
+      break; // Short-circuit: no need to check other links on this avatar
     }
 
     if (!singleResult.success && singleResult.error) {
@@ -322,10 +435,10 @@ async function checkStreamerLiveTask(streamer, previousStatus = null) {
   const isLive = Boolean(firstLiveResult && firstLiveResult.isLive);
   const activeUrl = firstLiveResult
     ? firstLiveResult.url
-    : normalizeUrl(urls[0]);
+    : normalizeUrl(urlObjects[0].url);
   const activePlatform = firstLiveResult
     ? firstLiveResult.platform
-    : detectPlatform(urls[0]);
+    : detectPlatform(urlObjects[0].url);
   const cachedInfo =
     isLive && firstLiveResult ? firstLiveResult.cachedInfo : null;
   const nowIso = new Date().toISOString();
@@ -372,7 +485,7 @@ async function checkStreamerLiveTask(streamer, previousStatus = null) {
 }
 
 /**
- * Background Scheduler Class to check streamer links periodically.
+ * Background Scheduler Class to check streamer links with per-link frequencies and sequential queue.
  */
 class StreamLiveCheckerService {
   constructor({
@@ -389,6 +502,7 @@ class StreamLiveCheckerService {
     this.intervalMs = intervalMs;
     this.timer = null;
     this.isRunning = false;
+    this.minuteCounter = 0;
     this.activeChecks = new Set();
   }
 
@@ -400,15 +514,16 @@ class StreamLiveCheckerService {
     this.isRunning = true;
     this.onLog(
       "StreamChecker",
-      `Background Live Checker started (Interval: ${this.intervalMs / 1000}s).`,
+      `Background Live Checker started (Interval: 1m tick, 5s yt-dlp cooldown).`,
     );
 
-    // Initial check
-    this.checkAll();
+    // Initial check (minute 0 checks all freqMinutes % 1 === 0, i.e. all links)
+    this.checkAll(false);
 
-    // Regular interval
+    // Regular 1-minute interval
     this.timer = setInterval(() => {
-      this.checkAll();
+      this.minuteCounter++;
+      this.checkAll(false);
     }, this.intervalMs);
   }
 
@@ -425,9 +540,10 @@ class StreamLiveCheckerService {
   }
 
   /**
-   * Checks all streamers currently configured.
+   * Checks streamers.
+   * @param {boolean} [isManual=false]
    */
-  async checkAll() {
+  async checkAll(isManual = false) {
     const streamers = this.getStreamers ? this.getStreamers() : [];
     if (!streamers || streamers.length === 0) {
       return;
@@ -435,16 +551,17 @@ class StreamLiveCheckerService {
 
     for (const streamer of streamers) {
       if (!streamer || !streamer.id) continue;
-      this.checkSingleStreamer(streamer);
+      this.checkSingleStreamer(streamer, isManual);
     }
   }
 
   /**
-   * Checks a single streamer and notifies callback with status update.
+   * Checks a single streamer.
    * @param {object} streamer
+   * @param {boolean} [isManual=false]
    * @returns {Promise<object>}
    */
-  async checkSingleStreamer(streamer) {
+  async checkSingleStreamer(streamer, isManual = false) {
     const streamerId = streamer.id;
     if (this.activeChecks.has(streamerId)) {
       return;
@@ -462,9 +579,12 @@ class StreamLiveCheckerService {
       const statusMap = this.getStatusMap ? this.getStatusMap() : {};
       const previousStatus = statusMap[streamerId] || null;
 
-      const result = await checkStreamerLiveTask(streamer, previousStatus);
+      const result = await checkStreamerLiveTask(streamer, previousStatus, {
+        isManual,
+        minuteCounter: this.minuteCounter,
+      });
 
-      if (this.onStatusUpdate) {
+      if (!result.skippedThisMinute && this.onStatusUpdate) {
         this.onStatusUpdate({
           ...result,
           checkStatus: result.isLive
@@ -499,4 +619,5 @@ module.exports = {
   evaluateTriggers,
   checkStreamerLiveTask,
   StreamLiveCheckerService,
+  globalYtDlpQueue,
 };

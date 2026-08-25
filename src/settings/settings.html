@@ -21,7 +21,7 @@
                 <h1>LiveStreamers Settings</h1>
             </div>
             <div class="header-badge-group">
-                <span class="badge badge-pulse" id="auto-check-badge">Auto-Check: 1m</span>
+                <span class="badge badge-pulse" id="auto-check-badge">Auto-Check: 1m Tick</span>
             </div>
         </header>
 
@@ -117,15 +117,15 @@
                         </div>
                     </div>
 
-                    <!-- Multi-URL List Section -->
+                    <!-- Multi-URL List Section with per-link frequency -->
                     <div class="form-urls-section">
                         <div class="flex-between urls-section-header">
-                            <label>Multi-Platform Stream URLs <span class="req">*</span></label>
+                            <label>Multi-Platform Stream URLs & Check Frequencies <span class="req">*</span></label>
                             <span class="urls-hint-badge">Checked top-to-bottom • Stops at 1st live link</span>
                         </div>
 
                         <div id="urls-input-list" class="urls-input-list">
-                            <!-- Dynamic URL input rows added via JS -->
+                            <!-- Dynamic URL input rows with per-link frequency added via JS -->
                         </div>
 
                         <button type="button" class="btn btn-sm btn-secondary btn-add-url" id="btn-add-url-row">
@@ -249,7 +249,8 @@
                 <div id="log-terminal" class="log-terminal">
                     <div class="log-entry system-log">
                         <span class="log-time">[System]</span>
-                        <span class="log-msg">Ready. Multi-URL live tracking with auto short-circuiting active.</span>
+                        <span class="log-msg">Ready. Multi-URL live tracking with auto short-circuiting & 5s cooldown
+                            active.</span>
                     </div>
                 </div>
             </section>
@@ -363,7 +364,7 @@
         </main>
 
         <footer class="settings-footer">
-            <span>LiveStreamers Overlay • Multi-URL Check • Priority Triggers • Dynamic Sorting</span>
+            <span>LiveStreamers Overlay • Multi-URL Check with Per-Link Frequency • Priority Triggers</span>
         </footer>
     </div>
 

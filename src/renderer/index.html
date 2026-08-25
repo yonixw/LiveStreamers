@@ -23,7 +23,7 @@
                     <circle cx="9" cy="18" r="1.5"></circle>
                     <circle cx="15" cy="18" r="1.5"></circle>
                 </svg>
-                <span class="header-title">LiveStreamers</span>
+                <span class="header-title">Live</span>
                 <span id="header-live-badge" class="header-live-badge">0 Live</span>
             </div>
 
@@ -31,7 +31,7 @@
                 <!-- Quick Sort Action Buttons on Drag Anchor Bar -->
                 <div class="header-sort-buttons" title="Avatar Sort Order">
                     <button id="btn-sort-triggered" class="header-sort-btn active" data-sort="last-triggered"
-                        title="Sort by Last Triggered / Live Events">
+                        title="Sort by Last Triggered / Events">
                         ⚡
                     </button>
                     <button id="btn-sort-live" class="header-sort-btn" data-sort="longest-live"
@@ -59,12 +59,17 @@
             </div>
         </header>
 
-        <!-- Shared Live Stream Status Banner -->
+        <!-- Shared Live Stream Status Banner (Fixed 2 lines by default, zero layout shifting) -->
         <div id="stream-info-banner" class="stream-info-banner">
             <div id="banner-default-view" class="banner-view active">
-                <span class="banner-icon-hint">ℹ️</span>
-                <span id="banner-default-text" class="banner-hint-text">Hover any avatar to view live details • Click to
-                    open stream</span>
+                <div class="banner-meta-line">
+                    <span class="banner-icon-hint">ℹ️</span>
+                    <span id="banner-default-header" class="banner-streamer-name">LiveStreamers</span>
+                    <span id="banner-default-status" class="banner-status-pill pill-offline">Tracking</span>
+                </div>
+                <div id="banner-default-text" class="banner-title-line title-offline">
+                    Hover any avatar for live details • Click to open
+                </div>
             </div>
 
             <div id="banner-hover-view" class="banner-view">
@@ -84,9 +89,9 @@
             </div>
         </div>
 
-        <!-- Avatars Row Container -->
+        <!-- Vertical Avatars List Container -->
         <div id="avatars-container" class="avatars-container">
-            <!-- Dynamic avatar circle cards rendered in sorted order by renderer.js -->
+            <!-- Dynamic avatar circle cards rendered in vertical order by renderer.js -->
         </div>
     </div>
 

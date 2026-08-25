@@ -20,6 +20,7 @@ const {
   saveStatus,
   defaultStreamers,
   normalizeStreamerConfig,
+  normalizeUrlEntry,
 } = require("./tasks/storage");
 const {
   StreamLiveCheckerService,
@@ -33,6 +34,7 @@ let overlayWindow = null;
 let settingsWindow = null;
 let tray = null;
 let liveCheckerService = null;
+let saveBoundsTimeout = null;
 
 // Load persisted configuration and latest status on startup
 const persistedSettings = loadSettings();
@@ -45,6 +47,7 @@ const state = {
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
   currentOpacity: persistedSettings.currentOpacity ?? 1.0,
   overlayVisible: persistedSettings.overlayVisible ?? true,
+  overlayBounds: persistedSettings.overlayBounds || null,
   streamers: Array.isArray(persistedSettings.streamers)
     ? persistedSettings.streamers
     : defaultStreamers,
@@ -80,10 +83,11 @@ function createDefaultTrayIcon() {
   return nativeImage.createFromBuffer(buffer, { width: size, height: size });
 }
 
+// Calculate dimensions for vertical avatar list layout
 function calculateOverlayDimensions(itemCount) {
   const count = Math.max(1, itemCount || 1);
-  const width = Math.max(400, Math.min(1800, count * 155 + 60));
-  const height = 270;
+  const width = 280;
+  const height = Math.max(280, Math.min(1080, count * 135 + 110));
   return { width, height };
 }
 
@@ -92,14 +96,34 @@ function updateOverlayBounds() {
   const count = state.streamers ? state.streamers.length : 1;
   const { width, height } = calculateOverlayDimensions(count);
   const bounds = overlayWindow.getBounds();
-  if (bounds.width !== width || bounds.height !== height) {
+
+  // If user hasn't explicitly resized height/width, or if count changed significantly
+  if (bounds.width !== width) {
     overlayWindow.setBounds({
       x: bounds.x,
       y: bounds.y,
       width,
-      height,
+      height: Math.max(bounds.height, height),
     });
   }
+}
+
+function debounceSaveOverlayBounds() {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  if (saveBoundsTimeout) clearTimeout(saveBoundsTimeout);
+
+  saveBoundsTimeout = setTimeout(() => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      const bounds = overlayWindow.getBounds();
+      state.overlayBounds = {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+      };
+      saveSettings(state);
+    }
+  }, 400);
 }
 
 /**
@@ -107,7 +131,9 @@ function updateOverlayBounds() {
  */
 function getEnrichedStreamer(streamer) {
   const status = state.statusMap[streamer.id] || {};
-  const primaryUrl = (streamer.urls && streamer.urls[0]) || "";
+  const firstUrlObj = streamer.urls && streamer.urls[0];
+  const primaryUrl =
+    typeof firstUrlObj === "string" ? firstUrlObj : firstUrlObj?.url || "";
   const activeUrl = status.activeUrl || primaryUrl;
   const activePlatform = status.activePlatform || detectPlatform(activeUrl);
 
@@ -117,7 +143,7 @@ function getEnrichedStreamer(streamer) {
     activeUrl,
     activePlatform,
     platform: activePlatform,
-    url: activeUrl, // compatibility
+    url: activeUrl,
     checkStatus: status.checkStatus || "idle",
     cachedInfo: status.cachedInfo || null,
     lastChecked: status.lastChecked || null,
@@ -136,10 +162,6 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
 
   switch (sortBy) {
     case "last-triggered": {
-      // Sort priority:
-      // 1. Streamers with lastTriggeredAt (most recent first)
-      // 2. Currently live streamers
-      // 3. Offline streamers
       return [...enriched].sort((a, b) => {
         const timeA = a.lastTriggeredAt
           ? new Date(a.lastTriggeredAt).getTime()
@@ -154,9 +176,6 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
     }
 
     case "longest-live": {
-      // Sort priority:
-      // 1. Live streamers with earliest startTime (longest live uptime first)
-      // 2. Offline streamers
       return [...enriched].sort((a, b) => {
         if (a.isLive && !b.isLive) return -1;
         if (!a.isLive && b.isLive) return 1;
@@ -167,16 +186,13 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
           const startB = b.cachedInfo?.startTime
             ? new Date(b.cachedInfo.startTime).getTime()
             : Date.now();
-          return startA - startB; // Earliest start = longest live uptime
+          return startA - startB; // Earliest start = longest live
         }
         return (a.name || "").localeCompare(b.name || "");
       });
     }
 
     case "last-started": {
-      // Sort priority:
-      // 1. Live streamers with latest startTime (most recently went live first)
-      // 2. Offline streamers
       return [...enriched].sort((a, b) => {
         if (a.isLive && !b.isLive) return -1;
         if (!a.isLive && b.isLive) return 1;
@@ -187,7 +203,7 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
           const startB = b.cachedInfo?.startTime
             ? new Date(b.cachedInfo.startTime).getTime()
             : 0;
-          return startB - startA; // Latest start = most recently started
+          return startB - startA; // Latest start = most recently live
         }
         return (a.name || "").localeCompare(b.name || "");
       });
@@ -207,11 +223,28 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
 
 function createOverlayWindow() {
   const count = state.streamers ? state.streamers.length : 1;
-  const { width, height } = calculateOverlayDimensions(count);
+  const defaultDim = calculateOverlayDimensions(count);
+
+  let initialBounds = {
+    width: defaultDim.width,
+    height: defaultDim.height,
+  };
+
+  // Restore saved position & dimensions if available
+  if (state.overlayBounds && typeof state.overlayBounds.width === "number") {
+    initialBounds.width = state.overlayBounds.width;
+    initialBounds.height = state.overlayBounds.height;
+    if (
+      typeof state.overlayBounds.x === "number" &&
+      typeof state.overlayBounds.y === "number"
+    ) {
+      initialBounds.x = state.overlayBounds.x;
+      initialBounds.y = state.overlayBounds.y;
+    }
+  }
 
   overlayWindow = new BrowserWindow({
-    width,
-    height,
+    ...initialBounds,
     transparent: true,
     frame: false,
     hasShadow: false,
@@ -237,6 +270,10 @@ function createOverlayWindow() {
   if (!state.overlayVisible) {
     overlayWindow.hide();
   }
+
+  // Save position and dimensions on move and resize
+  overlayWindow.on("moved", debounceSaveOverlayBounds);
+  overlayWindow.on("resized", debounceSaveOverlayBounds);
 
   overlayWindow.on("closed", () => {
     overlayWindow = null;
@@ -316,7 +353,7 @@ function buildTrayMenu() {
       label: "Check Live Status Now",
       click: () => {
         if (liveCheckerService) {
-          liveCheckerService.checkAll();
+          liveCheckerService.checkAll(true);
         }
       },
     },
@@ -331,6 +368,7 @@ function buildTrayMenu() {
       click: () => {
         if (overlayWindow && !overlayWindow.isDestroyed()) {
           overlayWindow.center();
+          debounceSaveOverlayBounds();
         }
       },
     },
@@ -415,7 +453,6 @@ function initBackgroundChecker() {
         checkedUrlsCount: update.checkedUrlsCount ?? current.checkedUrlsCount,
       };
 
-      // Persist status updates to status.json
       saveStatus(state.statusMap);
       broadcastStateUpdate();
     },
@@ -459,18 +496,19 @@ ipcMain.handle("streamers:update", (_event, newStreamers) => {
 ipcMain.handle("streamers:add", (_event, streamerData) => {
   if (!streamerData) return getSortedEnrichedStreamers();
 
-  const urls = Array.isArray(streamerData.urls)
-    ? streamerData.urls.map((u) => normalizeUrl(u)).filter(Boolean)
+  const rawUrls = Array.isArray(streamerData.urls)
+    ? streamerData.urls
     : streamerData.url
-      ? [normalizeUrl(streamerData.url)]
+      ? [streamerData.url]
       : [];
 
+  const urls = rawUrls.map(normalizeUrlEntry).filter(Boolean);
   if (urls.length === 0) return getSortedEnrichedStreamers();
 
   const name =
     streamerData.name && streamerData.name.trim()
       ? streamerData.name.trim()
-      : extractStreamerName(urls[0]);
+      : extractStreamerName(urls[0].url);
 
   const id = `streamer-${Date.now()}-${crypto.randomInt(100, 999)}`;
 
@@ -495,7 +533,7 @@ ipcMain.handle("streamers:add", (_event, streamerData) => {
   broadcastStateUpdate();
 
   if (liveCheckerService) {
-    liveCheckerService.checkSingleStreamer(newStreamer);
+    liveCheckerService.checkSingleStreamer(newStreamer, true);
   }
 
   return getSortedEnrichedStreamers();
@@ -517,10 +555,10 @@ ipcMain.handle("streamers:check-now", async (_event, streamerId) => {
   if (streamerId) {
     const streamer = state.streamers.find((s) => s.id === streamerId);
     if (streamer && liveCheckerService) {
-      return await liveCheckerService.checkSingleStreamer(streamer);
+      return await liveCheckerService.checkSingleStreamer(streamer, true);
     }
   } else if (liveCheckerService) {
-    liveCheckerService.checkAll();
+    liveCheckerService.checkAll(true);
     return true;
   }
   return false;
@@ -639,7 +677,9 @@ ipcMain.handle("app:open-external", async (_event, url) => {
 });
 
 ipcMain.handle("task:run-streamer-check", async (_event, streamer) => {
-  return await checkStreamerLiveTask(streamer, state.statusMap[streamer?.id]);
+  return await checkStreamerLiveTask(streamer, state.statusMap[streamer?.id], {
+    isManual: true,
+  });
 });
 
 ipcMain.handle("task:run-pet-avatar", async (_event, userName) => {
@@ -654,6 +694,7 @@ ipcMain.handle("log:terminal", (_event, { tag, message, isError }) => {
 ipcMain.handle("window:center-overlay", () => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.center();
+    debounceSaveOverlayBounds();
   }
   return true;
 });

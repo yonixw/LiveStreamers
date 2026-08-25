@@ -197,8 +197,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // URL builder row management
-  function createUrlRow(url = "") {
+  // URL builder row management with per-link frequency in minutes
+  function createUrlRow(entry = { url: "", freqMinutes: 1 }) {
+    const rawUrl = typeof entry === "string" ? entry : entry?.url || "";
+    const rawFreq =
+      typeof entry === "object" && entry?.freqMinutes ? entry.freqMinutes : 1;
+
     const row = document.createElement("div");
     row.className = "url-input-row";
 
@@ -206,24 +210,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     orderChip.className = "url-order-chip";
     orderChip.textContent = "#1";
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.placeholder =
-      "e.g. https://kick.com/streamer or https://youtube.com/@channel/live";
-    input.value = url;
-    input.required = true;
+    const urlInput = document.createElement("input");
+    urlInput.type = "text";
+    urlInput.placeholder = "Stream URL (e.g. https://kick.com/streamer)";
+    urlInput.value = rawUrl;
+    urlInput.required = true;
 
     const platTag = document.createElement("span");
     platTag.className = "url-platform-tag pill-other";
     platTag.textContent = "URL";
 
     function updatePlatTag() {
-      const plat = detectPlatform(input.value);
+      const plat = detectPlatform(urlInput.value);
       platTag.className = `url-platform-tag ${getPlatformPillClass(plat)}`;
       platTag.textContent = plat.toUpperCase();
     }
-    input.addEventListener("input", updatePlatTag);
+    urlInput.addEventListener("input", updatePlatTag);
     updatePlatTag();
+
+    // Frequency in minutes input
+    const freqWrapper = document.createElement("div");
+    freqWrapper.className = "url-freq-wrapper";
+    freqWrapper.title =
+      "Check frequency for this link in minutes (Checks at minute counter % freq == 0)";
+
+    const freqLabel = document.createElement("span");
+    freqLabel.className = "url-freq-label";
+    freqLabel.textContent = "Freq:";
+
+    const freqInput = document.createElement("input");
+    freqInput.type = "number";
+    freqInput.className = "input-url-freq";
+    freqInput.min = "1";
+    freqInput.step = "1";
+    freqInput.value = String(Math.max(1, parseInt(rawFreq, 10) || 1));
+
+    const freqUnit = document.createElement("span");
+    freqUnit.className = "url-freq-label";
+    freqUnit.textContent = "m";
+
+    freqWrapper.appendChild(freqLabel);
+    freqWrapper.appendChild(freqInput);
+    freqWrapper.appendChild(freqUnit);
 
     const actions = document.createElement("div");
     actions.className = "url-row-actions";
@@ -264,7 +292,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         row.remove();
         updateUrlsOrderChips();
       } else {
-        input.value = "";
+        urlInput.value = "";
+        freqInput.value = "1";
         updatePlatTag();
       }
     });
@@ -274,7 +303,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     actions.appendChild(btnDel);
 
     row.appendChild(orderChip);
-    row.appendChild(input);
+    row.appendChild(urlInput);
+    row.appendChild(freqWrapper);
     row.appendChild(platTag);
     row.appendChild(actions);
 
@@ -298,8 +328,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function setFormUrls(urls = []) {
     urlsInputList.innerHTML = "";
-    if (urls.length === 0) {
-      urlsInputList.appendChild(createUrlRow(""));
+    if (!urls || urls.length === 0) {
+      urlsInputList.appendChild(createUrlRow({ url: "", freqMinutes: 1 }));
     } else {
       urls.forEach((u) => urlsInputList.appendChild(createUrlRow(u)));
     }
@@ -307,17 +337,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function getFormUrls() {
-    const inputs = urlsInputList.querySelectorAll("input");
-    return Array.from(inputs)
-      .map((inp) => inp.value.trim())
-      .filter((val) => val.length > 0);
+    const rows = Array.from(urlsInputList.querySelectorAll(".url-input-row"));
+    return rows
+      .map((row) => {
+        const urlInp = row.querySelector('input[type="text"]');
+        const freqInp = row.querySelector(".input-url-freq");
+        const url = urlInp ? urlInp.value.trim() : "";
+        const freqMinutes = freqInp
+          ? Math.max(1, parseInt(freqInp.value, 10) || 1)
+          : 1;
+        return { url, freqMinutes };
+      })
+      .filter((item) => item.url.length > 0);
   }
 
   if (btnAddUrlRow) {
     btnAddUrlRow.addEventListener("click", () => {
-      urlsInputList.appendChild(createUrlRow(""));
+      urlsInputList.appendChild(createUrlRow({ url: "", freqMinutes: 1 }));
       updateUrlsOrderChips();
-      const lastInput = urlsInputList.lastElementChild.querySelector("input");
+      const lastInput =
+        urlsInputList.lastElementChild.querySelector('input[type="text"]');
       if (lastInput) lastInput.focus();
     });
   }
@@ -331,7 +370,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     streamerNameInput.value = "";
     streamerAvatarInput.value = "";
-    setFormUrls([""]);
+    setFormUrls([{ url: "", freqMinutes: 1 }]);
 
     trigGoingLive.checked = true;
     trigTitleChange.checked = true;
@@ -352,7 +391,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     streamerNameInput.value = streamer.name || "";
     streamerAvatarInput.value = streamer.avatarImage || "";
-    setFormUrls(streamer.urls || [streamer.url]);
+    setFormUrls(streamer.urls || [{ url: streamer.url, freqMinutes: 1 }]);
 
     const trig = streamer.triggers || {};
     trigGoingLive.checked = trig.goingLive !== false;
@@ -551,7 +590,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Render Streamers List with detailed Trigger Debugging
+  // Render Streamers List with detailed Trigger Debugging and Per-Link Frequencies
   function renderStreamersList(streamers) {
     localStreamers = Array.isArray(streamers) ? streamers : [];
     const liveCount = localStreamers.filter((s) => s.isLive).length;
@@ -610,20 +649,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       nameSpan.textContent = streamer.name || "Streamer";
       titleRow.appendChild(nameSpan);
 
-      // URL chips showing checking order
+      // URL chips showing checking order and frequency
       const urlsContainer = document.createElement("div");
       urlsContainer.className = "streamer-urls-chips";
 
       const urls = Array.isArray(streamer.urls)
         ? streamer.urls
-        : [streamer.url || ""];
-      urls.forEach((url, uIdx) => {
-        const plat = detectPlatform(url);
+        : [{ url: streamer.url || "", freqMinutes: 1 }];
+      urls.forEach((entry, uIdx) => {
+        const urlStr = typeof entry === "string" ? entry : entry?.url || "";
+        const freq =
+          typeof entry === "object" && entry?.freqMinutes
+            ? entry.freqMinutes
+            : 1;
+        const plat = detectPlatform(urlStr);
+
         const chip = document.createElement("span");
-        const isActive = streamer.isLive && streamer.activeUrl === url;
+        const isActive = streamer.isLive && streamer.activeUrl === urlStr;
         chip.className = `url-order-badge ${isActive ? "active-url-badge" : ""}`;
-        chip.title = `${uIdx + 1}. [${plat.toUpperCase()}] ${url}`;
-        chip.textContent = `${uIdx + 1}.${plat.toUpperCase()}${isActive ? " (LIVE)" : ""}`;
+        chip.title = `${uIdx + 1}. [${plat.toUpperCase()}] ${urlStr} (Checked every ${freq}m)`;
+        chip.textContent = `${uIdx + 1}.${plat.toUpperCase()} (${freq}m)${isActive ? " [LIVE]" : ""}`;
         urlsContainer.appendChild(chip);
       });
       titleRow.appendChild(urlsContainer);
@@ -785,7 +830,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btnCheckAll) {
     btnCheckAll.addEventListener("click", async () => {
       appendLog(
-        "Triggering live checks for all streamers...",
+        "Triggering manual live checks for all streamers...",
         "info",
         "LiveCheck",
       );
@@ -799,28 +844,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Preset buttons
+  // Preset buttons with frequencies
   presetButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const preset = btn.getAttribute("data-preset");
       if (preset === "lofi") {
         streamerNameInput.value = "Lofi Girl";
         streamerAvatarInput.value = "";
-        setFormUrls(["https://www.youtube.com/@LofiGirl/live"]);
+        setFormUrls([
+          { url: "https://www.youtube.com/@LofiGirl/live", freqMinutes: 1 },
+        ]);
       } else if (preset === "shroud") {
         streamerNameInput.value = "Shroud";
         streamerAvatarInput.value = "";
         setFormUrls([
-          "https://www.twitch.tv/shroud",
-          "https://www.youtube.com/@shroud/live",
+          { url: "https://www.twitch.tv/shroud", freqMinutes: 1 },
+          { url: "https://www.youtube.com/@shroud/live", freqMinutes: 2 },
         ]);
       } else if (preset === "xqc") {
         streamerNameInput.value = "xQc";
         streamerAvatarInput.value = "";
         setFormUrls([
-          "https://kick.com/xqc",
-          "https://www.twitch.tv/xqcow",
-          "https://www.youtube.com/@xQcOW/live",
+          { url: "https://kick.com/xqc", freqMinutes: 1 },
+          { url: "https://www.twitch.tv/xqcow", freqMinutes: 1 },
+          { url: "https://www.youtube.com/@xQcOW/live", freqMinutes: 3 },
         ]);
       }
       updateAvatarPreview();
@@ -835,7 +882,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         id: "yt-lofigirl",
         name: "Lofi Girl",
         avatarImage: "",
-        urls: ["https://www.youtube.com/@LofiGirl/live"],
+        urls: [
+          { url: "https://www.youtube.com/@LofiGirl/live", freqMinutes: 1 },
+        ],
         triggers: {
           titleChange: true,
           viewerCountEnabled: false,
@@ -849,8 +898,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         name: "Shroud",
         avatarImage: "",
         urls: [
-          "https://www.twitch.tv/shroud",
-          "https://www.youtube.com/@shroud/live",
+          { url: "https://www.twitch.tv/shroud", freqMinutes: 1 },
+          { url: "https://www.youtube.com/@shroud/live", freqMinutes: 2 },
         ],
         triggers: {
           titleChange: true,
@@ -865,9 +914,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         name: "xQc",
         avatarImage: "",
         urls: [
-          "https://kick.com/xqc",
-          "https://www.twitch.tv/xqcow",
-          "https://www.youtube.com/@xQcOW/live",
+          { url: "https://kick.com/xqc", freqMinutes: 1 },
+          { url: "https://www.twitch.tv/xqcow", freqMinutes: 1 },
+          { url: "https://www.youtube.com/@xQcOW/live", freqMinutes: 3 },
         ],
         triggers: {
           titleChange: true,
@@ -999,7 +1048,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Initial load
-  setFormUrls([""]);
+  setFormUrls([{ url: "", freqMinutes: 1 }]);
   if (window.electronAPI) {
     try {
       if (window.electronAPI.getSettings) {

@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Banner elements
   const streamInfoBanner = document.getElementById("stream-info-banner");
   const bannerDefaultView = document.getElementById("banner-default-view");
+  const bannerDefaultHeader = document.getElementById("banner-default-header");
+  const bannerDefaultStatus = document.getElementById("banner-default-status");
   const bannerDefaultText = document.getElementById("banner-default-text");
   const bannerHoverView = document.getElementById("banner-hover-view");
 
@@ -146,15 +148,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // Update Top Banner Summary
+  // Update Top Banner Summary (Always 2 Lines)
   function updateDefaultBannerSummary() {
     if (!streamersList || streamersList.length === 0) {
       if (headerLiveBadge.textContent !== "0 Live") {
         headerLiveBadge.textContent = "0 Live";
         headerLiveBadge.className = "header-live-badge";
       }
-      bannerDefaultText.textContent =
-        "No streamers configured. Click ⚙️ to add.";
+      if (bannerDefaultHeader)
+        bannerDefaultHeader.textContent = "LiveStreamers";
+      if (bannerDefaultStatus) {
+        bannerDefaultStatus.textContent = "Empty";
+        bannerDefaultStatus.className = "banner-status-pill pill-offline";
+      }
+      if (bannerDefaultText)
+        bannerDefaultText.textContent =
+          "No streamers added. Click ⚙️ to configure.";
       return;
     }
 
@@ -166,10 +175,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (liveCount > 0) {
       headerLiveBadge.className = "header-live-badge badge-active";
-      bannerDefaultText.innerHTML = `🟢 <strong>${liveCount} Live Now</strong> • Hover any avatar for details • Click to open`;
+      if (bannerDefaultHeader)
+        bannerDefaultHeader.textContent = `${liveCount} Live`;
+      if (bannerDefaultStatus) {
+        bannerDefaultStatus.textContent = "Streaming";
+        bannerDefaultStatus.className = "banner-status-pill pill-live";
+      }
+      if (bannerDefaultText)
+        bannerDefaultText.textContent =
+          "Hover any avatar for details • Click to open";
     } else {
       headerLiveBadge.className = "header-live-badge";
-      bannerDefaultText.textContent = `⚪ All streamers offline • Hover an avatar for details • Drag top bar to move`;
+      if (bannerDefaultHeader)
+        bannerDefaultHeader.textContent = "LiveStreamers";
+      if (bannerDefaultStatus) {
+        bannerDefaultStatus.textContent = "Offline";
+        bannerDefaultStatus.className = "banner-status-pill pill-offline";
+      }
+      if (bannerDefaultText)
+        bannerDefaultText.textContent =
+          "All streamers offline • Hover avatar for details";
     }
   }
 
@@ -269,7 +294,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateDefaultBannerSummary();
   }
 
-  // Fine-grained Non-Flashing In-Place Reconciliation
+  // Fine-grained Non-Flashing In-Place Reconciliation (Vertical Stack)
   function renderAvatarsInPlace(streamers) {
     streamersList = Array.isArray(streamers) ? streamers : [];
     updateDefaultBannerSummary();
@@ -360,7 +385,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       }
 
-      // Check DOM position: only insert/move if position in parent is different
+      // Check DOM position in vertical container: only move if index changed
       const currentChildAtIndex = avatarsContainer.children[index];
       if (currentChildAtIndex !== card) {
         avatarsContainer.insertBefore(card, currentChildAtIndex || null);

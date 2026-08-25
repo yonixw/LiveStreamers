@@ -27,7 +27,7 @@ const defaultStreamers = [
     id: "yt-lofigirl",
     name: "Lofi Girl",
     avatarImage: "",
-    urls: ["https://www.youtube.com/@LofiGirl/live"],
+    urls: [{ url: "https://www.youtube.com/@LofiGirl/live", freqMinutes: 1 }],
     triggers: {
       titleChange: true,
       viewerCountEnabled: false,
@@ -41,8 +41,8 @@ const defaultStreamers = [
     name: "Shroud",
     avatarImage: "",
     urls: [
-      "https://www.twitch.tv/shroud",
-      "https://www.youtube.com/@shroud/live",
+      { url: "https://www.twitch.tv/shroud", freqMinutes: 1 },
+      { url: "https://www.youtube.com/@shroud/live", freqMinutes: 2 },
     ],
     triggers: {
       titleChange: true,
@@ -57,9 +57,9 @@ const defaultStreamers = [
     name: "xQc",
     avatarImage: "",
     urls: [
-      "https://kick.com/xqc",
-      "https://www.twitch.tv/xqcow",
-      "https://www.youtube.com/@xQcOW/live",
+      { url: "https://kick.com/xqc", freqMinutes: 1 },
+      { url: "https://www.twitch.tv/xqcow", freqMinutes: 1 },
+      { url: "https://www.youtube.com/@xQcOW/live", freqMinutes: 3 },
     ],
     triggers: {
       titleChange: true,
@@ -72,13 +72,44 @@ const defaultStreamers = [
 ];
 
 const defaultSettings = {
-  sortBy: "last-triggered", // "last-triggered" | "last-started" | "longest-live" | "manual" | "name"
+  sortBy: "last-triggered",
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
   currentOpacity: 1.0,
   overlayVisible: true,
+  overlayBounds: {
+    x: null,
+    y: null,
+    width: 280,
+    height: 460,
+  },
   streamers: defaultStreamers,
 };
+
+/**
+ * Normalizes a URL entry to { url: string, freqMinutes: number }.
+ */
+function normalizeUrlEntry(entry) {
+  if (!entry) return null;
+  if (typeof entry === "string" && entry.trim().length > 0) {
+    return {
+      url: entry.trim(),
+      freqMinutes: 1,
+    };
+  }
+  if (
+    typeof entry === "object" &&
+    typeof entry.url === "string" &&
+    entry.url.trim().length > 0
+  ) {
+    const freq = Math.max(1, parseInt(entry.freqMinutes, 10) || 1);
+    return {
+      url: entry.url.trim(),
+      freqMinutes: freq,
+    };
+  }
+  return null;
+}
 
 /**
  * Normalizes a single streamer object ensuring consistent schema.
@@ -100,18 +131,18 @@ function normalizeStreamerConfig(streamer, index = 0) {
     };
   }
 
-  // Handle URL vs URLs migration
-  let urls = [];
+  // Handle URL vs URLs migration and frequency
+  let rawUrls = [];
   if (Array.isArray(streamer.urls)) {
-    urls = streamer.urls.filter(
-      (u) => typeof u === "string" && u.trim().length > 0,
-    );
+    rawUrls = streamer.urls;
   } else if (
     typeof streamer.url === "string" &&
     streamer.url.trim().length > 0
   ) {
-    urls = [streamer.url.trim()];
+    rawUrls = [streamer.url.trim()];
   }
+
+  const urls = rawUrls.map(normalizeUrlEntry).filter(Boolean);
 
   const triggers = {
     titleChange: streamer.triggers?.titleChange ?? true,
@@ -150,6 +181,7 @@ function loadSettings() {
       return {
         ...defaultSettings,
         ...data,
+        overlayBounds: data.overlayBounds || defaultSettings.overlayBounds,
         streamers: normalizedStreamers,
       };
     }
@@ -160,7 +192,6 @@ function loadSettings() {
     );
   }
 
-  // Save defaults if file did not exist
   saveSettings(defaultSettings);
   return { ...defaultSettings };
 }
@@ -177,6 +208,7 @@ function saveSettings(settings) {
       isIgnoringMouseEvents: settings.isIgnoringMouseEvents ?? false,
       currentOpacity: settings.currentOpacity ?? 1.0,
       overlayVisible: settings.overlayVisible ?? true,
+      overlayBounds: settings.overlayBounds || null,
       streamers: Array.isArray(settings.streamers)
         ? settings.streamers.map((s, idx) => normalizeStreamerConfig(s, idx))
         : defaultStreamers,
@@ -225,6 +257,7 @@ module.exports = {
   getStatusPath,
   defaultStreamers,
   defaultSettings,
+  normalizeUrlEntry,
   normalizeStreamerConfig,
   loadSettings,
   saveSettings,
