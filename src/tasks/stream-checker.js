@@ -444,14 +444,11 @@ async function checkStreamerLiveTask(
     };
   }
 
-  // Filter links to check based on per-link frequency (counter % freqMinutes === 0)
+  // Filter links to check: check link strictly when (minuteCounter % freqMinutes === 0) or if isManual
   const linksToCheck = urlObjects.filter((linkObj) => {
     if (isManual) return true;
-    const freq = linkObj.freqMinutes || 1;
-    const isDue = minuteCounter % freq === 0;
-    const isCurrentlyActiveLiveLink =
-      previousStatus?.isLive && previousStatus.activeUrl === linkObj.url;
-    return isDue || isCurrentlyActiveLiveLink;
+    const freq = Math.max(1, parseInt(linkObj.freqMinutes, 10) || 1);
+    return minuteCounter % freq === 0;
   });
 
   // If no links for this streamer meet their frequency this minute, maintain previous status
@@ -461,6 +458,10 @@ async function checkStreamerLiveTask(
       streamerId: streamer.id,
       skippedThisMinute: true,
     };
+  }
+
+  if (typeof options.onCheckStart === "function") {
+    options.onCheckStart();
   }
 
   console.log(
@@ -491,7 +492,7 @@ async function checkStreamerLiveTask(
         `[${timestamp}] [Background Live Check] [${streamerName}] Link ${i + 1} (${plat.toUpperCase()}) is LIVE! Short-circuiting remaining ${linksToCheck.length - i - 1} due link(s).`,
       );
       firstLiveResult = singleResult;
-      break; // Short-circuit: no need to check other links on this avatar
+      break; // Short-circuit: no need to check other links on this avatar, moves on to next streamer
     }
 
     if (!singleResult.success && singleResult.error) {
@@ -499,15 +500,29 @@ async function checkStreamerLiveTask(
     }
   }
 
-  const isLive = Boolean(firstLiveResult && firstLiveResult.isLive);
-  const activeUrl = firstLiveResult
-    ? firstLiveResult.url
-    : normalizeUrl(urlObjects[0].url);
-  const activePlatform = firstLiveResult
-    ? firstLiveResult.platform
-    : detectPlatform(urlObjects[0].url);
-  const cachedInfo =
-    isLive && firstLiveResult ? firstLiveResult.cachedInfo : null;
+  // Determine isLive and active metadata
+  let isLive = false;
+  let activeUrl = normalizeUrl(urlObjects[0].url);
+  let activePlatform = detectPlatform(urlObjects[0].url);
+  let cachedInfo = null;
+
+  if (firstLiveResult && firstLiveResult.isLive) {
+    isLive = true;
+    activeUrl = firstLiveResult.url;
+    activePlatform = firstLiveResult.platform;
+    cachedInfo = firstLiveResult.cachedInfo;
+  } else if (
+    previousStatus?.isLive &&
+    !linksToCheck.some(
+      (l) => normalizeUrl(l.url) === normalizeUrl(previousStatus.activeUrl),
+    )
+  ) {
+    // If streamer was previously live on a link that wasn't due to be checked this minute, preserve status
+    isLive = true;
+    activeUrl = previousStatus.activeUrl;
+    activePlatform = previousStatus.activePlatform;
+    cachedInfo = previousStatus.cachedInfo;
+  }
   const nowIso = new Date().toISOString();
 
   // Construct current check result
@@ -657,13 +672,6 @@ class StreamLiveCheckerService {
     const { streamer, isManual, resolve, reject } = this.streamerQueue.shift();
     const streamerId = streamer.id;
 
-    if (this.onStatusUpdate) {
-      this.onStatusUpdate({
-        streamerId,
-        checkStatus: "checking",
-      });
-    }
-
     try {
       const statusMap = this.getStatusMap ? this.getStatusMap() : {};
       const previousStatus = statusMap[streamerId] || null;
@@ -672,6 +680,14 @@ class StreamLiveCheckerService {
       const result = await checkStreamerLiveTask(streamer, previousStatus, {
         isManual,
         minuteCounter: this.minuteCounter,
+        onCheckStart: () => {
+          if (this.onStatusUpdate) {
+            this.onStatusUpdate({
+              streamerId,
+              checkStatus: "checking",
+            });
+          }
+        },
       });
 
       if (!result.skippedThisMinute && this.onStatusUpdate) {
