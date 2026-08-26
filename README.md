@@ -1,5 +1,7 @@
 # LiveStreamers
 
+`(Repo and code was created using AI, Gemini 3.6 Flash, with human oversight on code.)`
+
 A lightweight, transparent desktop overlay built with Electron and native HTML/CSS/JS that tracks live streamers across **Twitch**, **YouTube**, **Kick**, and other platforms in real time. Powered by `yt-dlp` under the hood for metadata extraction and trigger automation.
 
 ---
