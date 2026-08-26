@@ -8,7 +8,7 @@
   "scripts": {
     "start": "bun x electron .",
     "dev": "bun x electron .",
-    "build:win": "bun x electron-builder --win",
+    "build:win": "bun x electron-builder --win ",
     "build:mac": "bun x electron-builder --mac",
     "build:linux": "bun x electron-builder --linux",
     "build:all": "bun x electron-builder -mwl",
