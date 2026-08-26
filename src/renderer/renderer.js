@@ -363,6 +363,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (frame.className !== desiredFrameClass) {
           frame.className = desiredFrameClass;
         }
+        if (isLive && streamer.liveBorderColor) {
+          frame.style.borderColor = streamer.liveBorderColor;
+          frame.style.boxShadow = `0 0 12px ${streamer.liveBorderColor}bf, 0 0 24px ${streamer.liveBorderColor}40, inset 0 0 6px ${streamer.liveBorderColor}80`;
+        } else {
+          frame.style.borderColor = "";
+          frame.style.boxShadow = "";
+        }
       }
 
       // Tooltip and ALT_TEXT: ${username nick} / ${domain} / ${game} / ${full title}
@@ -471,6 +478,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         } else {
           viewerTag.classList.add("tag-offline");
           viewerTag.innerHTML = "";
+        }
+        if (isLive && streamer.liveBorderColor) {
+          viewerTag.style.borderColor = streamer.liveBorderColor;
+          viewerTag.style.color = streamer.liveBorderColor;
+        } else {
+          viewerTag.style.borderColor = "";
+          viewerTag.style.color = "";
         }
       }
 

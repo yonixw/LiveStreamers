@@ -42,6 +42,28 @@
     "width": 340,
     "height": 487
   },
+  "actionRules": [
+    {
+      "id": "action-rule-1787706044819",
+      "name": "test",
+      "enabled": true,
+      "command": "echo %_1",
+      "streamerIds": [
+        "kc-xqc"
+      ]
+    }
+  ],
+  "colorRules": [
+    {
+      "id": "color-rule-1787705994265",
+      "name": "vip",
+      "enabled": true,
+      "color": "#FA0000",
+      "streamerIds": [
+        "streamer-1787697589918-253"
+      ]
+    }
+  ],
   "streamers": [
     {
       "id": "kc-xqc",

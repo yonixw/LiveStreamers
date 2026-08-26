@@ -118,6 +118,8 @@ const defaultSettings = {
     height: 460,
   },
   popupBounds: null,
+  actionRules: [],
+  colorRules: [],
   streamers: defaultStreamers,
 };
 
@@ -144,6 +146,69 @@ function normalizeUrlEntry(entry) {
     };
   }
   return null;
+}
+
+/**
+ * Normalizes an action rule object ({ id, name, enabled, command, streamerIds }).
+ */
+function normalizeActionRule(rule, index = 0) {
+  if (!rule || typeof rule !== "object") {
+    return {
+      id: `action-rule-${Date.now()}-${index}`,
+      name: `Action Rule ${index + 1}`,
+      enabled: true,
+      command: "",
+      streamerIds: [],
+    };
+  }
+  return {
+    id:
+      typeof rule.id === "string" && rule.id.trim()
+        ? rule.id.trim()
+        : `action-rule-${Date.now()}-${index}`,
+    name:
+      typeof rule.name === "string" && rule.name.trim()
+        ? rule.name.trim()
+        : `Action Rule ${index + 1}`,
+    enabled: rule.enabled !== false,
+    command: typeof rule.command === "string" ? rule.command.trim() : "",
+    streamerIds: Array.isArray(rule.streamerIds)
+      ? rule.streamerIds.map((id) => String(id).trim()).filter(Boolean)
+      : [],
+  };
+}
+
+/**
+ * Normalizes a color rule object ({ id, name, enabled, color, streamerIds }).
+ */
+function normalizeColorRule(rule, index = 0) {
+  if (!rule || typeof rule !== "object") {
+    return {
+      id: `color-rule-${Date.now()}-${index}`,
+      name: `Color Rule ${index + 1}`,
+      enabled: true,
+      color: "#22c55e",
+      streamerIds: [],
+    };
+  }
+  return {
+    id:
+      typeof rule.id === "string" && rule.id.trim()
+        ? rule.id.trim()
+        : `color-rule-${Date.now()}-${index}`,
+    name:
+      typeof rule.name === "string" && rule.name.trim()
+        ? rule.name.trim()
+        : `Color Rule ${index + 1}`,
+    enabled: rule.enabled !== false,
+    color:
+      typeof rule.color === "string" && rule.color.trim()
+        ? rule.color.trim()
+        : "#22c55e",
+    streamerIds: Array.isArray(rule.streamerIds)
+      ? rule.streamerIds.map((id) => String(id).trim()).filter(Boolean)
+      : [],
+  };
 }
 
 /**
@@ -264,6 +329,13 @@ function loadSettings() {
         ),
       );
 
+      const normalizedActionRules = Array.isArray(data.actionRules)
+        ? data.actionRules.map((r, i) => normalizeActionRule(r, i))
+        : [];
+      const normalizedColorRules = Array.isArray(data.colorRules)
+        ? data.colorRules.map((r, i) => normalizeColorRule(r, i))
+        : [];
+
       return {
         ...defaultSettings,
         ...data,
@@ -278,6 +350,8 @@ function loadSettings() {
           windowStates[currentWindowStateIndex] ||
           data.overlayBounds ||
           defaultSettings.overlayBounds,
+        actionRules: normalizedActionRules,
+        colorRules: normalizedColorRules,
         streamers: normalizedStreamers,
       };
     }
@@ -341,6 +415,12 @@ function saveSettings(settings) {
       overlayVisible: settings.overlayVisible ?? true,
       overlayBounds: settings.overlayBounds || null,
       popupBounds: settings.popupBounds || null,
+      actionRules: Array.isArray(settings.actionRules)
+        ? settings.actionRules.map((r, i) => normalizeActionRule(r, i))
+        : [],
+      colorRules: Array.isArray(settings.colorRules)
+        ? settings.colorRules.map((r, i) => normalizeColorRule(r, i))
+        : [],
       streamers: Array.isArray(settings.streamers)
         ? settings.streamers.map((s, idx) => normalizeStreamerConfig(s, idx))
         : defaultStreamers,
@@ -391,6 +471,8 @@ module.exports = {
   defaultSettings,
   normalizeUrlEntry,
   normalizeStreamerConfig,
+  normalizeActionRule,
+  normalizeColorRule,
   loadSettings,
   saveSettings,
   loadStatus,

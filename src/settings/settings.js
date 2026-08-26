@@ -99,7 +99,45 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnClearLogs = document.getElementById("btn-clear-logs");
   const logTerminal = document.getElementById("log-terminal");
 
+  // Common Group Rules Elements (Action -> Streamers[] & Color -> Streamers[])
+  const btnAddActionRule = document.getElementById("btn-add-action-rule");
+  const actionRuleEditor = document.getElementById("action-rule-editor");
+  const actionRuleIdInput = document.getElementById("action-rule-id");
+  const actionRuleNameInput = document.getElementById("action-rule-name");
+  const actionRuleCommandInput = document.getElementById("action-rule-command");
+  const btnBrowseCommand = document.getElementById("btn-browse-command");
+  const btnActionSelectAll = document.getElementById("btn-action-select-all");
+  const btnActionDeselectAll = document.getElementById(
+    "btn-action-deselect-all",
+  );
+  const actionStreamersPicker = document.getElementById(
+    "action-streamers-picker",
+  );
+  const btnTestActionRule = document.getElementById("btn-test-action-rule");
+  const actionTestResult = document.getElementById("action-test-result");
+  const btnCancelActionRule = document.getElementById("btn-cancel-action-rule");
+  const btnSaveActionRule = document.getElementById("btn-save-action-rule");
+  const actionRulesListEl = document.getElementById("action-rules-list");
+
+  const btnAddColorRule = document.getElementById("btn-add-color-rule");
+  const colorRuleEditor = document.getElementById("color-rule-editor");
+  const colorRuleIdInput = document.getElementById("color-rule-id");
+  const colorRuleNameInput = document.getElementById("color-rule-name");
+  const colorRulePicker = document.getElementById("color-rule-picker");
+  const colorRuleHex = document.getElementById("color-rule-hex");
+  const colorPresetButtons = document.querySelectorAll(".btn-color-dot");
+  const btnColorSelectAll = document.getElementById("btn-color-select-all");
+  const btnColorDeselectAll = document.getElementById("btn-color-deselect-all");
+  const colorStreamersPicker = document.getElementById(
+    "color-streamers-picker",
+  );
+  const btnCancelColorRule = document.getElementById("btn-cancel-color-rule");
+  const btnSaveColorRule = document.getElementById("btn-save-color-rule");
+  const colorRulesListEl = document.getElementById("color-rules-list");
+
   let localStreamers = [];
+  let localActionRules = [];
+  let localColorRules = [];
   const petTaskStates = new Map();
 
   // Output a log entry to browser DevTools console
@@ -1658,6 +1696,587 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // --- Multi-Streamer Selection Picker Helper ---
+  function populateStreamerMultiPicker(containerEl, selectedIds = []) {
+    if (!containerEl) return;
+    containerEl.innerHTML = "";
+
+    if (localStreamers.length === 0) {
+      const emptySpan = document.createElement("span");
+      emptySpan.className = "empty-list-message";
+      emptySpan.style.padding = "4px 8px";
+      emptySpan.textContent =
+        "No streamers configured yet. Add streamer profiles above.";
+      containerEl.appendChild(emptySpan);
+      return;
+    }
+
+    localStreamers.forEach((s) => {
+      const label = document.createElement("label");
+      const isChecked = selectedIds.includes(s.id);
+      label.className = `picker-streamer-chip ${isChecked ? "chip-selected" : ""}`;
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = s.id;
+      checkbox.checked = isChecked;
+      checkbox.addEventListener("change", () => {
+        label.classList.toggle("chip-selected", checkbox.checked);
+      });
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = s.name || "Streamer";
+
+      label.appendChild(checkbox);
+      label.appendChild(nameSpan);
+      containerEl.appendChild(label);
+    });
+  }
+
+  function getSelectedStreamerIds(containerEl) {
+    if (!containerEl) return [];
+    const checkboxes = containerEl.querySelectorAll(
+      'input[type="checkbox"]:checked',
+    );
+    return Array.from(checkboxes).map((cb) => cb.value);
+  }
+
+  function setAllPickerSelection(containerEl, selectAll) {
+    if (!containerEl) return;
+    const chips = containerEl.querySelectorAll(".picker-streamer-chip");
+    chips.forEach((chip) => {
+      const cb = chip.querySelector('input[type="checkbox"]');
+      if (cb) {
+        cb.checked = selectAll;
+        chip.classList.toggle("chip-selected", selectAll);
+      }
+    });
+  }
+
+  // --- Action Rules (Action -> Streamers[]) Logic ---
+  function renderActionRules(rules) {
+    localActionRules = Array.isArray(rules) ? rules : [];
+    if (!actionRulesListEl) return;
+    actionRulesListEl.innerHTML = "";
+
+    if (localActionRules.length === 0) {
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "empty-rules-msg";
+      emptyDiv.textContent =
+        "No action rules configured yet. Click '+ Add Action Rule' to set up an on-live batch script.";
+      actionRulesListEl.appendChild(emptyDiv);
+      return;
+    }
+
+    localActionRules.forEach((rule) => {
+      const item = document.createElement("div");
+      item.className = `rule-card-item ${rule.enabled === false ? "rule-disabled" : ""}`;
+
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "rule-card-info";
+
+      const titleRow = document.createElement("div");
+      titleRow.className = "rule-card-title-row";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "rule-card-name";
+      nameSpan.textContent = rule.name || "Action Rule";
+
+      const enabledBadge = document.createElement("span");
+      enabledBadge.className = `rule-card-badge ${rule.enabled !== false ? "status-live" : "status-offline"}`;
+      enabledBadge.textContent = rule.enabled !== false ? "Active" : "Disabled";
+
+      titleRow.appendChild(nameSpan);
+      titleRow.appendChild(enabledBadge);
+
+      const cmdSpan = document.createElement("div");
+      cmdSpan.className = "rule-card-detail";
+      cmdSpan.textContent = rule.command || "(no command specified)";
+      cmdSpan.title = rule.command || "";
+
+      // Streamers assigned list
+      const streamersPillsDiv = document.createElement("div");
+      streamersPillsDiv.className = "rule-streamers-pills";
+
+      const assignedNames = (rule.streamerIds || [])
+        .map((id) => {
+          const found = localStreamers.find((s) => s.id === id);
+          return found ? found.name : null;
+        })
+        .filter(Boolean);
+
+      if (assignedNames.length === 0) {
+        const noPill = document.createElement("span");
+        noPill.className = "rule-streamer-pill";
+        noPill.textContent = "0 streamers assigned";
+        streamersPillsDiv.appendChild(noPill);
+      } else {
+        assignedNames.forEach((name) => {
+          const pill = document.createElement("span");
+          pill.className = "rule-streamer-pill";
+          pill.textContent = name;
+          streamersPillsDiv.appendChild(pill);
+        });
+      }
+
+      infoDiv.appendChild(titleRow);
+      infoDiv.appendChild(cmdSpan);
+      infoDiv.appendChild(streamersPillsDiv);
+
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "rule-card-actions";
+
+      // Edit button
+      const btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.className = "btn-icon-action";
+      btnEdit.title = "Edit Action Rule";
+      btnEdit.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      `;
+      btnEdit.addEventListener("click", () => openActionRuleEditor(rule));
+
+      // Toggle enable/disable button
+      const btnToggle = document.createElement("button");
+      btnToggle.type = "button";
+      btnToggle.className = "btn-sm-action";
+      btnToggle.style.fontSize = "0.7rem";
+      btnToggle.textContent = rule.enabled !== false ? "Disable" : "Enable";
+      btnToggle.addEventListener("click", async () => {
+        rule.enabled = rule.enabled === false;
+        await saveActionRulesToBackend();
+      });
+
+      // Delete button
+      const btnDelete = document.createElement("button");
+      btnDelete.type = "button";
+      btnDelete.className = "btn-icon-action btn-delete";
+      btnDelete.title = "Delete Action Rule";
+      btnDelete.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `;
+      btnDelete.addEventListener("click", async () => {
+        localActionRules = localActionRules.filter((r) => r.id !== rule.id);
+        await saveActionRulesToBackend();
+      });
+
+      actionsDiv.appendChild(btnToggle);
+      actionsDiv.appendChild(btnEdit);
+      actionsDiv.appendChild(btnDelete);
+
+      item.appendChild(infoDiv);
+      item.appendChild(actionsDiv);
+      actionRulesListEl.appendChild(item);
+    });
+  }
+
+  async function saveActionRulesToBackend() {
+    if (window.electronAPI && window.electronAPI.updateSettings) {
+      const updated = await window.electronAPI.updateSettings({
+        actionRules: localActionRules,
+      });
+      if (updated && Array.isArray(updated.actionRules)) {
+        localActionRules = updated.actionRules;
+      }
+      renderActionRules(localActionRules);
+      appendLog("Action rules updated", "info", "Settings");
+    }
+  }
+
+  function openActionRuleEditor(rule = null) {
+    if (!actionRuleEditor) return;
+    if (rule) {
+      actionRuleIdInput.value = rule.id || "";
+      actionRuleNameInput.value = rule.name || "";
+      actionRuleCommandInput.value = rule.command || "";
+      populateStreamerMultiPicker(
+        actionStreamersPicker,
+        rule.streamerIds || [],
+      );
+    } else {
+      actionRuleIdInput.value = "";
+      actionRuleNameInput.value = "";
+      actionRuleCommandInput.value = "";
+      populateStreamerMultiPicker(actionStreamersPicker, []);
+    }
+    if (actionTestResult) {
+      actionTestResult.style.display = "none";
+      actionTestResult.textContent = "";
+    }
+    actionRuleEditor.style.display = "block";
+    actionRuleCommandInput.focus();
+  }
+
+  function closeActionRuleEditor() {
+    if (actionRuleEditor) {
+      actionRuleEditor.style.display = "none";
+      actionRuleIdInput.value = "";
+      actionRuleNameInput.value = "";
+      actionRuleCommandInput.value = "";
+    }
+  }
+
+  if (btnAddActionRule) {
+    btnAddActionRule.addEventListener("click", () =>
+      openActionRuleEditor(null),
+    );
+  }
+  if (btnCancelActionRule) {
+    btnCancelActionRule.addEventListener("click", closeActionRuleEditor);
+  }
+  if (btnActionSelectAll) {
+    btnActionSelectAll.addEventListener("click", () =>
+      setAllPickerSelection(actionStreamersPicker, true),
+    );
+  }
+  if (btnActionDeselectAll) {
+    btnActionDeselectAll.addEventListener("click", () =>
+      setAllPickerSelection(actionStreamersPicker, false),
+    );
+  }
+
+  if (btnBrowseCommand) {
+    btnBrowseCommand.addEventListener("click", async () => {
+      if (window.electronAPI && window.electronAPI.selectCommandFile) {
+        const filePath = await window.electronAPI.selectCommandFile();
+        if (filePath) {
+          actionRuleCommandInput.value = `"${filePath}" %_1`;
+        }
+      }
+    });
+  }
+
+  if (btnTestActionRule) {
+    btnTestActionRule.addEventListener("click", async () => {
+      const cmd = (actionRuleCommandInput?.value || "").trim();
+      if (!cmd) {
+        if (actionTestResult) {
+          actionTestResult.className =
+            "action-test-result-badge action-test-error";
+          actionTestResult.textContent =
+            "Please enter a command template first!";
+          actionTestResult.style.display = "inline-block";
+        }
+        return;
+      }
+      btnTestActionRule.disabled = true;
+      if (actionTestResult) {
+        actionTestResult.className = "action-test-result-badge";
+        actionTestResult.textContent = "Testing command...";
+        actionTestResult.style.display = "inline-block";
+      }
+
+      try {
+        if (window.electronAPI && window.electronAPI.testActionRule) {
+          const res = await window.electronAPI.testActionRule({
+            command: cmd,
+            url: "https://www.youtube.com/@LofiGirl/live",
+            streamerName: "Lofi Girl (Test)",
+          });
+          if (res.success) {
+            actionTestResult.className =
+              "action-test-result-badge action-test-success";
+            actionTestResult.textContent = "✓ Executed successfully!";
+          } else {
+            actionTestResult.className =
+              "action-test-result-badge action-test-error";
+            actionTestResult.textContent = `✕ ${res.error || "Execution failed"}`;
+          }
+        }
+      } catch (err) {
+        if (actionTestResult) {
+          actionTestResult.className =
+            "action-test-result-badge action-test-error";
+          actionTestResult.textContent = `✕ ${err.message}`;
+        }
+      } finally {
+        btnTestActionRule.disabled = false;
+      }
+    });
+  }
+
+  if (btnSaveActionRule) {
+    btnSaveActionRule.addEventListener("click", async () => {
+      const command = (actionRuleCommandInput?.value || "").trim();
+      if (!command) {
+        alert("Please provide a command template (e.g. C:\\live.bat %_1)");
+        actionRuleCommandInput?.focus();
+        return;
+      }
+
+      const id = actionRuleIdInput.value || `action-rule-${Date.now()}`;
+      const name = (actionRuleNameInput?.value || "").trim() || "Live Action";
+      const streamerIds = getSelectedStreamerIds(actionStreamersPicker);
+
+      const existingIndex = localActionRules.findIndex((r) => r.id === id);
+      const ruleObj = {
+        id,
+        name,
+        enabled: true,
+        command,
+        streamerIds,
+      };
+
+      if (existingIndex >= 0) {
+        localActionRules[existingIndex] = {
+          ...localActionRules[existingIndex],
+          ...ruleObj,
+        };
+      } else {
+        localActionRules.push(ruleObj);
+      }
+
+      await saveActionRulesToBackend();
+      closeActionRuleEditor();
+    });
+  }
+
+  // --- Color Rules (Color -> Streamers[]) Logic ---
+  function renderColorRules(rules) {
+    localColorRules = Array.isArray(rules) ? rules : [];
+    if (!colorRulesListEl) return;
+    colorRulesListEl.innerHTML = "";
+
+    if (localColorRules.length === 0) {
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "empty-rules-msg";
+      emptyDiv.textContent =
+        "No custom color rules configured yet. Click '+ Add Color Rule' to assign custom avatar live borders.";
+      colorRulesListEl.appendChild(emptyDiv);
+      return;
+    }
+
+    localColorRules.forEach((rule) => {
+      const item = document.createElement("div");
+      item.className = `rule-card-item ${rule.enabled === false ? "rule-disabled" : ""}`;
+
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "rule-card-info";
+
+      const titleRow = document.createElement("div");
+      titleRow.className = "rule-card-title-row";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "rule-card-name";
+      nameSpan.textContent = rule.name || "Color Rule";
+
+      const colorBadge = document.createElement("span");
+      colorBadge.className = "rule-card-badge badge-color-preview";
+      colorBadge.innerHTML = `<span class="color-swatch-mini" style="background:${rule.color || "#22c55e"};"></span> ${rule.color || "#22c55e"}`;
+
+      const enabledBadge = document.createElement("span");
+      enabledBadge.className = `rule-card-badge ${rule.enabled !== false ? "status-live" : "status-offline"}`;
+      enabledBadge.textContent = rule.enabled !== false ? "Active" : "Disabled";
+
+      titleRow.appendChild(nameSpan);
+      titleRow.appendChild(colorBadge);
+      titleRow.appendChild(enabledBadge);
+
+      // Streamers assigned list
+      const streamersPillsDiv = document.createElement("div");
+      streamersPillsDiv.className = "rule-streamers-pills";
+
+      const assignedNames = (rule.streamerIds || [])
+        .map((id) => {
+          const found = localStreamers.find((s) => s.id === id);
+          return found ? found.name : null;
+        })
+        .filter(Boolean);
+
+      if (assignedNames.length === 0) {
+        const noPill = document.createElement("span");
+        noPill.className = "rule-streamer-pill";
+        noPill.textContent = "0 streamers assigned";
+        streamersPillsDiv.appendChild(noPill);
+      } else {
+        assignedNames.forEach((name) => {
+          const pill = document.createElement("span");
+          pill.className = "rule-streamer-pill";
+          pill.textContent = name;
+          streamersPillsDiv.appendChild(pill);
+        });
+      }
+
+      infoDiv.appendChild(titleRow);
+      infoDiv.appendChild(streamersPillsDiv);
+
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "rule-card-actions";
+
+      // Edit button
+      const btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.className = "btn-icon-action";
+      btnEdit.title = "Edit Color Rule";
+      btnEdit.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      `;
+      btnEdit.addEventListener("click", () => openColorRuleEditor(rule));
+
+      // Toggle enable/disable button
+      const btnToggle = document.createElement("button");
+      btnToggle.type = "button";
+      btnToggle.className = "btn-sm-action";
+      btnToggle.style.fontSize = "0.7rem";
+      btnToggle.textContent = rule.enabled !== false ? "Disable" : "Enable";
+      btnToggle.addEventListener("click", async () => {
+        rule.enabled = rule.enabled === false;
+        await saveColorRulesToBackend();
+      });
+
+      // Delete button
+      const btnDelete = document.createElement("button");
+      btnDelete.type = "button";
+      btnDelete.className = "btn-icon-action btn-delete";
+      btnDelete.title = "Delete Color Rule";
+      btnDelete.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `;
+      btnDelete.addEventListener("click", async () => {
+        localColorRules = localColorRules.filter((r) => r.id !== rule.id);
+        await saveColorRulesToBackend();
+      });
+
+      actionsDiv.appendChild(btnToggle);
+      actionsDiv.appendChild(btnEdit);
+      actionsDiv.appendChild(btnDelete);
+
+      item.appendChild(infoDiv);
+      item.appendChild(actionsDiv);
+      colorRulesListEl.appendChild(item);
+    });
+  }
+
+  async function saveColorRulesToBackend() {
+    if (window.electronAPI && window.electronAPI.updateSettings) {
+      const updated = await window.electronAPI.updateSettings({
+        colorRules: localColorRules,
+      });
+      if (updated && Array.isArray(updated.colorRules)) {
+        localColorRules = updated.colorRules;
+      }
+      renderColorRules(localColorRules);
+      appendLog("Color rules updated", "info", "Settings");
+    }
+  }
+
+  function openColorRuleEditor(rule = null) {
+    if (!colorRuleEditor) return;
+    if (rule) {
+      colorRuleIdInput.value = rule.id || "";
+      colorRuleNameInput.value = rule.name || "";
+      const col = rule.color || "#ef4444";
+      if (colorRulePicker) colorRulePicker.value = col;
+      if (colorRuleHex) colorRuleHex.value = col;
+      populateStreamerMultiPicker(colorStreamersPicker, rule.streamerIds || []);
+    } else {
+      colorRuleIdInput.value = "";
+      colorRuleNameInput.value = "";
+      const defaultCol = "#ef4444";
+      if (colorRulePicker) colorRulePicker.value = defaultCol;
+      if (colorRuleHex) colorRuleHex.value = defaultCol;
+      populateStreamerMultiPicker(colorStreamersPicker, []);
+    }
+    colorRuleEditor.style.display = "block";
+  }
+
+  function closeColorRuleEditor() {
+    if (colorRuleEditor) {
+      colorRuleEditor.style.display = "none";
+      colorRuleIdInput.value = "";
+      colorRuleNameInput.value = "";
+    }
+  }
+
+  if (btnAddColorRule) {
+    btnAddColorRule.addEventListener("click", () => openColorRuleEditor(null));
+  }
+  if (btnCancelColorRule) {
+    btnCancelColorRule.addEventListener("click", closeColorRuleEditor);
+  }
+  if (btnColorSelectAll) {
+    btnColorSelectAll.addEventListener("click", () =>
+      setAllPickerSelection(colorStreamersPicker, true),
+    );
+  }
+  if (btnColorDeselectAll) {
+    btnColorDeselectAll.addEventListener("click", () =>
+      setAllPickerSelection(colorStreamersPicker, false),
+    );
+  }
+
+  if (colorRulePicker && colorRuleHex) {
+    colorRulePicker.addEventListener("input", (e) => {
+      colorRuleHex.value = e.target.value.toUpperCase();
+    });
+    colorRuleHex.addEventListener("input", (e) => {
+      let val = e.target.value.trim();
+      if (!val.startsWith("#")) val = `#${val}`;
+      if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+        colorRulePicker.value = val;
+      }
+    });
+  }
+
+  colorPresetButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const col = btn.getAttribute("data-color");
+      if (col) {
+        if (colorRulePicker) colorRulePicker.value = col;
+        if (colorRuleHex) colorRuleHex.value = col.toUpperCase();
+      }
+    });
+  });
+
+  if (btnSaveColorRule) {
+    btnSaveColorRule.addEventListener("click", async () => {
+      let color = (colorRuleHex?.value || colorRulePicker?.value || "").trim();
+      if (!color.startsWith("#")) color = `#${color}`;
+      if (!/^#[0-9a-fA-F]{6}$/i.test(color)) {
+        alert("Please select or enter a valid hex color (e.g. #EF4444)");
+        colorRuleHex?.focus();
+        return;
+      }
+
+      const id = colorRuleIdInput.value || `color-rule-${Date.now()}`;
+      const name = (colorRuleNameInput?.value || "").trim() || "Color Group";
+      const streamerIds = getSelectedStreamerIds(colorStreamersPicker);
+
+      const existingIndex = localColorRules.findIndex((r) => r.id === id);
+      const ruleObj = {
+        id,
+        name,
+        enabled: true,
+        color,
+        streamerIds,
+      };
+
+      if (existingIndex >= 0) {
+        localColorRules[existingIndex] = {
+          ...localColorRules[existingIndex],
+          ...ruleObj,
+        };
+      } else {
+        localColorRules.push(ruleObj);
+      }
+
+      await saveColorRulesToBackend();
+      closeColorRuleEditor();
+    });
+  }
+
   // Sync settings
   function applySettingsToUI(settings) {
     if (!settings) return;
@@ -1733,6 +2352,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         radio.checked =
           Math.abs(parseFloat(radio.value) - settings.currentOpacity) < 0.05;
       });
+    }
+    if (Array.isArray(settings.actionRules)) {
+      renderActionRules(settings.actionRules);
+    }
+    if (Array.isArray(settings.colorRules)) {
+      renderColorRules(settings.colorRules);
     }
     if (Array.isArray(settings.streamers)) {
       renderStreamersList(settings.streamers);

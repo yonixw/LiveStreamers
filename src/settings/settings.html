@@ -593,7 +593,168 @@
                 </div>
             </section>
 
-            <!-- Section 7: Quick Action Buttons -->
+            <!-- Section 7: Common Group Rules (Action -> Streamers[] & Color -> Streamers[]) -->
+            <section class="settings-card group-rules-card" id="group-rules-section">
+                <div class="card-header flex-between">
+                    <div>
+                        <h2>⚡ Common Group Rules (Action ➔ Streamers[] & Color ➔ Streamers[])</h2>
+                        <span class="card-subtitle">Define common actions and avatar colors once, then assign them to
+                            multiple streamers</span>
+                    </div>
+                </div>
+
+                <!-- Sub-Section A: Live Action Scripts (Action -> Streamers[]) -->
+                <div class="group-rule-box">
+                    <div class="group-rule-header flex-between">
+                        <div>
+                            <h3 class="group-rule-title">🚀 On-Live Script / Batch Command (Action ➔ Streamers[])</h3>
+                            <span class="group-rule-subtitle">Automatically runs a script/batch command when any
+                                assigned streamer goes live. <code>%_1</code> is replaced by the live stream URL.</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-add-action-rule">+ Add Action
+                            Rule</button>
+                    </div>
+
+                    <!-- Action Rule Editor Form -->
+                    <div id="action-rule-editor" class="rule-editor-box" style="display: none;">
+                        <input type="hidden" id="action-rule-id" value="" />
+                        <div class="form-grid-two">
+                            <div class="form-group">
+                                <label for="action-rule-name">Rule Name / Description</label>
+                                <input type="text" id="action-rule-name"
+                                    placeholder="e.g. Open in Player / Run Batch Script" />
+                            </div>
+                            <div class="form-group">
+                                <label for="action-rule-command">Batch Path / Command Line (with <code>%_1</code>) <span
+                                        class="req">*</span></label>
+                                <div class="avatar-input-wrapper">
+                                    <input type="text" id="action-rule-command" placeholder="e.g. C:\live.bat %_1" />
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                        id="btn-browse-command">Browse...</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Streamer Multi-Select Checklist -->
+                        <div class="form-group">
+                            <div class="flex-between streamer-picker-header">
+                                <label>Assign Streamers to this Action:</label>
+                                <div class="picker-quick-buttons">
+                                    <button type="button" class="btn-picker-link" id="btn-action-select-all">Select
+                                        All</button>
+                                    <button type="button" class="btn-picker-link" id="btn-action-deselect-all">Deselect
+                                        All</button>
+                                </div>
+                            </div>
+                            <div id="action-streamers-picker" class="streamers-multi-picker">
+                                <!-- Dynamic streamer checkboxes rendered by JS -->
+                            </div>
+                        </div>
+
+                        <div class="form-actions-row flex-between" style="margin-top: 10px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-test-action-rule">🧪 Test
+                                    Run Command</button>
+                                <span id="action-test-result" class="action-test-result-badge"
+                                    style="display: none;"></span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                    id="btn-cancel-action-rule">Cancel</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-save-action-rule">Save
+                                    Action Rule</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List of Saved Action Rules -->
+                    <div id="action-rules-list" class="rules-cards-list">
+                        <!-- Dynamic rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Sub-Section B: Live Avatar Border Colors (Color -> Streamers[]) -->
+                <div class="group-rule-box" style="margin-top: 24px;">
+                    <div class="group-rule-header flex-between">
+                        <div>
+                            <h3 class="group-rule-title">🎨 Custom Live Border Colors (Color ➔ Streamers[])</h3>
+                            <span class="group-rule-subtitle">Assign custom live avatar circle border & glow colors
+                                instead of default green for a list of streamers.</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-add-color-rule">+ Add Color
+                            Rule</button>
+                    </div>
+
+                    <!-- Color Rule Editor Form -->
+                    <div id="color-rule-editor" class="rule-editor-box" style="display: none;">
+                        <input type="hidden" id="color-rule-id" value="" />
+                        <div class="form-grid-two">
+                            <div class="form-group">
+                                <label for="color-rule-name">Group Label / Name</label>
+                                <input type="text" id="color-rule-name" placeholder="e.g. VIP Red Group, Favorites" />
+                            </div>
+                            <div class="form-group">
+                                <label>Avatar Live Circle Color</label>
+                                <div class="color-picker-row">
+                                    <input type="color" id="color-rule-picker" value="#ef4444"
+                                        class="color-swatch-input" />
+                                    <input type="text" id="color-rule-hex" value="#ef4444"
+                                        class="form-input color-hex-input" maxlength="7" />
+                                    <div class="color-preset-palette">
+                                        <button type="button" class="btn-color-dot" data-color="#ef4444"
+                                            style="background:#ef4444;" title="Red"></button>
+                                        <button type="button" class="btn-color-dot" data-color="#f59e0b"
+                                            style="background:#f59e0b;" title="Amber"></button>
+                                        <button type="button" class="btn-color-dot" data-color="#3b82f6"
+                                            style="background:#3b82f6;" title="Blue"></button>
+                                        <button type="button" class="btn-color-dot" data-color="#a855f7"
+                                            style="background:#a855f7;" title="Purple"></button>
+                                        <button type="button" class="btn-color-dot" data-color="#ec4899"
+                                            style="background:#ec4899;" title="Pink"></button>
+                                        <button type="button" class="btn-color-dot" data-color="#06b6d4"
+                                            style="background:#06b6d4;" title="Cyan"></button>
+                                        <button type="button" class="btn-color-dot" data-color="#22c55e"
+                                            style="background:#22c55e;" title="Green (Default)"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Streamer Multi-Select Checklist -->
+                        <div class="form-group">
+                            <div class="flex-between streamer-picker-header">
+                                <label>Assign Streamers to this Color:</label>
+                                <div class="picker-quick-buttons">
+                                    <button type="button" class="btn-picker-link" id="btn-color-select-all">Select
+                                        All</button>
+                                    <button type="button" class="btn-picker-link" id="btn-color-deselect-all">Deselect
+                                        All</button>
+                                </div>
+                            </div>
+                            <div id="color-streamers-picker" class="streamers-multi-picker">
+                                <!-- Dynamic streamer checkboxes rendered by JS -->
+                            </div>
+                        </div>
+
+                        <div class="form-actions-row flex-between" style="margin-top: 10px;">
+                            <div></div>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                    id="btn-cancel-color-rule">Cancel</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="btn-save-color-rule">Save Color
+                                    Rule</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List of Saved Color Rules -->
+                    <div id="color-rules-list" class="rules-cards-list">
+                        <!-- Dynamic rendered by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8: Quick Action Buttons -->
             <section class="settings-card actions-card">
                 <div class="card-header">
                     <h2>Quick Actions</h2>

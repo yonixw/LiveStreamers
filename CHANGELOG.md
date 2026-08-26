@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.0] - 2026-08-26
 
 ### Added
+- **Common Reverse Group Rules (Action ➔ Streamers[] & Color ➔ Streamers[])**:
+  - **On-Live Script / Batch Command (`actionRules`)**: Added support for configuring script commands or batch files (e.g. `C:\live.bat %_1`) that automatically execute in the background when any assigned streamer goes live, substituting `%_1`, `%1`, or `%_URL%` with the active live stream URL.
+  - **Custom Live Avatar Circle Border Colors (`colorRules`)**: Added support for configuring custom avatar live border & glow colors (with preset color palette and hex picker) applied to groups of streamers instead of the default green.
+  - **Common Rule Management UI**: Added dedicated editor sections at the bottom of the Settings window ([`src/settings/settings.html`](src/settings/settings.html:600), [`src/settings/settings.css`](src/settings/settings.css:1730), [`src/settings/settings.js`](src/settings/settings.js:1680)) with multi-streamer selection pickers ("Select All" / "Deselect All"), file browser, live test execution button, and persistence in `data/settings.json`.
+  - **Live Border Color In-Place Rendering**: Enriched streamers with `liveBorderColor` in [`src/main.js:getEnrichedStreamer()`](src/main.js:357) and updated [`src/renderer/renderer.js`](src/renderer/renderer.js:365) to apply custom border and glow styles dynamically to live avatars and viewer tags.
 - **Streamer Search & Filter with Saturated Yellow Active State**:
   - Added filter / search textbox (`#input-search-streamers`) in the Settings streamers list header ([`src/settings/settings.html`](src/settings/settings.html:380)) to filter through large streamer lists in real-time.
   - Implemented saturated yellow background highlighting (`#ffe600` with high-contrast text and border) whenever active search terms are entered ([`src/settings/settings.css`](src/settings/settings.css:770)).

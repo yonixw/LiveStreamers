@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   checkStreamerLive: (streamerId) =>
     ipcRenderer.invoke("streamers:check-now", streamerId),
   selectAvatarImage: () => ipcRenderer.invoke("dialog:select-avatar-image"),
+  selectCommandFile: () => ipcRenderer.invoke("dialog:select-command-file"),
+  testActionRule: (data) => ipcRenderer.invoke("action-rules:test", data),
   openStreamerLinksPopup: (streamerId) =>
     ipcRenderer.invoke("popup:open-streamer-links", streamerId),
   getActivePopupStreamer: () => ipcRenderer.invoke("popup:get-active-streamer"),

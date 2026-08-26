@@ -13,6 +13,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 const crypto = require("node:crypto");
 const util = require("node:util");
+const child_process = require("node:child_process");
 
 const pkg = require("../package.json");
 
@@ -115,6 +116,8 @@ const {
   defaultStreamers,
   normalizeStreamerConfig,
   normalizeUrlEntry,
+  normalizeActionRule,
+  normalizeColorRule,
 } = require("./tasks/storage");
 const {
   StreamLiveCheckerService,
@@ -169,6 +172,12 @@ const state = {
   overlayVisible: persistedSettings.overlayVisible ?? true,
   overlayBounds: persistedSettings.overlayBounds || null,
   popupBounds: persistedSettings.popupBounds || null,
+  actionRules: Array.isArray(persistedSettings.actionRules)
+    ? persistedSettings.actionRules
+    : [],
+  colorRules: Array.isArray(persistedSettings.colorRules)
+    ? persistedSettings.colorRules
+    : [],
   streamers: Array.isArray(persistedSettings.streamers)
     ? persistedSettings.streamers
     : defaultStreamers,
@@ -364,10 +373,25 @@ function getEnrichedStreamer(streamer) {
   const activeUrl = status.activeUrl || primaryUrl;
   const activePlatform = status.activePlatform || detectPlatform(activeUrl);
 
+  // Find custom live border color from colorRules if any
+  let liveBorderColor = null;
+  if (Array.isArray(state.colorRules)) {
+    const matchedRule = state.colorRules.find(
+      (rule) =>
+        rule.enabled !== false &&
+        Array.isArray(rule.streamerIds) &&
+        rule.streamerIds.includes(streamer.id),
+    );
+    if (matchedRule && matchedRule.color) {
+      liveBorderColor = matchedRule.color;
+    }
+  }
+
   return {
     ...streamer,
     isLive: Boolean(status.isLive),
     offlineSince: status.isLive ? null : status.offlineSince || null,
+    liveBorderColor,
     activeUrl,
     activePlatform,
     platform: activePlatform,
@@ -380,6 +404,69 @@ function getEnrichedStreamer(streamer) {
     lastTriggeredAt: status.lastTriggeredAt || null,
     checkedUrlsCount: status.checkedUrlsCount || 0,
   };
+}
+
+/**
+ * Executes configured Action Rules for a streamer transitioning to live.
+ */
+function executeLiveActionRules(streamerId, activeUrl) {
+  if (!Array.isArray(state.actionRules) || state.actionRules.length === 0)
+    return;
+  const streamer = state.streamers.find((s) => s.id === streamerId);
+  const streamerName = streamer ? streamer.name : streamerId;
+  const targetUrl =
+    activeUrl ||
+    (streamer &&
+      streamer.urls &&
+      (typeof streamer.urls[0] === "string"
+        ? streamer.urls[0]
+        : streamer.urls[0]?.url)) ||
+    "";
+
+  state.actionRules.forEach((rule) => {
+    if (
+      rule.enabled !== false &&
+      Array.isArray(rule.streamerIds) &&
+      rule.streamerIds.includes(streamerId) &&
+      rule.command &&
+      rule.command.trim()
+    ) {
+      let cmd = rule.command
+        .replace(/%_1\b/g, `"${targetUrl}"`)
+        .replace(/%1\b/g, `"${targetUrl}"`)
+        .replace(/%_URL%/gi, `"${targetUrl}"`)
+        .replace(/%URL%/gi, `"${targetUrl}"`)
+        .replace(/%_NAME%/gi, `"${streamerName}"`)
+        .replace(/%NAME%/gi, `"${streamerName}"`);
+
+      if (cmd.includes("%_1")) {
+        cmd = cmd.replace(/%_1/g, targetUrl);
+      }
+
+      console.log(
+        `[LiveAction] Executing on-live action "${rule.name || "Action"}" for [${streamerName}]: ${cmd}`,
+      );
+
+      child_process.exec(cmd, { windowsHide: false }, (err, stdout, stderr) => {
+        if (err) {
+          console.error(
+            `[LiveAction] Error executing command for ${streamerName} ("${cmd}"): ${err.message}`,
+          );
+        } else {
+          if (stdout && stdout.trim()) {
+            console.log(
+              `[LiveAction] Output [${streamerName}]: ${stdout.trim()}`,
+            );
+          }
+          if (stderr && stderr.trim()) {
+            console.warn(
+              `[LiveAction] Stderr [${streamerName}]: ${stderr.trim()}`,
+            );
+          }
+        }
+      });
+    }
+  });
 }
 
 /**
@@ -784,6 +871,9 @@ function initBackgroundChecker() {
       if (!streamerId) return;
 
       const current = state.statusMap[streamerId] || {};
+      const wasOffline = !current.isLive;
+      const isNowLive = update.isLive === true;
+
       let offlineSince =
         update.offlineSince !== undefined
           ? update.offlineSince
@@ -794,6 +884,13 @@ function initBackgroundChecker() {
         offlineSince = new Date().toISOString();
       } else if (update.isLive === false && !offlineSince) {
         offlineSince = current.lastChecked || new Date().toISOString();
+      }
+
+      if (wasOffline && isNowLive) {
+        executeLiveActionRules(
+          streamerId,
+          update.activeUrl || current.activeUrl,
+        );
       }
 
       state.statusMap[streamerId] = {
@@ -1083,6 +1180,18 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     }
   }
 
+  if (Array.isArray(partialSettings.actionRules)) {
+    state.actionRules = partialSettings.actionRules.map((r, idx) =>
+      normalizeActionRule(r, idx),
+    );
+  }
+
+  if (Array.isArray(partialSettings.colorRules)) {
+    state.colorRules = partialSettings.colorRules.map((r, idx) =>
+      normalizeColorRule(r, idx),
+    );
+  }
+
   if (Array.isArray(partialSettings.streamers)) {
     state.streamers = partialSettings.streamers.map((s, idx) =>
       normalizeStreamerConfig(s, idx),
@@ -1154,6 +1263,66 @@ ipcMain.handle("dialog:select-avatar-image", async () => {
   }
   return null;
 });
+
+ipcMain.handle("dialog:select-command-file", async () => {
+  const result = await dialog.showOpenDialog({
+    title: "Select Script or Executable",
+    properties: ["openFile"],
+    filters: [
+      {
+        name: "Executable & Scripts",
+        extensions: ["bat", "cmd", "ps1", "exe", "vbs", "sh"],
+      },
+      { name: "All Files", extensions: ["*"] },
+    ],
+  });
+
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+ipcMain.handle(
+  "action-rules:test",
+  async (_event, { command, url, streamerName }) => {
+    if (!command || !command.trim()) {
+      return { success: false, error: "Command template is empty" };
+    }
+    const targetUrl = url || "https://www.youtube.com/@LofiGirl/live";
+    const targetName = streamerName || "Test Streamer";
+    let cmd = command
+      .replace(/%_1\b/g, `"${targetUrl}"`)
+      .replace(/%1\b/g, `"${targetUrl}"`)
+      .replace(/%_URL%/gi, `"${targetUrl}"`)
+      .replace(/%URL%/gi, `"${targetUrl}"`)
+      .replace(/%_NAME%/gi, `"${targetName}"`)
+      .replace(/%NAME%/gi, `"${targetName}"`);
+
+    if (cmd.includes("%_1")) {
+      cmd = cmd.replace(/%_1/g, targetUrl);
+    }
+
+    console.log(`[LiveAction] Testing command template: ${cmd}`);
+
+    return new Promise((resolve) => {
+      child_process.exec(cmd, { windowsHide: false }, (err, stdout, stderr) => {
+        if (err) {
+          console.error(`[LiveAction] Test failed: ${err.message}`);
+          resolve({ success: false, error: err.message, cmd });
+        } else {
+          const out = stdout
+            ? stdout.trim()
+            : stderr
+              ? stderr.trim()
+              : "Command executed successfully";
+          console.log(`[LiveAction] Test success: ${out}`);
+          resolve({ success: true, output: out, cmd });
+        }
+      });
+    });
+  },
+);
 
 ipcMain.handle("settings:open", () => {
   createSettingsWindow();

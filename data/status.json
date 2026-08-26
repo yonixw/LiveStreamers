@@ -7,9 +7,9 @@
     "checkStatus": "live",
     "cachedInfo": {
       "title": "🦒LIVE🦒CLICK🦒HERE🦒LOCK IN🦒DRAMA🦒NEWS🦒GAMESCOM🦒REACT🦒IMPORTANT🦒QUICKLY🦒HERE🦒PULL UP🦒",
-      "game": "Just Chatting",
-      "category": "Just Chatting",
-      "viewerCount": 7106,
+      "game": "Rocket League",
+      "category": "Rocket League",
+      "viewerCount": 6730,
       "startTime": "2026-08-25T17:34:41.000Z",
       "liveTime": "2026-08-25T17:34:41.000Z",
       "description": "THE BEST AT ABSOLUTELY EVERYTHING. THE JUICER. LEADER OF THE JUICERS.",
@@ -18,21 +18,21 @@
       "channelUrl": "https://kick.com/xqc",
       "url": "https://kick.com/xqc",
       "platform": "kick",
-      "cachedAt": "2026-08-26T00:09:12.137Z"
+      "cachedAt": "2026-08-26T00:59:55.591Z"
     },
-    "lastChecked": "2026-08-26T00:09:12.137Z",
+    "lastChecked": "2026-08-26T00:59:55.592Z",
     "lastError": null,
     "lastTrigger": {
       "type": "category_change",
       "label": "Category Changed",
-      "message": "Category changed from \"Roblox\" to \"Just Chatting\"",
+      "message": "Category changed from \"Just Chatting\" to \"Rocket League\"",
       "diff": {
-        "from": "Roblox",
-        "to": "Just Chatting"
+        "from": "Just Chatting",
+        "to": "Rocket League"
       },
-      "timestamp": "2026-08-25T23:11:53.736Z"
+      "timestamp": "2026-08-26T00:58:18.684Z"
     },
-    "lastTriggeredAt": "2026-08-25T23:11:53.736Z",
+    "lastTriggeredAt": "2026-08-26T00:58:18.684Z",
     "checkedUrlsCount": 1,
     "offlineSince": null
   },
@@ -57,7 +57,7 @@
       "platform": "twitch",
       "cachedAt": "2026-08-25T22:30:22.834Z"
     },
-    "lastChecked": "2026-08-26T00:09:24.568Z",
+    "lastChecked": "2026-08-26T01:00:20.734Z",
     "lastError": null,
     "lastTrigger": {
       "type": "title_change",
@@ -95,7 +95,7 @@
       "title": "memein' and streamin' and buildin' my dreamin'",
       "game": "Factorio",
       "category": "Factorio",
-      "viewerCount": 4132,
+      "viewerCount": 4103,
       "startTime": "2026-08-25T20:00:40.000Z",
       "liveTime": "2026-08-25T20:00:40.000Z",
       "description": "The premier Internet POLITICS streamer, exploring philosophy, policy analysis, drama farmer and center of the extended orbiter universe.",
@@ -104,9 +104,9 @@
       "channelUrl": "https://kick.com/destiny",
       "url": "https://kick.com/destiny",
       "platform": "kick",
-      "cachedAt": "2026-08-26T00:09:00.302Z"
+      "cachedAt": "2026-08-26T01:00:08.355Z"
     },
-    "lastChecked": "2026-08-26T00:09:00.302Z",
+    "lastChecked": "2026-08-26T01:00:08.355Z",
     "lastError": null,
     "lastTrigger": {
       "type": "going_live",
