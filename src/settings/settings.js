@@ -60,6 +60,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Streamers List Elements
   const streamersListEl = document.getElementById("streamers-list");
   const streamerCountLabel = document.getElementById("streamer-count-label");
+  const inputSearchStreamers = document.getElementById(
+    "input-search-streamers",
+  );
+  const btnClearSearch = document.getElementById("btn-clear-search");
   const btnResetDefaults = document.getElementById("btn-reset-defaults");
   const btnCheckAll = document.getElementById("btn-check-all");
   const presetButtons = document.querySelectorAll(".btn-preset");
@@ -771,11 +775,83 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Render Streamers List with detailed Trigger Debugging and Per-Link Frequencies
+  function escapeHtml(str) {
+    if (!str) return "";
+    const div = document.createElement("div");
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  // Filter matching helper for streamer search
+  function matchesStreamerFilter(streamer, query) {
+    if (!query) return true;
+    if (streamer.name && streamer.name.toLowerCase().includes(query))
+      return true;
+    if (streamer.note && streamer.note.toLowerCase().includes(query))
+      return true;
+    if (
+      streamer.followingDate &&
+      streamer.followingDate.toLowerCase().includes(query)
+    )
+      return true;
+    if (
+      streamer.activePlatform &&
+      streamer.activePlatform.toLowerCase().includes(query)
+    )
+      return true;
+    if (
+      streamer.cachedInfo?.title &&
+      streamer.cachedInfo.title.toLowerCase().includes(query)
+    )
+      return true;
+    if (
+      streamer.cachedInfo?.game &&
+      streamer.cachedInfo.game.toLowerCase().includes(query)
+    )
+      return true;
+    if (
+      streamer.cachedInfo?.category &&
+      streamer.cachedInfo.category.toLowerCase().includes(query)
+    )
+      return true;
+    if (streamer.url && streamer.url.toLowerCase().includes(query)) return true;
+    if (Array.isArray(streamer.urls)) {
+      for (const entry of streamer.urls) {
+        const urlStr = typeof entry === "string" ? entry : entry?.url || "";
+        if (urlStr.toLowerCase().includes(query)) return true;
+        const plat = detectPlatform(urlStr);
+        if (plat && plat.toLowerCase().includes(query)) return true;
+      }
+    }
+    return false;
+  }
+
+  // Render Streamers List with detailed Trigger Debugging, Per-Link Frequencies & Search Filter
   function renderStreamersList(streamers) {
-    localStreamers = Array.isArray(streamers) ? streamers : [];
+    if (streamers != null) {
+      localStreamers = Array.isArray(streamers) ? streamers : [];
+    }
+    const query = (inputSearchStreamers?.value || "").trim().toLowerCase();
+    const isSearching = query.length > 0;
+
+    if (inputSearchStreamers) {
+      inputSearchStreamers.classList.toggle("has-value", isSearching);
+    }
+    if (btnClearSearch) {
+      btnClearSearch.style.display = isSearching ? "flex" : "none";
+    }
+
     const liveCount = localStreamers.filter((s) => s.isLive).length;
-    streamerCountLabel.textContent = `Configured Streamers (${localStreamers.length}) • ${liveCount} Live`;
+    const filteredStreamers = isSearching
+      ? localStreamers.filter((s) => matchesStreamerFilter(s, query))
+      : localStreamers;
+
+    if (isSearching) {
+      streamerCountLabel.textContent = `Configured Streamers (${localStreamers.length}) • Filtered (${filteredStreamers.length}) • ${liveCount} Live`;
+    } else {
+      streamerCountLabel.textContent = `Configured Streamers (${localStreamers.length}) • ${liveCount} Live`;
+    }
+
     streamersListEl.innerHTML = "";
 
     if (localStreamers.length === 0) {
@@ -786,7 +862,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    localStreamers.forEach((streamer, index) => {
+    if (filteredStreamers.length === 0) {
+      const emptyLi = document.createElement("li");
+      emptyLi.className = "empty-list-message";
+      emptyLi.innerHTML = `No streamers match "<strong>${escapeHtml(inputSearchStreamers?.value.trim() || "")}</strong>". <button type="button" class="btn-link" id="btn-clear-empty-filter">Clear filter</button>`;
+      streamersListEl.appendChild(emptyLi);
+
+      const clearEmptyBtn = emptyLi.querySelector("#btn-clear-empty-filter");
+      if (clearEmptyBtn) {
+        clearEmptyBtn.addEventListener("click", () => {
+          if (inputSearchStreamers) {
+            inputSearchStreamers.value = "";
+            inputSearchStreamers.classList.remove("has-value");
+            if (btnClearSearch) btnClearSearch.style.display = "none";
+            inputSearchStreamers.focus();
+          }
+          renderStreamersList(localStreamers);
+        });
+      }
+      return;
+    }
+
+    filteredStreamers.forEach((streamer) => {
+      const actualIndex = localStreamers.findIndex((s) => s.id === streamer.id);
       const li = document.createElement("li");
       li.className = `streamer-item ${streamer.isLive ? "is-live" : "is-offline"}`;
 
@@ -1000,16 +1098,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       btnUp.className = "btn-icon-action";
       btnUp.title = "Move Up in list";
       btnUp.innerHTML = "▲";
-      btnUp.disabled = index === 0;
-      btnUp.addEventListener("click", () => moveStreamerOrder(index, -1));
+      btnUp.disabled = actualIndex <= 0;
+      btnUp.addEventListener("click", () => moveStreamerOrder(actualIndex, -1));
 
       const btnDown = document.createElement("button");
       btnDown.type = "button";
       btnDown.className = "btn-icon-action";
       btnDown.title = "Move Down in list";
       btnDown.innerHTML = "▼";
-      btnDown.disabled = index === localStreamers.length - 1;
-      btnDown.addEventListener("click", () => moveStreamerOrder(index, 1));
+      btnDown.disabled =
+        actualIndex < 0 || actualIndex >= localStreamers.length - 1;
+      btnDown.addEventListener("click", () =>
+        moveStreamerOrder(actualIndex, 1),
+      );
 
       // Edit Button
       const btnEdit = document.createElement("button");
@@ -1078,6 +1179,50 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateItemPetTaskUI(li, streamer.id);
     });
   }
+
+  // Search / Filter Streamers input events
+  if (inputSearchStreamers) {
+    inputSearchStreamers.addEventListener("input", () => {
+      const hasVal = inputSearchStreamers.value.trim().length > 0;
+      inputSearchStreamers.classList.toggle("has-value", hasVal);
+      if (btnClearSearch) {
+        btnClearSearch.style.display = hasVal ? "flex" : "none";
+      }
+      renderStreamersList(localStreamers);
+    });
+
+    inputSearchStreamers.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        inputSearchStreamers.value = "";
+        inputSearchStreamers.classList.remove("has-value");
+        if (btnClearSearch) btnClearSearch.style.display = "none";
+        renderStreamersList(localStreamers);
+      }
+    });
+  }
+
+  if (btnClearSearch) {
+    btnClearSearch.addEventListener("click", () => {
+      if (inputSearchStreamers) {
+        inputSearchStreamers.value = "";
+        inputSearchStreamers.classList.remove("has-value");
+        btnClearSearch.style.display = "none";
+        inputSearchStreamers.focus();
+      }
+      renderStreamersList(localStreamers);
+    });
+  }
+
+  // Global Ctrl+F / Cmd+F shortcut to focus search filter
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === "f") {
+      if (inputSearchStreamers) {
+        e.preventDefault();
+        inputSearchStreamers.focus();
+        inputSearchStreamers.select();
+      }
+    }
+  });
 
   // Check All Now
   if (btnCheckAll) {

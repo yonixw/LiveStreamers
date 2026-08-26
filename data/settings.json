@@ -44,36 +44,6 @@
   },
   "streamers": [
     {
-      "id": "streamer-1787697589918-253",
-      "name": "destiny",
-      "avatarImage": "",
-      "followingDate": "2026-08-26",
-      "note": "",
-      "customTag": "",
-      "snoozedUntil": null,
-      "urls": [
-        {
-          "url": "https://kick.com/destiny",
-          "freqMinutes": 40
-        },
-        {
-          "url": "!https://www.destiny.gg/bigscreen#kick/destiny",
-          "freqMinutes": 25
-        }
-      ],
-      "triggers": {
-        "titleChange": true,
-        "titleContainsEnabled": false,
-        "titleContainsText": "",
-        "viewerCountEnabled": false,
-        "viewerCountThreshold": 5000,
-        "runtimeMinutesEnabled": false,
-        "runtimeMinutesThreshold": 30,
-        "goingLive": true,
-        "categoryChange": true
-      }
-    },
-    {
       "id": "kc-xqc",
       "name": "xQc",
       "avatarImage": "",
@@ -101,6 +71,36 @@
         "titleContainsText": "",
         "viewerCountEnabled": true,
         "viewerCountThreshold": 20000,
+        "runtimeMinutesEnabled": false,
+        "runtimeMinutesThreshold": 30,
+        "goingLive": true,
+        "categoryChange": true
+      }
+    },
+    {
+      "id": "streamer-1787697589918-253",
+      "name": "destiny",
+      "avatarImage": "",
+      "followingDate": "2026-08-26",
+      "note": "2222",
+      "customTag": "",
+      "snoozedUntil": null,
+      "urls": [
+        {
+          "url": "https://kick.com/destiny",
+          "freqMinutes": 40
+        },
+        {
+          "url": "!https://www.destiny.gg/bigscreen#kick/destiny",
+          "freqMinutes": 25
+        }
+      ],
+      "triggers": {
+        "titleChange": true,
+        "titleContainsEnabled": false,
+        "titleContainsText": "",
+        "viewerCountEnabled": false,
+        "viewerCountThreshold": 5000,
         "runtimeMinutesEnabled": false,
         "runtimeMinutesThreshold": 30,
         "goingLive": true,

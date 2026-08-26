@@ -374,8 +374,17 @@
                 <!-- Streamers List -->
                 <div class="users-list-wrapper">
                     <div class="users-list-header">
-                        <span id="streamer-count-label">Configured Streamers (0)</span>
+                        <div class="users-list-header-left">
+                            <span id="streamer-count-label">Configured Streamers (0)</span>
+                        </div>
                         <div class="list-header-actions">
+                            <div class="streamer-search-box">
+                                <input type="text" id="input-search-streamers" class="streamer-search-input"
+                                    placeholder="🔍 Filter / search... (Ctrl+F)" autocomplete="off"
+                                    spellcheck="false" />
+                                <button type="button" id="btn-clear-search" class="btn-clear-search"
+                                    title="Clear filter" style="display: none;">✕</button>
+                            </div>
                             <button type="button" class="btn-sm-action" id="btn-check-all">
                                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -383,7 +392,6 @@
                                 </svg>
                                 Check All Now
                             </button>
-
                         </div>
                     </div>
                     <ul id="streamers-list" class="streamers-list">

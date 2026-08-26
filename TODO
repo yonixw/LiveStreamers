@@ -1,17 +1,14 @@
-trigger find text -> in game/categ also -> forsen game 
-        search trigger allow "," for split for multi search
 
 warning image -> custom "live" image -> alarama etc... for old account becoming live 
 
-"checking" yellow tag -> icon and status gets stuck... why?
-
-streamer list -> search by nick name -> filter
-    or allow ctrl+f
-        WHICH will also allow selection of text
+[x] streamer list -> search by nick name / platform / note / title -> filter
+    [x] saturated yellow background when has search value
+    [x] allow ctrl+f to focus search filter
     
 ---------
     
 gtm or posthog ping with disable in setting 
+    user uuid in data? 
     start 
     quit
     beacon every 10m 

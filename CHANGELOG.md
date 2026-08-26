@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.0] - 2026-08-26
 
 ### Added
+- **Streamer Search & Filter with Saturated Yellow Active State**:
+  - Added filter / search textbox (`#input-search-streamers`) in the Settings streamers list header ([`src/settings/settings.html`](src/settings/settings.html:380)) to filter through large streamer lists in real-time.
+  - Implemented saturated yellow background highlighting (`#ffe600` with high-contrast text and border) whenever active search terms are entered ([`src/settings/settings.css`](src/settings/settings.css:770)).
+  - Added comprehensive multi-property search matching across nickname/name, notes, following date, platforms, URLs, stream title, and game/category in [`src/settings/settings.js:matchesStreamerFilter()`](src/settings/settings.js:790).
+  - Added instant clear button (`#btn-clear-search`), Escape key reset, and global `Ctrl+F` / `Cmd+F` keyboard shortcut to focus and select the search filter input.
 - **Offline Duration Tracking & In-Place Rendering**:
   - Implemented `offlineSince` timestamp tracking in [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:536), capturing when a streamer transitioned from Live to Offline or maintaining historical offline timestamps across checks and errors.
   - Enriched streamers with `offlineSince` in [`src/main.js:getEnrichedStreamer()`](src/main.js:357) and preserved offline history in `data/status.json`.
