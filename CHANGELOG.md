@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-08-27
+
+### Added
+- **Dedicated Standalone Tooltip Window**:
+  - Replaced native HTML `title` attributes with a dedicated frameless, transparent, always-on-top Tooltip Window in [`src/tooltip-win/tooltip.html`](src/tooltip-win/tooltip.html:1) and [`src/tooltip-win/tooltip.css`](src/tooltip-win/tooltip.css:1).
+  - Displays streamer nickname/name, live/offline status badge, domain tag, game/category, and full stream title without OS-level popover clipping or lingering stuck tooltips.
+  - Implemented dynamic auto-sizing with `ResizeObserver` reporting content dimensions over IPC via [`window.electronAPI.updateTooltipSize()`](src/preload.js:6).
+  - Added smart screen-aware positioning in [`src/main.js:positionTooltipWindow()`](src/main.js:847) placing the tooltip adjacent to the hovered avatar card and clamping within the active display's `workArea`.
+- **Main Process Cursor Polling & Rapid Mouse-Out Dismissal**:
+  - Implemented backend cursor tracking in [`src/main.js:startTooltipCursorTracking()`](src/main.js:814) polling [`screen.getCursorScreenPoint()`](src/main.js:829) against overlay window bounds.
+  - Automatically dismisses and hides the tooltip window immediately if the mouse cursor leaves the overlay gadget boundary, eliminating the fast-movement mouseout race conditions inherent to transparent Electron windows.
+- **Preload Tooltip Bridge API**:
+  - Exposed [`showTooltip`](src/preload.js:4), [`hideTooltip`](src/preload.js:5), [`updateTooltipSize`](src/preload.js:6), and [`onTooltipData`](src/preload.js:7) in [`src/preload.js`](src/preload.js:1).
+
+### Changed
+- **Overlay Hover Card Events & Real-Time Sync**:
+  - Removed native `title` attributes across avatar cards, circle frames, and inner images in [`src/renderer/renderer.js:renderAvatarsInPlace()`](src/renderer/renderer.js:296).
+  - Added `mouseenter` and `mouseleave` event listeners to avatar cards sending structured tooltip metadata.
+  - Synchronized real-time streamer updates directly to the active tooltip window when background live checks finish during an active hover.
+
 ## [1.9.1] - 2026-08-27
 
 ### Added

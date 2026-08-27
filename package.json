@@ -1,6 +1,6 @@
 {
   "name": "live-streamers-circles",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "description": "Cross-platform Electron app with live streamers overlay for status",
   "main": "src/main.js",
   "type": "commonjs",
