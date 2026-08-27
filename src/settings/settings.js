@@ -2474,14 +2474,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         opacityValDisplay.textContent = `${pct}%`;
       }
     }
+    if (Array.isArray(settings.streamers)) {
+      renderStreamersList(settings.streamers);
+    }
     if (Array.isArray(settings.actionRules)) {
       renderActionRules(settings.actionRules);
     }
     if (Array.isArray(settings.colorRules)) {
       renderColorRules(settings.colorRules);
-    }
-    if (Array.isArray(settings.streamers)) {
-      renderStreamersList(settings.streamers);
     }
   }
 
@@ -2521,6 +2521,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.electronAPI && window.electronAPI.onStreamersUpdated) {
     window.electronAPI.onStreamersUpdated((updatedStreamers) => {
       renderStreamersList(updatedStreamers);
+      if (localActionRules.length > 0) {
+        renderActionRules(localActionRules);
+      }
+      if (localColorRules.length > 0) {
+        renderColorRules(localColorRules);
+      }
     });
   }
 
