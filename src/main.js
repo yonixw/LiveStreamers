@@ -130,6 +130,9 @@ const {
 let overlayWindow = null;
 let settingsWindow = null;
 let linksPopupWindow = null;
+let tooltipWindow = null;
+let tooltipCursorCheckInterval = null;
+let latestTooltipTarget = null;
 let activePopupStreamerId = null;
 let tray = null;
 let liveCheckerService = null;
@@ -671,6 +674,7 @@ function createOverlayWindow() {
 
   overlayWindow.on("closed", () => {
     overlayWindow = null;
+    hideTooltipWindow();
   });
 }
 
@@ -765,6 +769,139 @@ function createLinksPopupWindow(streamerId) {
   });
 
   return linksPopupWindow;
+}
+
+function createTooltipWindow() {
+  if (tooltipWindow && !tooltipWindow.isDestroyed()) {
+    return tooltipWindow;
+  }
+
+  tooltipWindow = new BrowserWindow({
+    width: 260,
+    height: 100,
+    show: false,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    focusable: false,
+    resizable: false,
+    hasShadow: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  tooltipWindow.loadFile(path.join(__dirname, "tooltip-win", "tooltip.html"));
+
+  tooltipWindow.on("closed", () => {
+    tooltipWindow = null;
+    stopTooltipCursorTracking();
+  });
+
+  return tooltipWindow;
+}
+
+function hideTooltipWindow() {
+  stopTooltipCursorTracking();
+  latestTooltipTarget = null;
+  if (
+    tooltipWindow &&
+    !tooltipWindow.isDestroyed() &&
+    tooltipWindow.isVisible()
+  ) {
+    tooltipWindow.hide();
+  }
+}
+
+function startTooltipCursorTracking() {
+  if (tooltipCursorCheckInterval) return;
+  tooltipCursorCheckInterval = setInterval(() => {
+    if (
+      !tooltipWindow ||
+      tooltipWindow.isDestroyed() ||
+      !tooltipWindow.isVisible()
+    ) {
+      stopTooltipCursorTracking();
+      return;
+    }
+
+    if (
+      !overlayWindow ||
+      overlayWindow.isDestroyed() ||
+      !overlayWindow.isVisible()
+    ) {
+      hideTooltipWindow();
+      return;
+    }
+
+    const cursor = screen.getCursorScreenPoint();
+    const bounds = overlayWindow.getBounds();
+
+    // Check if cursor is inside overlay window dimensions
+    const isInsideOverlay =
+      cursor.x >= bounds.x &&
+      cursor.x <= bounds.x + bounds.width &&
+      cursor.y >= bounds.y &&
+      cursor.y <= bounds.y + bounds.height;
+
+    if (!isInsideOverlay) {
+      hideTooltipWindow();
+    }
+  }, 60);
+}
+
+function stopTooltipCursorTracking() {
+  if (tooltipCursorCheckInterval) {
+    clearInterval(tooltipCursorCheckInterval);
+    tooltipCursorCheckInterval = null;
+  }
+}
+
+function positionTooltipWindow(targetRect) {
+  if (!tooltipWindow || tooltipWindow.isDestroyed()) return;
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+
+  const overlayBounds = overlayWindow.getBounds();
+  const [tipWidth, tipHeight] = tooltipWindow.getSize();
+
+  // Card screen position
+  const cardScreenX = overlayBounds.x + (targetRect?.left || 0);
+  const cardScreenY = overlayBounds.y + (targetRect?.top || 0);
+  const cardWidth = targetRect?.width || 80;
+  const cardHeight = targetRect?.height || 80;
+
+  const display = screen.getDisplayNearestPoint({
+    x: cardScreenX + cardWidth / 2,
+    y: cardScreenY + cardHeight / 2,
+  }).workArea;
+
+  const PADDING = 10;
+  let finalX = cardScreenX + cardWidth + PADDING;
+
+  // If tooltip exceeds right side of screen display, place on left side of card
+  if (finalX + tipWidth > display.x + display.width) {
+    finalX = cardScreenX - tipWidth - PADDING;
+  }
+
+  // If still offscreen to left, clamp to workArea.x
+  if (finalX < display.x) {
+    finalX = display.x + 4;
+  }
+
+  // Align vertically with card top, clamped to workArea
+  let finalY = cardScreenY;
+  if (finalY + tipHeight > display.y + display.height) {
+    finalY = display.y + display.height - tipHeight - 4;
+  }
+  if (finalY < display.y) {
+    finalY = display.y + 4;
+  }
+
+  tooltipWindow.setPosition(Math.round(finalX), Math.round(finalY));
 }
 
 function createTray() {
@@ -867,6 +1004,7 @@ function toggleOverlayVisibility() {
     state.overlayVisible = true;
   } else if (overlayWindow.isVisible()) {
     overlayWindow.hide();
+    hideTooltipWindow();
     state.overlayVisible = false;
   } else {
     overlayWindow.show();
@@ -1460,6 +1598,42 @@ ipcMain.handle("window:set-ignore-mouse-events", (_event, ignore, options) => {
     console.log(
       `[SmartClickThrough] Mode changed: ${ignore ? "Click-Through enabled (transparent region)" : "Interactive enabled (hovering element)"}`,
     );
+  }
+  return true;
+});
+
+ipcMain.handle("tooltip:show", (_event, data) => {
+  if (!state.overlayVisible) return false;
+  const win = createTooltipWindow();
+  latestTooltipTarget = data?.targetRect || null;
+
+  win.webContents.send("tooltip:set-data", data);
+
+  if (latestTooltipTarget) {
+    positionTooltipWindow(latestTooltipTarget);
+  }
+
+  win.showInactive();
+  startTooltipCursorTracking();
+  return true;
+});
+
+ipcMain.handle("tooltip:hide", () => {
+  hideTooltipWindow();
+  return true;
+});
+
+ipcMain.handle("tooltip:update-size", (_event, size) => {
+  if (!tooltipWindow || tooltipWindow.isDestroyed()) return false;
+  if (
+    size &&
+    typeof size.width === "number" &&
+    typeof size.height === "number"
+  ) {
+    tooltipWindow.setSize(size.width, size.height);
+    if (latestTooltipTarget) {
+      positionTooltipWindow(latestTooltipTarget);
+    }
   }
   return true;
 });

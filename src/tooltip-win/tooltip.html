@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiveStreamers Tooltip</title>
+    <link rel="stylesheet" href="tooltip.css" />
+</head>
+
+<body>
+    <div id="tooltip-card" class="tooltip-card">
+        <div class="tooltip-header">
+            <div class="tooltip-streamer-info">
+                <span id="tooltip-name" class="tooltip-streamer-name">Streamer</span>
+                <span id="tooltip-status-badge" class="tooltip-badge live-badge">LIVE</span>
+            </div>
+            <span id="tooltip-domain" class="tooltip-domain-tag">domain.com</span>
+        </div>
+
+        <div id="tooltip-game-row" class="tooltip-game-row">
+            <span class="tooltip-game-icon">🎮</span>
+            <span id="tooltip-game" class="tooltip-game-text">Category</span>
+        </div>
+
+        <div id="tooltip-title" class="tooltip-title-text">Stream Title</div>
+    </div>
+
+    <script>
+        const card = document.getElementById("tooltip-card");
+        const nameEl = document.getElementById("tooltip-name");
+        const statusBadgeEl = document.getElementById("tooltip-status-badge");
+        const domainEl = document.getElementById("tooltip-domain");
+        const gameRowEl = document.getElementById("tooltip-game-row");
+        const gameEl = document.getElementById("tooltip-game");
+        const titleEl = document.getElementById("tooltip-title");
+
+        if (window.electronAPI && window.electronAPI.onTooltipData) {
+            window.electronAPI.onTooltipData((data) => {
+                if (!data) return;
+
+                nameEl.textContent = data.name || "Streamer";
+                domainEl.textContent = data.domain || "";
+                domainEl.style.display = data.domain ? "inline-block" : "none";
+
+                if (data.isLive) {
+                    statusBadgeEl.textContent = "LIVE";
+                    statusBadgeEl.className = "tooltip-badge live-badge";
+                    statusBadgeEl.style.display = "inline-block";
+                } else {
+                    statusBadgeEl.textContent = "OFFLINE";
+                    statusBadgeEl.className = "tooltip-badge offline-badge";
+                    statusBadgeEl.style.display = "inline-block";
+                }
+
+                const gameText = data.game && data.game !== "(---)" ? data.game.trim() : "";
+                if (gameText) {
+                    gameEl.textContent = gameText;
+                    gameRowEl.style.display = "flex";
+                } else {
+                    gameRowEl.style.display = "none";
+                }
+
+                titleEl.textContent = data.title || "No Title";
+                if (data.liveBorderColor && data.isLive) {
+                    card.style.borderColor = data.liveBorderColor;
+                    statusBadgeEl.style.backgroundColor = data.liveBorderColor;
+                } else {
+                    card.style.borderColor = "rgba(148, 163, 184, 0.25)";
+                    statusBadgeEl.style.backgroundColor = "";
+                }
+            });
+        }
+
+        // Auto-measure content dimension and report to Electron main process
+        const observer = new ResizeObserver(() => {
+            const rect = card.getBoundingClientRect();
+            const width = Math.ceil(rect.width);
+            const height = Math.ceil(rect.height);
+            if (window.electronAPI && window.electronAPI.updateTooltipSize) {
+                window.electronAPI.updateTooltipSize({ width, height });
+            }
+        });
+
+        observer.observe(card);
+    </script>
+</body>
+
+</html>

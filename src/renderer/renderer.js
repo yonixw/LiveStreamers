@@ -254,6 +254,72 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  let currentlyHoveredCard = null;
+
+  function getTooltipDataForStreamer(streamer, cardElement) {
+    if (!streamer) return null;
+    const isLive = Boolean(streamer.isLive);
+    const cached = streamer.cachedInfo || null;
+
+    const userNick = streamer.customTag || streamer.name || "Streamer";
+    let domain = isLive ? "online" : "offline";
+    const activeOrFirstUrl =
+      isLive && streamer.activeUrl
+        ? streamer.activeUrl
+        : Array.isArray(streamer.urls) && streamer.urls.length > 0
+          ? typeof streamer.urls[0] === "string"
+            ? streamer.urls[0]
+            : streamer.urls[0].url
+          : streamer.url || "";
+
+    if (activeOrFirstUrl) {
+      try {
+        const parsed = new URL(
+          activeOrFirstUrl.startsWith("http")
+            ? activeOrFirstUrl
+            : `https://${activeOrFirstUrl}`,
+        );
+        domain = parsed.hostname.replace(/^www\./, "");
+      } catch (_e) {
+        domain = streamer.activePlatform || (isLive ? "stream" : "offline");
+      }
+    }
+
+    const game =
+      cached && (cached.category || cached.game)
+        ? cached.category || cached.game
+        : "";
+
+    const fullTitle =
+      cached && cached.title ? cached.title : isLive ? "No Title" : "Offline";
+
+    let targetRect = null;
+    if (
+      cardElement &&
+      typeof cardElement.getBoundingClientRect === "function"
+    ) {
+      const rect = cardElement.getBoundingClientRect();
+      targetRect = {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      };
+    }
+
+    return {
+      name: userNick,
+      domain,
+      game,
+      title: fullTitle,
+      isLive,
+      liveBorderColor: streamer.liveBorderColor || null,
+      targetRect,
+    };
+  }
+
   // Fine-grained Non-Flashing In-Place Reconciliation (Vertical Stack)
   function renderAvatarsInPlace(streamers) {
     lastRawStreamersList = Array.isArray(streamers) ? streamers : [];
@@ -351,6 +417,25 @@ document.addEventListener("DOMContentLoaded", async () => {
           const target = card._streamer || streamer;
           handleAvatarClick(target);
         });
+
+        card.addEventListener("mouseenter", () => {
+          currentlyHoveredCard = card;
+          const current = card._streamer || streamer;
+          if (window.electronAPI && window.electronAPI.showTooltip) {
+            window.electronAPI.showTooltip(
+              getTooltipDataForStreamer(current, card),
+            );
+          }
+        });
+
+        card.addEventListener("mouseleave", () => {
+          if (currentlyHoveredCard === card) {
+            currentlyHoveredCard = null;
+            if (window.electronAPI && window.electronAPI.hideTooltip) {
+              window.electronAPI.hideTooltip();
+            }
+          }
+        });
       }
 
       // Check DOM position in vertical container: only move if index changed
@@ -385,50 +470,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Tooltip and ALT_TEXT: ${username nick} / ${domain} / ${game} / ${full title}
       const userNick = streamer.customTag || streamer.name || "Streamer";
-      let domain = "offline";
-      const activeOrFirstUrl =
-        isLive && streamer.activeUrl
-          ? streamer.activeUrl
-          : Array.isArray(streamer.urls) && streamer.urls.length > 0
-            ? typeof streamer.urls[0] === "string"
-              ? streamer.urls[0]
-              : streamer.urls[0].url
-            : streamer.url || "";
 
-      if (activeOrFirstUrl) {
-        try {
-          const parsed = new URL(
-            activeOrFirstUrl.startsWith("http")
-              ? activeOrFirstUrl
-              : `https://${activeOrFirstUrl}`,
-          );
-          domain = parsed.hostname.replace(/^www\./, "");
-        } catch (_e) {
-          domain = streamer.activePlatform || "stream";
-        }
+      // Update tooltip if this card is currently hovered
+      if (
+        currentlyHoveredCard === card &&
+        window.electronAPI &&
+        window.electronAPI.showTooltip
+      ) {
+        window.electronAPI.showTooltip(
+          getTooltipDataForStreamer(streamer, card),
+        );
       }
-
-      const game =
-        cached && (cached.category || cached.game)
-          ? cached.category || cached.game
-          : isLive
-            ? "Live"
-            : "Offline";
-
-      const fullTitle =
-        cached && cached.title ? cached.title : isLive ? "No Title" : "Offline";
-
-      const fullTooltip = `${userNick} / ${domain} / ${game} / ${fullTitle}`;
-
-      card.setAttribute("title", fullTooltip);
-      if (frame) frame.setAttribute("title", fullTooltip);
 
       // Update Avatar Image / Initials without flash
       const inner = card.querySelector(".avatar-inner");
       if (inner) {
-        inner.setAttribute("title", fullTooltip);
         const imgSrc = formatImageSrc(streamer.avatarImage);
         if (imgSrc) {
           let existingImg = inner.querySelector("img");
@@ -436,8 +493,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             inner.textContent = "";
             inner.style.background = "#18181b";
             existingImg = document.createElement("img");
-            existingImg.alt = fullTooltip;
-            existingImg.title = fullTooltip;
+            existingImg.alt = userNick;
             existingImg.src = imgSrc;
             existingImg.onerror = () => {
               existingImg.remove();
@@ -449,11 +505,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (existingImg.getAttribute("src") !== imgSrc) {
               existingImg.src = imgSrc;
             }
-            if (existingImg.getAttribute("alt") !== fullTooltip) {
-              existingImg.alt = fullTooltip;
-            }
-            if (existingImg.getAttribute("title") !== fullTooltip) {
-              existingImg.title = fullTooltip;
+            if (existingImg.getAttribute("alt") !== userNick) {
+              existingImg.alt = userNick;
             }
           }
         } else {
@@ -565,6 +618,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   window.addEventListener("mouseleave", () => {
+    currentlyHoveredCard = null;
+    if (window.electronAPI && window.electronAPI.hideTooltip) {
+      window.electronAPI.hideTooltip();
+    }
     if (!isSmartClickThroughEnabled || isStaticClickThroughEnabled) return;
     if (isHoveringInteractive) {
       isHoveringInteractive = false;

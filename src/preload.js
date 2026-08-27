@@ -52,6 +52,16 @@ contextBridge.exposeInMainWorld("electronAPI", {
     return () => ipcRenderer.removeListener("log:entry", handler);
   },
 
+  // Tooltip Window
+  showTooltip: (data) => ipcRenderer.invoke("tooltip:show", data),
+  hideTooltip: () => ipcRenderer.invoke("tooltip:hide"),
+  updateTooltipSize: (size) => ipcRenderer.invoke("tooltip:update-size", size),
+  onTooltipData: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on("tooltip:set-data", handler);
+    return () => ipcRenderer.removeListener("tooltip:set-data", handler);
+  },
+
   // Overlay & System actions
   openExternal: (url) => ipcRenderer.invoke("app:open-external", url),
   centerOverlay: () => ipcRenderer.invoke("window:center-overlay"),
