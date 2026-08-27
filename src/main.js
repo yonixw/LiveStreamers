@@ -824,6 +824,13 @@ function buildTrayMenu() {
         resetOverlayUI();
       },
     },
+    {
+      label: "Open bin folder",
+      click: () => {
+        const binFolder = path.dirname(process.execPath);
+        shell.openPath(binFolder);
+      },
+    },
     { type: "separator" },
     {
       label: "Quit",

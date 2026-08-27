@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added days and hours inputs (`#input-hide-offline-days` and `#input-hide-offline-hours`) in [`src/settings/settings.html`](src/settings/settings.html:202) and [`src/settings/settings.js`](src/settings/settings.js:1597).
   - Allowed both inputs to be $\ge 0$ where setting 0 days and 0 hours hides all offline streamers from the overlay.
   - Extended offline filter calculations in [`src/main.js:isStreamerHiddenByOfflineFilter()`](src/main.js:575), [`src/renderer/renderer.js`](src/renderer/renderer.js:250), and persistent settings in [`src/tasks/storage.js`](src/tasks/storage.js:100).
+- **System Tray "Open bin folder" Option**:
+  - Added `"Open bin folder"` context menu item in [`src/main.js:buildTrayMenu()`](src/main.js:827) to open the folder containing the running Electron process binary via [`shell.openPath()`](src/main.js:829) in the native file explorer across Windows, macOS, and Linux.
 
 ## [1.9.0] - 2026-08-26
 
