@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-08-27
+
+### Added
+- **yt-dlp Automatic GitHub Release Update Checking**:
+  - Enhanced [`src/tasks/yt-dlp-utils.js:ensureBinary()`](src/tasks/yt-dlp-utils.js:77) to automatically check for new yt-dlp releases on GitHub.
+  - Persisted the downloaded release version in `cache/yt-dlp-version.txt` next to the binary.
+  - Automatically compares local version against GitHub latest release tag and re-downloads when an updated version is released.
+
 ## [1.9.0] - 2026-08-26
 
 ### Added

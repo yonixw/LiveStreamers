@@ -62,44 +62,112 @@ function getBinaryPath(options = {}) {
   return path.join(cacheDir, binaryName);
 }
 
+let checkedForUpdateOnce = false;
+
 /**
- * Ensures the yt-dlp binary exists in cache folder, downloading it if not present.
+ * Ensures the yt-dlp binary exists in cache folder, downloading it if not present,
+ * and checking for GitHub release updates if an existing binary is older.
+ * Saves current version to yt-dlp-version.txt next to the binary.
  * @param {object} [options]
  * @param {string} [options.cacheDir]
  * @param {string} [options.binaryPath]
  * @param {string} [options.version]
+ * @param {boolean} [options.forceCheck]
  * @param {Function} [options.onProgress]
  * @returns {Promise<string>} Path to the valid yt-dlp executable
  */
 async function ensureBinary(options = {}) {
   const binaryPath = options.binaryPath || getBinaryPath(options);
   const cacheDir = path.dirname(binaryPath);
+  const versionFilePath = path.join(cacheDir, "yt-dlp-version.txt");
 
   if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true });
   }
 
-  if (!fs.existsSync(binaryPath)) {
-    console.log(
-      `[yt-dlp-utils] Binary not found at ${binaryPath}. Downloading latest release...`,
-    );
-    await YTDlpWrap.downloadFromGithub(
-      binaryPath,
-      options.version,
-      options.platform || os.platform(),
-      options.onProgress,
-    );
+  const binaryExists = fs.existsSync(binaryPath);
+  let localVersion = null;
+  if (fs.existsSync(versionFilePath)) {
+    try {
+      localVersion = fs.readFileSync(versionFilePath, "utf8").trim();
+    } catch {
+      localVersion = null;
+    }
+  }
 
-    if (os.platform() !== "win32" && fs.existsSync(binaryPath)) {
+  // If binary doesn't exist, or we haven't checked for updates yet in this session (or forceCheck is requested)
+  if (!binaryExists || !checkedForUpdateOnce || options.forceCheck) {
+    checkedForUpdateOnce = true;
+    try {
+      let targetVersion = options.version;
+      let latestTag = null;
+
       try {
-        fs.chmodSync(binaryPath, 0o755);
-      } catch {
-        // Ignore chmod error if already executable
+        const releases = await YTDlpWrap.getGithubReleases(1, 1);
+        if (releases && releases.length > 0) {
+          latestTag = (releases[0].tag_name || releases[0].name || "").trim();
+          if (!targetVersion) {
+            targetVersion = latestTag;
+          }
+        }
+      } catch (err) {
+        console.warn(
+          `[yt-dlp-utils] Failed to fetch latest GitHub release: ${err.message || err}`,
+        );
+      }
+
+      const shouldDownload =
+        !binaryExists ||
+        (targetVersion && localVersion && targetVersion !== localVersion) ||
+        (targetVersion && !localVersion);
+
+      if (shouldDownload) {
+        const reason = !binaryExists
+          ? "Binary not found"
+          : `Update available (${localVersion || "unknown"} -> ${targetVersion || "latest"})`;
+        console.log(
+          `[yt-dlp-utils] ${reason}. Downloading yt-dlp release ${targetVersion || ""}...`,
+        );
+
+        await YTDlpWrap.downloadFromGithub(
+          binaryPath,
+          targetVersion,
+          options.platform || os.platform(),
+          options.onProgress,
+        );
+
+        if (os.platform() !== "win32" && fs.existsSync(binaryPath)) {
+          try {
+            fs.chmodSync(binaryPath, 0o755);
+          } catch {
+            // Ignore chmod error if already executable
+          }
+        }
+
+        const savedVer = targetVersion || latestTag || "latest";
+        try {
+          fs.writeFileSync(versionFilePath, savedVer, "utf8");
+        } catch {
+          // Ignore version file write error
+        }
+
+        console.log(
+          `[yt-dlp-utils] Successfully downloaded yt-dlp binary (${savedVer}) to ${binaryPath}`,
+        );
+      } else {
+        console.log(
+          `[yt-dlp-utils] yt-dlp binary is up-to-date (version: ${localVersion || "latest"})`,
+        );
+      }
+    } catch (err) {
+      checkedForUpdateOnce = false;
+      console.warn(
+        `[yt-dlp-utils] Error checking/downloading yt-dlp update: ${err.message || err}. Using existing binary.`,
+      );
+      if (!binaryExists) {
+        throw err;
       }
     }
-    console.log(
-      `[yt-dlp-utils] Successfully downloaded yt-dlp binary to ${binaryPath}`,
-    );
   }
 
   return binaryPath;

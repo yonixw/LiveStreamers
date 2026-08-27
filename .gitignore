@@ -46,4 +46,5 @@ Thumbs.db
 
 bun.lock
 
-data/*.json
+data/
+cache/
