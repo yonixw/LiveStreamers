@@ -777,7 +777,7 @@ function createTooltipWindow() {
   }
 
   tooltipWindow = new BrowserWindow({
-    width: 260,
+    width: 200,
     height: 100,
     show: false,
     frame: false,
