@@ -321,6 +321,78 @@ function evaluateTriggers(streamer, current, previous = null) {
         }
       }
     }
+
+    // 4. Runtime Interval (every X minutes live addition) Trigger
+    if (triggers.runtimeIntervalEnabled) {
+      const intervalMins = Math.max(
+        1,
+        parseInt(triggers.runtimeIntervalMinutes, 10) || 30,
+      );
+      const startTimeStr = currInfo.startTime || currInfo.liveTime;
+      if (startTimeStr) {
+        const startMs = new Date(startTimeStr).getTime();
+        const currentRuntimeMins = Math.floor((Date.now() - startMs) / 60000);
+
+        let prevRuntimeMins = 0;
+        if (prev.isLive && (prevInfo.startTime || prevInfo.liveTime)) {
+          const prevStartMs = new Date(
+            prevInfo.startTime || prevInfo.liveTime,
+          ).getTime();
+          const prevCheckedMs = prev.lastChecked
+            ? new Date(prev.lastChecked).getTime()
+            : Date.now() - 60000;
+          prevRuntimeMins = Math.floor((prevCheckedMs - prevStartMs) / 60000);
+        }
+
+        const currBucket = Math.floor(currentRuntimeMins / intervalMins);
+        const prevBucket = Math.floor(prevRuntimeMins / intervalMins);
+
+        if (currBucket > prevBucket && currBucket > 0) {
+          const labelUnit =
+            intervalMins >= 60
+              ? intervalMins % 60 === 0
+                ? `${intervalMins / 60}h`
+                : `${Math.floor(intervalMins / 60)}h ${intervalMins % 60}m`
+              : `${intervalMins}m`;
+          return {
+            type: "runtime_interval",
+            label: `Live +${labelUnit}`,
+            message: `Streamer reached ${currentRuntimeMins}m live (${currBucket * intervalMins}m milestone, every ${labelUnit})`,
+            diff: {
+              from: `${prevRuntimeMins}m live`,
+              to: `${currentRuntimeMins}m live`,
+            },
+            timestamp: nowIso,
+          };
+        }
+      }
+    }
+
+    // 5. Viewer Step Trigger (triggers every +X viewers milestone based on floor(viewers/step))
+    if (triggers.viewerStepEnabled) {
+      const step = Math.max(2, parseInt(triggers.viewerStepCount, 10) || 100);
+      const currViewers = Number(currInfo.viewerCount) || 0;
+      const prevViewers =
+        prev.isLive && prevInfo && prevInfo.viewerCount != null
+          ? Number(prevInfo.viewerCount) || 0
+          : 0;
+
+      const currBucket = Math.floor(currViewers / step);
+      const prevBucket = Math.floor(prevViewers / step);
+
+      if (currBucket > prevBucket && currBucket > 0) {
+        return {
+          type: "viewer_step",
+          label: `Viewers +${step.toLocaleString()}`,
+          message: `Viewers reached ${currViewers.toLocaleString()} (crossed +${step.toLocaleString()} milestone to ${currBucket * step}+ from ${prevViewers.toLocaleString()})`,
+          diff: {
+            from: `${prevViewers.toLocaleString()} viewers`,
+            to: `${currViewers.toLocaleString()} viewers`,
+          },
+          timestamp: nowIso,
+        };
+      }
+    }
   }
 
   // If both current and previous were live, check in-stream changes

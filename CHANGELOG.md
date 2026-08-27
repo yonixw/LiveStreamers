@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Extended offline filter calculations in [`src/main.js:isStreamerHiddenByOfflineFilter()`](src/main.js:575), [`src/renderer/renderer.js`](src/renderer/renderer.js:250), and persistent settings in [`src/tasks/storage.js`](src/tasks/storage.js:100).
 - **System Tray "Open bin folder" Option**:
   - Added `"Open bin folder"` context menu item in [`src/main.js:buildTrayMenu()`](src/main.js:827) to open the folder containing the running Electron process binary via [`shell.openPath()`](src/main.js:829) in the native file explorer across Windows, macOS, and Linux.
+- **New Streamer Priority Triggers (Viewer Step & Live Time Interval)**:
+  - **Viewer Step Trigger (`viewerStepEnabled`, `viewerStepCount > 1`)**: Evaluates `Math.floor(viewers / step)` in [`src/tasks/stream-checker.js:evaluateTriggers()`](src/tasks/stream-checker.js:340), triggering on each $+X$ milestone when viewer count increases, and correctly re-triggering if viewers drop and rise again past the step milestone.
+  - **Live Runtime Addition / Interval Trigger (`runtimeIntervalEnabled`, `runtimeIntervalMinutes`)**: Added hours + minutes input in [`src/settings/settings.html`](src/settings/settings.html:349) and [`src/settings/settings.js`](src/settings/settings.js:635) that converts to total minutes and periodically fires every $X$ elapsed minutes live in [`src/tasks/stream-checker.js:evaluateTriggers()`](src/tasks/stream-checker.js:300).
+  - Extended streamer schema in [`src/tasks/storage.js:normalizeStreamerConfig()`](src/tasks/storage.js:250) to persist and validate both trigger configurations.
 
 ## [1.9.0] - 2026-08-26
 

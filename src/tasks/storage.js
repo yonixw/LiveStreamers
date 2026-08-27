@@ -256,9 +256,22 @@ function normalizeStreamerConfig(streamer, index = 0) {
         : "",
     viewerCountEnabled: streamer.triggers?.viewerCountEnabled ?? false,
     viewerCountThreshold: streamer.triggers?.viewerCountThreshold ?? 5000,
+    viewerStepEnabled: streamer.triggers?.viewerStepEnabled ?? false,
+    viewerStepCount:
+      typeof streamer.triggers?.viewerStepCount !== "undefined"
+        ? Math.max(2, parseInt(streamer.triggers.viewerStepCount, 10) || 100)
+        : 100,
     runtimeMinutesEnabled: streamer.triggers?.runtimeMinutesEnabled ?? false,
     runtimeMinutesThreshold:
       Number(streamer.triggers?.runtimeMinutesThreshold) || 30,
+    runtimeIntervalEnabled: streamer.triggers?.runtimeIntervalEnabled ?? false,
+    runtimeIntervalMinutes:
+      typeof streamer.triggers?.runtimeIntervalMinutes !== "undefined"
+        ? Math.max(
+            1,
+            parseInt(streamer.triggers.runtimeIntervalMinutes, 10) || 30,
+          )
+        : 30,
     goingLive: streamer.triggers?.goingLive ?? true,
     categoryChange: streamer.triggers?.categoryChange ?? true,
   };

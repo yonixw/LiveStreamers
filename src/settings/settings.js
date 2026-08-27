@@ -52,9 +52,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   const trigCategoryChange = document.getElementById("trig-category-change");
   const trigViewerEnabled = document.getElementById("trig-viewer-enabled");
   const trigViewerThreshold = document.getElementById("trig-viewer-threshold");
+  const trigViewerStepEnabled = document.getElementById(
+    "trig-viewer-step-enabled",
+  );
+  const trigViewerStepCount = document.getElementById("trig-viewer-step-count");
   const trigRuntimeEnabled = document.getElementById("trig-runtime-enabled");
   const trigRuntimeThreshold = document.getElementById(
     "trig-runtime-threshold",
+  );
+  const trigRuntimeIntervalEnabled = document.getElementById(
+    "trig-runtime-interval-enabled",
+  );
+  const trigRuntimeIntervalHours = document.getElementById(
+    "trig-runtime-interval-hours",
+  );
+  const trigRuntimeIntervalMinutes = document.getElementById(
+    "trig-runtime-interval-minutes",
   );
 
   // Streamers List Elements
@@ -586,8 +599,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     trigCategoryChange.checked = true;
     trigViewerEnabled.checked = false;
     trigViewerThreshold.value = "5000";
+    if (trigViewerStepEnabled) trigViewerStepEnabled.checked = false;
+    if (trigViewerStepCount) trigViewerStepCount.value = "100";
     if (trigRuntimeEnabled) trigRuntimeEnabled.checked = false;
     if (trigRuntimeThreshold) trigRuntimeThreshold.value = "30";
+    if (trigRuntimeIntervalEnabled) trigRuntimeIntervalEnabled.checked = false;
+    if (trigRuntimeIntervalHours) trigRuntimeIntervalHours.value = "0";
+    if (trigRuntimeIntervalMinutes) trigRuntimeIntervalMinutes.value = "30";
 
     updateAvatarPreview();
   }
@@ -624,11 +642,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     trigCategoryChange.checked = trig.categoryChange !== false;
     trigViewerEnabled.checked = Boolean(trig.viewerCountEnabled);
     trigViewerThreshold.value = String(trig.viewerCountThreshold || 5000);
+    if (trigViewerStepEnabled) {
+      trigViewerStepEnabled.checked = Boolean(trig.viewerStepEnabled);
+    }
+    if (trigViewerStepCount) {
+      trigViewerStepCount.value = String(trig.viewerStepCount || 100);
+    }
     if (trigRuntimeEnabled) {
       trigRuntimeEnabled.checked = Boolean(trig.runtimeMinutesEnabled);
     }
     if (trigRuntimeThreshold) {
       trigRuntimeThreshold.value = String(trig.runtimeMinutesThreshold || 30);
+    }
+    if (trigRuntimeIntervalEnabled) {
+      trigRuntimeIntervalEnabled.checked = Boolean(trig.runtimeIntervalEnabled);
+    }
+    const intervalTotalMins = Math.max(
+      1,
+      parseInt(trig.runtimeIntervalMinutes, 10) || 30,
+    );
+    if (trigRuntimeIntervalHours) {
+      trigRuntimeIntervalHours.value = String(
+        Math.floor(intervalTotalMins / 60),
+      );
+    }
+    if (trigRuntimeIntervalMinutes) {
+      trigRuntimeIntervalMinutes.value = String(intervalTotalMins % 60);
     }
 
     updateAvatarPreview();
@@ -671,12 +710,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       categoryChange: trigCategoryChange.checked,
       viewerCountEnabled: trigViewerEnabled.checked,
       viewerCountThreshold: Number(trigViewerThreshold.value) || 5000,
+      viewerStepEnabled: trigViewerStepEnabled
+        ? trigViewerStepEnabled.checked
+        : false,
+      viewerStepCount: trigViewerStepCount
+        ? Math.max(2, parseInt(trigViewerStepCount.value, 10) || 100)
+        : 100,
       runtimeMinutesEnabled: trigRuntimeEnabled
         ? trigRuntimeEnabled.checked
         : false,
       runtimeMinutesThreshold: trigRuntimeThreshold
         ? Number(trigRuntimeThreshold.value) || 30
         : 30,
+      runtimeIntervalEnabled: trigRuntimeIntervalEnabled
+        ? trigRuntimeIntervalEnabled.checked
+        : false,
+      runtimeIntervalMinutes:
+        Math.max(
+          1,
+          Math.max(0, parseInt(trigRuntimeIntervalHours?.value, 10) || 0) * 60 +
+            Math.max(0, parseInt(trigRuntimeIntervalMinutes?.value, 10) || 0),
+        ) || 30,
     };
 
     const editingId = editStreamerIdInput.value;
