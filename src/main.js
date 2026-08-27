@@ -153,7 +153,17 @@ const state = {
   smartClickThrough: persistedSettings.smartClickThrough ?? false,
   showBoundaryCorners: persistedSettings.showBoundaryCorners ?? false,
   hideOfflineEnabled: persistedSettings.hideOfflineEnabled ?? false,
-  hideOfflineDays: persistedSettings.hideOfflineDays || 7,
+  hideOfflineDays:
+    typeof persistedSettings.hideOfflineDays !== "undefined"
+      ? Math.max(0, parseInt(persistedSettings.hideOfflineDays, 10) || 0)
+      : 7,
+  hideOfflineHours:
+    typeof persistedSettings.hideOfflineHours !== "undefined"
+      ? Math.max(
+          0,
+          Math.min(23, parseInt(persistedSettings.hideOfflineHours, 10) || 0),
+        )
+      : 0,
   windowStatesCount: persistedSettings.windowStatesCount || 1,
   currentWindowStateIndex: persistedSettings.currentWindowStateIndex || 0,
   windowStates:
@@ -565,11 +575,12 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
 }
 
 /**
- * Checks if an offline streamer should be hidden according to hideOfflineEnabled and hideOfflineDays settings.
+ * Checks if an offline streamer should be hidden according to hideOfflineEnabled, hideOfflineDays and hideOfflineHours settings.
  * If streamer is live -> NOT hidden (false).
  * If streamer is offline and hideOfflineEnabled is true:
  *   If no offlineSince / null -> hidden (true, treated as infinite time).
- *   If offline for > hideOfflineDays -> hidden (true).
+ *   If max duration (days*24 + hours) is 0 -> hidden (true, hides all offline).
+ *   If offline duration > max duration -> hidden (true).
  *   Else -> NOT hidden (false).
  */
 function isStreamerHiddenByOfflineFilter(streamer) {
@@ -585,9 +596,15 @@ function isStreamerHiddenByOfflineFilter(streamer) {
     const offlineTime = new Date(streamer.offlineSince).getTime();
     if (isNaN(offlineTime)) return true;
     const diffMs = Date.now() - offlineTime;
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    const maxDays = Math.max(1, parseInt(state.hideOfflineDays, 10) || 7);
-    return diffDays > maxDays;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    const maxDays = Math.max(0, parseInt(state.hideOfflineDays, 10) || 0);
+    const maxHours = Math.max(0, parseInt(state.hideOfflineHours, 10) || 0);
+    const totalMaxHours = maxDays * 24 + maxHours;
+
+    if (totalMaxHours === 0) {
+      return true; // 0 days + 0 hours = hide all offline streamers
+    }
+    return diffHours > totalMaxHours;
   } catch {
     return true;
   }
@@ -1126,8 +1143,18 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     typeof partialSettings.hideOfflineDays === "string"
   ) {
     state.hideOfflineDays = Math.max(
-      1,
-      parseInt(partialSettings.hideOfflineDays, 10) || 7,
+      0,
+      parseInt(partialSettings.hideOfflineDays, 10) || 0,
+    );
+  }
+
+  if (
+    typeof partialSettings.hideOfflineHours === "number" ||
+    typeof partialSettings.hideOfflineHours === "string"
+  ) {
+    state.hideOfflineHours = Math.max(
+      0,
+      Math.min(23, parseInt(partialSettings.hideOfflineHours, 10) || 0),
     );
   }
 

@@ -99,6 +99,7 @@ const defaultSettings = {
   showBoundaryCorners: false,
   hideOfflineEnabled: false,
   hideOfflineDays: 7,
+  hideOfflineHours: 0,
   windowStatesCount: 1,
   currentWindowStateIndex: 0,
   windowStates: [
@@ -342,7 +343,17 @@ function loadSettings() {
         smartClickThrough: Boolean(data.smartClickThrough),
         showBoundaryCorners: Boolean(data.showBoundaryCorners),
         hideOfflineEnabled: Boolean(data.hideOfflineEnabled),
-        hideOfflineDays: Math.max(1, parseInt(data.hideOfflineDays, 10) || 7),
+        hideOfflineDays:
+          typeof data.hideOfflineDays !== "undefined"
+            ? Math.max(0, parseInt(data.hideOfflineDays, 10) || 0)
+            : 7,
+        hideOfflineHours:
+          typeof data.hideOfflineHours !== "undefined"
+            ? Math.max(
+                0,
+                Math.min(23, parseInt(data.hideOfflineHours, 10) || 0),
+              )
+            : 0,
         windowStatesCount,
         currentWindowStateIndex,
         windowStates,
@@ -397,7 +408,17 @@ function saveSettings(settings) {
       smartClickThrough: settings.smartClickThrough ?? false,
       showBoundaryCorners: settings.showBoundaryCorners ?? false,
       hideOfflineEnabled: Boolean(settings.hideOfflineEnabled),
-      hideOfflineDays: Math.max(1, parseInt(settings.hideOfflineDays, 10) || 7),
+      hideOfflineDays:
+        typeof settings.hideOfflineDays !== "undefined"
+          ? Math.max(0, parseInt(settings.hideOfflineDays, 10) || 0)
+          : 7,
+      hideOfflineHours:
+        typeof settings.hideOfflineHours !== "undefined"
+          ? Math.max(
+              0,
+              Math.min(23, parseInt(settings.hideOfflineHours, 10) || 0),
+            )
+          : 0,
       windowStatesCount: Math.max(
         1,
         parseInt(settings.windowStatesCount, 10) || 1,

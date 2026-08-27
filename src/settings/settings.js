@@ -85,12 +85,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const inputHideOfflineDays = document.getElementById(
     "input-hide-offline-days",
   );
+  const inputHideOfflineHours = document.getElementById(
+    "input-hide-offline-hours",
+  );
   const inputWindowStatesCount = document.getElementById(
     "input-window-states-count",
   );
   const windowStatesButtons = document.getElementById("window-states-buttons");
   const windowStateBadge = document.getElementById("window-state-badge");
-  const opacityRadios = document.querySelectorAll('input[name="opacity"]');
+  const opacitySlider = document.getElementById("opacity-slider");
+  const opacityValDisplay = document.getElementById("opacity-val-display");
 
   const btnCenterOverlay = document.getElementById("btn-center-overlay");
   const btnToggleOverlay = document.getElementById("btn-toggle-overlay");
@@ -293,7 +297,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  function isStreamerOfflineHidden(streamer, hideEnabled, maxDays) {
+  function isStreamerOfflineHidden(streamer, hideEnabled, maxDays, maxHours) {
     if (!hideEnabled) return false;
     if (streamer.isLive) return false;
     if (!streamer.offlineSince) return true;
@@ -301,8 +305,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       const offlineTime = new Date(streamer.offlineSince).getTime();
       if (isNaN(offlineTime)) return true;
       const diffMs = Date.now() - offlineTime;
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      return diffDays > maxDays;
+      const diffHours = diffMs / (1000 * 60 * 60);
+      const days = Math.max(0, parseInt(maxDays, 10) || 0);
+      const hours = Math.max(0, parseInt(maxHours, 10) || 0);
+      const totalHours = days * 24 + hours;
+      if (totalHours === 0) return true; // 0 days + 0 hours = hide all offline
+      return diffHours > totalHours;
     } catch {
       return true;
     }
@@ -1046,10 +1054,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         const isHidden = isStreamerOfflineHidden(
           streamer,
           chkHideOfflineEnabled?.checked,
-          parseInt(inputHideOfflineDays?.value, 10) || 7,
+          inputHideOfflineDays?.value || 0,
+          inputHideOfflineHours?.value || 0,
         );
+        const daysVal = parseInt(inputHideOfflineDays?.value, 10) || 0;
+        const hoursVal = parseInt(inputHideOfflineHours?.value, 10) || 0;
+        const durLabel =
+          daysVal === 0 && hoursVal === 0
+            ? "all"
+            : `${daysVal > 0 ? daysVal + "d " : ""}${hoursVal > 0 ? hoursVal + "h" : ""}`.trim();
         const hiddenBadge = isHidden
-          ? ` <span class="badge-hidden-offline" title="Hidden from overlay window (> ${inputHideOfflineDays?.value || 7}d offline or unknown timestamp)">👁️‍🗨️ Hidden in Overlay</span>`
+          ? ` <span class="badge-hidden-offline" title="Hidden from overlay window (> ${durLabel} offline or unknown timestamp)">👁️‍🗨️ Hidden in Overlay</span>`
           : "";
         statusBadgeHtml = `<span class="status-indicator status-offline">⚪ Offline (${lastCheckedStr}${offlineDur})</span>${hiddenBadge}`;
       }
@@ -1594,22 +1609,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  const handleOfflineDurationChange = () => {
+    const days = Math.max(
+      0,
+      Math.min(365, parseInt(inputHideOfflineDays?.value, 10) || 0),
+    );
+    const hours = Math.max(
+      0,
+      Math.min(23, parseInt(inputHideOfflineHours?.value, 10) || 0),
+    );
+    if (inputHideOfflineDays) inputHideOfflineDays.value = String(days);
+    if (inputHideOfflineHours) inputHideOfflineHours.value = String(hours);
+
+    if (window.electronAPI && window.electronAPI.updateSettings) {
+      window.electronAPI.updateSettings({
+        hideOfflineDays: days,
+        hideOfflineHours: hours,
+      });
+      appendLog(
+        `Hide Offline threshold set to: ${days} day(s) ${hours} hour(s)`,
+        "info",
+        "Settings",
+      );
+      renderStreamersList(localStreamers);
+    }
+  };
+
   if (inputHideOfflineDays) {
-    inputHideOfflineDays.addEventListener("change", (e) => {
-      const val = Math.max(1, Math.min(365, parseInt(e.target.value, 10) || 7));
-      e.target.value = String(val);
-      if (window.electronAPI && window.electronAPI.updateSettings) {
-        window.electronAPI.updateSettings({
-          hideOfflineDays: val,
-        });
-        appendLog(
-          `Hide Offline threshold set to: ${val} day(s)`,
-          "info",
-          "Settings",
-        );
-        renderStreamersList(localStreamers);
-      }
-    });
+    inputHideOfflineDays.addEventListener(
+      "change",
+      handleOfflineDurationChange,
+    );
+    inputHideOfflineDays.addEventListener("input", handleOfflineDurationChange);
+  }
+  if (inputHideOfflineHours) {
+    inputHideOfflineHours.addEventListener(
+      "change",
+      handleOfflineDurationChange,
+    );
+    inputHideOfflineHours.addEventListener(
+      "input",
+      handleOfflineDurationChange,
+    );
   }
 
   // Multiple Window States Handlers
@@ -1663,20 +1704,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Opacity radios
-  opacityRadios.forEach((radio) => {
-    radio.addEventListener("change", () => {
-      if (
-        radio.checked &&
-        window.electronAPI &&
-        window.electronAPI.updateSettings
-      ) {
-        window.electronAPI.updateSettings({
-          currentOpacity: parseFloat(radio.value),
-        });
+  // Opacity slider
+  if (opacitySlider) {
+    const handleOpacityChange = (e) => {
+      const pct = Math.max(
+        10,
+        Math.min(100, parseInt(e.target.value, 10) || 100),
+      );
+      if (opacityValDisplay) {
+        opacityValDisplay.textContent = `${pct}%`;
       }
-    });
-  });
+      const opacityVal = pct / 100;
+      if (window.electronAPI) {
+        if (window.electronAPI.setOpacity) {
+          window.electronAPI.setOpacity(opacityVal);
+        }
+        if (window.electronAPI.updateSettings) {
+          window.electronAPI.updateSettings({
+            currentOpacity: opacityVal,
+          });
+        }
+      }
+    };
+    opacitySlider.addEventListener("input", handleOpacityChange);
+    opacitySlider.addEventListener("change", handleOpacityChange);
+  }
 
   // Quick Action buttons
   btnCenterOverlay.addEventListener("click", () => {
@@ -2340,18 +2392,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     ) {
       chkHideOfflineEnabled.checked = settings.hideOfflineEnabled;
     }
-    if (settings.hideOfflineDays && inputHideOfflineDays) {
+    if (
+      typeof settings.hideOfflineDays !== "undefined" &&
+      inputHideOfflineDays
+    ) {
       inputHideOfflineDays.value = String(settings.hideOfflineDays);
+    }
+    if (
+      typeof settings.hideOfflineHours !== "undefined" &&
+      inputHideOfflineHours
+    ) {
+      inputHideOfflineHours.value = String(settings.hideOfflineHours);
     }
     renderWindowStatesUI(
       settings.windowStatesCount || 1,
       settings.currentWindowStateIndex || 0,
     );
     if (typeof settings.currentOpacity === "number") {
-      opacityRadios.forEach((radio) => {
-        radio.checked =
-          Math.abs(parseFloat(radio.value) - settings.currentOpacity) < 0.05;
-      });
+      const pct = Math.max(
+        10,
+        Math.min(100, Math.round(settings.currentOpacity * 100)),
+      );
+      if (opacitySlider) {
+        opacitySlider.value = String(pct);
+      }
+      if (opacityValDisplay) {
+        opacityValDisplay.textContent = `${pct}%`;
+      }
     }
     if (Array.isArray(settings.actionRules)) {
       renderActionRules(settings.actionRules);

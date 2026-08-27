@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   let isHoveringInteractive = false;
   let hideOfflineEnabled = false;
   let hideOfflineDays = 7;
+  let hideOfflineHours = 0;
   const headerDragZone = document.getElementById("header-drag-zone");
   const headerStateIndicator = document.getElementById(
     "header-state-indicator",
@@ -134,8 +135,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       hideOfflineEnabled = settings.hideOfflineEnabled;
     }
 
-    if (settings.hideOfflineDays) {
-      hideOfflineDays = parseInt(settings.hideOfflineDays, 10) || 7;
+    if (typeof settings.hideOfflineDays !== "undefined") {
+      hideOfflineDays = Math.max(
+        0,
+        parseInt(settings.hideOfflineDays, 10) || 0,
+      );
+    }
+
+    if (typeof settings.hideOfflineHours !== "undefined") {
+      hideOfflineHours = Math.max(
+        0,
+        Math.min(23, parseInt(settings.hideOfflineHours, 10) || 0),
+      );
     }
 
     if (lastRawStreamersList && lastRawStreamersList.length > 0) {
@@ -252,8 +263,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!s.offlineSince) return false;
       try {
         const offMs = Date.now() - new Date(s.offlineSince).getTime();
-        const offDays = offMs / (1000 * 60 * 60 * 24);
-        return offDays <= hideOfflineDays;
+        const offHours = offMs / (1000 * 60 * 60);
+        const totalMaxHours = hideOfflineDays * 24 + hideOfflineHours;
+        if (totalMaxHours === 0) return false;
+        return offHours <= totalMaxHours;
       } catch {
         return false;
       }

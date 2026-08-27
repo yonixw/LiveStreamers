@@ -196,14 +196,17 @@
                             <div class="toggle-label-group">
                                 <span class="toggle-title">Hide Inactive Offline Streamers</span>
                                 <span class="toggle-description">Hide streamers from the overlay window if offline for
-                                    more than X days (or missing offline timestamp)</span>
+                                    more than specified duration (0 days & 0 hrs = hide all offline; missing offline timestamp is always hidden)</span>
                             </div>
                         </label>
                         <div id="hide-offline-days-row" class="hide-offline-days-row">
                             <span class="hide-offline-label">Hide if offline for more than:</span>
-                            <input type="number" id="input-hide-offline-days" min="1" max="365" step="1" value="7"
+                            <input type="number" id="input-hide-offline-days" min="0" max="365" step="1" value="7"
                                 class="form-input input-hide-offline-days" />
-                            <span class="hide-offline-label">day(s) (null / unknown is hidden)</span>
+                            <span class="hide-offline-label">day(s)</span>
+                            <input type="number" id="input-hide-offline-hours" min="0" max="23" step="1" value="0"
+                                class="form-input input-hide-offline-days" />
+                            <span class="hide-offline-label">hour(s)</span>
                         </div>
                     </div>
                 </div>
@@ -519,39 +522,22 @@
                 </div>
             </section>
 
-            <!-- Section 5: Opacity Radio Selection -->
+            <!-- Section 5: Opacity Slider Selection -->
             <section class="settings-card">
                 <div class="card-header">
                     <h2>Opacity / Transparency</h2>
                     <span class="card-subtitle">Choose the transparency level for the avatar overlay</span>
                 </div>
 
-                <div class="radio-grid" id="opacity-radio-group">
-                    <label class="radio-card">
-                        <input type="radio" name="opacity" value="1.0" checked />
-                        <span class="radio-custom"></span>
-                        <span class="radio-label">100% (Solid)</span>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" name="opacity" value="0.75" />
-                        <span class="radio-custom"></span>
-                        <span class="radio-label">75%</span>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" name="opacity" value="0.5" />
-                        <span class="radio-custom"></span>
-                        <span class="radio-label">50%</span>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" name="opacity" value="0.25" />
-                        <span class="radio-custom"></span>
-                        <span class="radio-label">25%</span>
-                    </label>
-                    <label class="radio-card">
-                        <input type="radio" name="opacity" value="0.1" />
-                        <span class="radio-custom"></span>
-                        <span class="radio-label">10%</span>
-                    </label>
+                <div class="appearance-group">
+                    <div class="appearance-header">
+                        <span class="appearance-label">Overlay Opacity:</span>
+                        <span id="opacity-val-display" class="size-val-badge">100%</span>
+                    </div>
+                    <div class="size-controls-row">
+                        <input type="range" id="opacity-slider" min="10" max="100" step="1" value="100"
+                            class="size-slider" />
+                    </div>
                 </div>
             </section>
 

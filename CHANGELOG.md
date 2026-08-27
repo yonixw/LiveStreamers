@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced [`src/tasks/yt-dlp-utils.js:ensureBinary()`](src/tasks/yt-dlp-utils.js:77) to automatically check for new yt-dlp releases on GitHub.
   - Persisted the downloaded release version in `cache/yt-dlp-version.txt` next to the binary.
   - Automatically compares local version against GitHub latest release tag and re-downloads when an updated version is released.
+- **Continuous Opacity Range Slider (10%–100%)**:
+  - Replaced the 5 radio presets in [`src/settings/settings.html`](src/settings/settings.html:523) with an interactive opacity range slider (`#opacity-slider`, `min="10"` to `max="100"`) and dynamic percentage indicator badge (`#opacity-val-display`).
+  - Wired live slider input and change handling in [`src/settings/settings.js`](src/settings/settings.js:1670) updating overlay opacity seamlessly via [`window.electronAPI.setOpacity()`](src/preload.js:71).
+- **Hide Inactive Offline Streamers Days & Hours Duration Support**:
+  - Added days and hours inputs (`#input-hide-offline-days` and `#input-hide-offline-hours`) in [`src/settings/settings.html`](src/settings/settings.html:202) and [`src/settings/settings.js`](src/settings/settings.js:1597).
+  - Allowed both inputs to be $\ge 0$ where setting 0 days and 0 hours hides all offline streamers from the overlay.
+  - Extended offline filter calculations in [`src/main.js:isStreamerHiddenByOfflineFilter()`](src/main.js:575), [`src/renderer/renderer.js`](src/renderer/renderer.js:250), and persistent settings in [`src/tasks/storage.js`](src/tasks/storage.js:100).
 
 ## [1.9.0] - 2026-08-26
 
