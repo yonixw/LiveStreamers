@@ -682,9 +682,9 @@ function createSettingsWindow() {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 740,
+    width: 960,
     height: 880,
-    minWidth: 540,
+    minWidth: 620,
     minHeight: 650,
     autoHideMenuBar: true,
     title: `Settings - ${pkg.name} - ${pkg.version}`,

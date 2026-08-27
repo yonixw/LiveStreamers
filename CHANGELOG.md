@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.1] - 2026-08-27
 
 ### Added
+- **Dynamic Settings Table of Contents (TOC) Navigation Sidebar**:
+  - Added sticky Table of Contents sidebar navigation to [`src/settings/settings.html`](src/settings/settings.html:15) with dedicated CSS layout styles in [`src/settings/settings.css`](src/settings/settings.css:38).
+  - Implemented automatic heading mapping in [`src/settings/settings.js:initTableOfContents()`](src/settings/settings.js:2546) extracting all `h2` and `h3` sections dynamically on document load with unique target anchors.
+  - Added smooth scroll jumping to sections on click and real-time scroll-spy active state highlighting as the settings window is scrolled.
+  - Widened default settings window dimensions (`width: 960`) in [`src/main.js:createSettingsWindow()`](src/main.js:685) for an ergonomic side-by-side documentation-style layout.
 - **yt-dlp Automatic GitHub Release Update Checking**:
   - Enhanced [`src/tasks/yt-dlp-utils.js:ensureBinary()`](src/tasks/yt-dlp-utils.js:77) to automatically check for new yt-dlp releases on GitHub.
   - Persisted the downloaded release version in `cache/yt-dlp-version.txt` next to the binary.

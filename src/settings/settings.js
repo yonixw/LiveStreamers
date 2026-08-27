@@ -2535,4 +2535,123 @@ document.addEventListener("DOMContentLoaded", async () => {
       applySettingsToUI(newSettings);
     });
   }
+
+  // Initialize dynamic Table of Contents (TOC) sidebar
+  initTableOfContents();
 });
+
+/**
+ * Dynamically builds a Table of Contents (TOC) sidebar navigation from page headings (h2, h3).
+ * Provides smooth scrolling to sections and scroll-spy active state highlighting.
+ */
+function initTableOfContents() {
+  const tocNav = document.getElementById("toc-nav");
+  if (!tocNav) return;
+
+  const headings = document.querySelectorAll(
+    ".settings-content h2, .settings-content h3",
+  );
+  if (!headings.length) return;
+
+  tocNav.innerHTML = "";
+  const tocEntries = [];
+
+  headings.forEach((heading, index) => {
+    // Generate a unique ID if not present
+    let targetId = heading.id;
+    if (!targetId) {
+      const card = heading.closest(".settings-card, .group-rule-box");
+      if (card && card.id) {
+        targetId = card.id;
+      } else {
+        const rawText = heading.textContent || `section-${index}`;
+        const slug = rawText
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, "")
+          .trim()
+          .replace(/\s+/g, "-")
+          .substring(0, 32);
+        targetId = `sec-${slug || index}`;
+        heading.id = targetId;
+      }
+    }
+
+    const isSub = heading.tagName.toLowerCase() === "h3";
+    let text = heading.textContent.trim().replace(/\s+/g, " ");
+
+    const link = document.createElement("a");
+    link.className = `toc-link ${isSub ? "toc-link-sub" : "toc-link-main"}`;
+    link.href = `#${targetId}`;
+    link.dataset.targetId = targetId;
+    link.title = text;
+
+    const dot = document.createElement("span");
+    dot.className = "toc-dot";
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "toc-text";
+    textSpan.textContent = text;
+
+    link.appendChild(dot);
+    link.appendChild(textSpan);
+
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target =
+        document.getElementById(targetId) ||
+        document.querySelector(`[id="${targetId}"]`);
+      if (target) {
+        const card = target.closest(".settings-card") || target;
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+        setActiveTocLink(link);
+      }
+    });
+
+    tocNav.appendChild(link);
+    tocEntries.push({ heading, link, targetId });
+  });
+
+  function setActiveTocLink(activeLink) {
+    tocNav.querySelectorAll(".toc-link").forEach((l) => {
+      l.classList.remove("active");
+    });
+    if (activeLink) {
+      activeLink.classList.add("active");
+    }
+  }
+
+  if (tocEntries.length > 0) {
+    tocEntries[0].link.classList.add("active");
+  }
+
+  // Scroll-spy listener to highlight current visible section
+  let isScrollingTimeout = null;
+  const onScroll = () => {
+    if (isScrollingTimeout) return;
+    isScrollingTimeout = setTimeout(() => {
+      isScrollingTimeout = null;
+      const scrollPos = window.scrollY + 120;
+      let currentActive = null;
+
+      for (let i = 0; i < tocEntries.length; i++) {
+        const entry = tocEntries[i];
+        const target = document.getElementById(entry.targetId) || entry.heading;
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          const elemTop = window.scrollY + rect.top;
+          if (scrollPos >= elemTop - 30) {
+            currentActive = entry.link;
+          }
+        }
+      }
+
+      if (currentActive) {
+        setActiveTocLink(currentActive);
+      } else if (tocEntries.length > 0) {
+        setActiveTocLink(tocEntries[0].link);
+      }
+    }, 40);
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+}

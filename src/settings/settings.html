@@ -11,795 +11,862 @@
 </head>
 
 <body>
-    <div class="settings-container">
-        <header class="settings-header">
-            <div class="header-title">
-                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M23 7l-7 5 7 5V7z"></path>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                </svg>
-                <h1>LiveStreamers Settings</h1>
+    <div class="settings-layout">
+        <!-- Sticky Table of Contents Sidebar -->
+        <aside class="settings-sidebar" id="settings-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <svg class="sidebar-icon" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    <span>Contents</span>
+                </div>
             </div>
-            <div class="header-badge-group">
-                <span class="badge badge-pulse" id="auto-check-badge">Auto-Check: 1m Tick</span>
-            </div>
-        </header>
+            <nav class="toc-nav" id="toc-nav" aria-label="Table of Contents">
+                <!-- Dynamically generated list of sections from h2 headings on doc load -->
+            </nav>
+        </aside>
 
-        <main class="settings-content">
-            <!-- Section 1: Avatar Display, Size, Alignment & Sorting Strategy -->
-            <section class="settings-card">
-                <div class="card-header flex-between">
-                    <div>
-                        <h2>Avatar Ordering Strategy</h2>
-                        <span class="card-subtitle">Choose how avatar circles are prioritized & sorted on screen</span>
-                    </div>
+        <div class="settings-container">
+            <header class="settings-header">
+                <div class="header-title">
+                    <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 7l-7 5 7 5V7z"></path>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    <h1>LiveStreamers Settings</h1>
                 </div>
-
-                <div class="sort-options-grid">
-                    <label class="sort-card">
-                        <input type="radio" name="sort-order" value="last-triggered" checked />
-                        <div class="sort-card-content">
-                            <span class="sort-title">⚡ Last Triggered</span>
-                            <span class="sort-desc">Priority to avatars with latest events (Going live, Title change,
-                                Keyword match, Viewer spike)</span>
-                        </div>
-                    </label>
-
-                    <label class="sort-card">
-                        <input type="radio" name="sort-order" value="viewers" />
-                        <div class="sort-card-content">
-                            <span class="sort-title">👁️ Viewer Count</span>
-                            <span class="sort-desc">Highest live viewer count first, then offline</span>
-                        </div>
-                    </label>
-
-                    <label class="sort-card">
-                        <input type="radio" name="sort-order" value="longest-live" />
-                        <div class="sort-card-content">
-                            <span class="sort-title">⏱️ Longest Live</span>
-                            <span class="sort-desc">Started earliest (longest active uptime) first</span>
-                        </div>
-                    </label>
-
-                    <label class="sort-card">
-                        <input type="radio" name="sort-order" value="last-started" />
-                        <div class="sort-card-content">
-                            <span class="sort-title">🆕 Last to Start</span>
-                            <span class="sort-desc">Most recently went live first</span>
-                        </div>
-                    </label>
-
-                    <label class="sort-card">
-                        <input type="radio" name="sort-order" value="manual" />
-                        <div class="sort-card-content">
-                            <span class="sort-title">📋 Manual Order</span>
-                            <span class="sort-desc">Exact list position configured below</span>
-                        </div>
-                    </label>
-
-                    <label class="sort-card">
-                        <input type="radio" name="sort-order" value="name" />
-                        <div class="sort-card-content">
-                            <span class="sort-title">🔤 Alphabetical</span>
-                            <span class="sort-desc">A to Z by custom nickname</span>
-                        </div>
-                    </label>
+                <div class="header-badge-group">
+                    <span class="badge badge-pulse" id="auto-check-badge">Auto-Check: 1m Tick</span>
                 </div>
+            </header>
 
-                <!-- Avatar Appearance: Size & Alignment -->
-                <div class="avatar-appearance-box">
-                    <div class="appearance-group">
-                        <div class="appearance-header">
-                            <span class="appearance-label">Avatar Circle Size:</span>
-                            <span id="avatar-size-display" class="size-val-badge">80px</span>
-                        </div>
-                        <div class="size-controls-row">
-                            <div class="size-preset-buttons">
-                                <button type="button" class="btn-size-preset" data-size="60">Small (60px)</button>
-                                <button type="button" class="btn-size-preset" data-size="80">Medium (80px)</button>
-                                <button type="button" class="btn-size-preset" data-size="100">Large (100px)</button>
-                                <button type="button" class="btn-size-preset" data-size="120">XL (120px)</button>
-                            </div>
-                            <input type="range" id="avatar-size-slider" min="50" max="140" step="2" value="80"
-                                class="size-slider" />
-                        </div>
-                    </div>
-
-                    <div class="appearance-group">
-                        <div class="appearance-header">
-                            <span class="appearance-label">Text & Tag Font Size:</span>
-                            <span id="font-size-display" class="size-val-badge">12px</span>
-                        </div>
-                        <div class="size-controls-row">
-                            <div class="size-preset-buttons font-size-preset-buttons">
-                                <button type="button" class="btn-font-preset" data-size="10">Small (10px)</button>
-                                <button type="button" class="btn-font-preset" data-size="12">Normal (12px)</button>
-                                <button type="button" class="btn-font-preset" data-size="14">Large (14px)</button>
-                                <button type="button" class="btn-font-preset" data-size="16">XL (16px)</button>
-                            </div>
-                            <input type="range" id="font-size-slider" min="9" max="22" step="1" value="12"
-                                class="size-slider" />
-                        </div>
-                    </div>
-
-                    <div class="appearance-group full-width-group">
-                        <div class="appearance-header">
-                            <span class="appearance-label">Avatar & Tag Alignment:</span>
-                        </div>
-                        <div class="alignment-buttons-row">
-                            <button type="button" id="btn-align-left" class="btn-align-toggle active" data-align="left">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                                    <line x1="3" y1="12" x2="15" y2="12"></line>
-                                    <line x1="3" y1="18" x2="18" y2="18"></line>
-                                </svg>
-                                Align Left
-                            </button>
-                            <button type="button" id="btn-align-right" class="btn-align-toggle" data-align="right">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                                    <line x1="9" y1="12" x2="21" y2="12"></line>
-                                    <line x1="6" y1="18" x2="21" y2="18"></line>
-                                </svg>
-                                Align Right
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="appearance-group full-width-group">
-                        <div class="appearance-header">
-                            <span class="appearance-label">Streamer List Orientation:</span>
-                        </div>
-                        <div class="orientation-controls-row">
-                            <div class="orientation-radios-group">
-                                <label class="orientation-radio-label">
-                                    <input type="radio" name="layout-orientation" value="vertical" checked />
-                                    <span class="radio-custom"></span>
-                                    <span>↕ Vertical (Column)</span>
-                                </label>
-                                <label class="orientation-radio-label">
-                                    <input type="radio" name="layout-orientation" value="horizontal" />
-                                    <span class="radio-custom"></span>
-                                    <span>↔ Horizontal (Row)</span>
-                                </label>
-                            </div>
-                            <label class="toggle-control reverse-toggle">
-                                <input type="checkbox" id="chk-layout-reversed" />
-                                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                                <div class="toggle-label-group">
-                                    <span class="toggle-title">Reverse Order</span>
-                                    <span class="toggle-description">Inverts list direction (Bottom-to-Top or
-                                        Right-to-Left)</span>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="appearance-group full-width-group">
-                        <label class="toggle-control">
-                            <input type="checkbox" id="chk-show-nickname-tag" />
-                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                            <div class="toggle-label-group">
-                                <span class="toggle-title">Show Nickname as Tag</span>
-                                <span class="toggle-description">Displays white nickname tag on 50% transparent black
-                                    badge above viewer count</span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="appearance-group full-width-group">
-                        <label class="toggle-control">
-                            <input type="checkbox" id="chk-hide-offline-enabled" />
-                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                            <div class="toggle-label-group">
-                                <span class="toggle-title">Hide Inactive Offline Streamers</span>
-                                <span class="toggle-description">Hide streamers from the overlay window if offline for
-                                    more than specified duration (0 days & 0 hrs = hide all offline; missing offline
-                                    timestamp is always hidden)</span>
-                            </div>
-                        </label>
-                        <div id="hide-offline-days-row" class="hide-offline-days-row">
-                            <span class="hide-offline-label">Hide if offline for more than:</span>
-                            <input type="number" id="input-hide-offline-days" min="0" max="365" step="1" value="7"
-                                class="form-input input-hide-offline-days" />
-                            <span class="hide-offline-label">day(s)</span>
-                            <input type="number" id="input-hide-offline-hours" min="0" max="23" step="1" value="0"
-                                class="form-input input-hide-offline-days" />
-                            <span class="hide-offline-label">hour(s)</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 2: Streamer Profile & Multi-URL Configuration -->
-            <section class="settings-card">
-                <div class="card-header flex-between">
-                    <div>
-                        <h2 id="form-section-title">Add Streamer Profile</h2>
-                        <span class="card-subtitle">Configure custom nickname, avatar image, multi-platform URL checks,
-                            and triggers</span>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-secondary" id="btn-cancel-edit"
-                        style="display: none;">Cancel Edit</button>
-                </div>
-
-                <form id="streamer-form" class="streamer-config-form">
-                    <input type="hidden" id="edit-streamer-id" value="" />
-
-                    <!-- Nickname and Avatar Image Row -->
-                    <div class="form-grid-two">
-                        <div class="form-group">
-                            <label for="streamer-name-input">Nickname / Display Name <span class="req">*</span></label>
-                            <input type="text" id="streamer-name-input" placeholder="e.g. My Favorite Streamer"
-                                maxlength="40" required />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="streamer-avatar-input">Avatar Image (Path or URL)</label>
-                            <div class="avatar-input-wrapper">
-                                <input type="text" id="streamer-avatar-input"
-                                    placeholder="Leave empty for initials (e.g. C:\avatar.png, https://...)" />
-                                <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-avatar"
-                                    title="Browse local file">Browse...</button>
-                                <div id="avatar-form-preview" class="avatar-form-preview" title="Avatar preview">
-                                    <span id="avatar-preview-fallback">?</span>
-                                    <img id="avatar-preview-img" style="display: none;" alt="Preview" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Following Date and Note Row -->
-                    <div class="form-grid-two">
-                        <div class="form-group">
-                            <label for="streamer-following-date-input">Following Date</label>
-                            <input type="date" id="streamer-following-date-input" />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="streamer-note-input">Note</label>
-                            <input type="text" id="streamer-note-input"
-                                placeholder="e.g. How you found them, stream schedule, recommendations..."
-                                maxlength="250" />
-                        </div>
-                    </div>
-
-                    <!-- Multi-URL List Section with per-link frequency -->
-                    <div class="form-urls-section">
-                        <div class="flex-between urls-section-header">
-                            <label>Multi-Platform Stream URLs & Check Frequencies <span class="req">*</span></label>
-                            <span class="urls-hint-badge">Checked top-to-bottom • Stops at 1st live link</span>
-                        </div>
-
-                        <div id="urls-input-list" class="urls-input-list">
-                            <!-- Dynamic URL input rows with per-link frequency added via JS -->
-                        </div>
-
-                        <button type="button" class="btn btn-sm btn-secondary btn-add-url" id="btn-add-url-row">
-                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            + Add Another Platform URL (Kick, Twitch, YouTube)
-                        </button>
-                    </div>
-
-                    <!-- Trigger Rules Configuration -->
-                    <div class="triggers-config-box">
-                        <div class="triggers-title-row">
-                            <span class="triggers-heading">⚡ Priority Triggers</span>
-                            <span class="triggers-subtitle">Fired events boost avatar priority when sorted by Last
-                                Triggered</span>
-                        </div>
-
-                        <div class="triggers-grid">
-                            <label class="trigger-checkbox">
-                                <input type="checkbox" id="trig-going-live" checked />
-                                <span class="trigger-custom-check"></span>
-                                <span class="trigger-label">🔴 Going Live</span>
-                            </label>
-
-                            <label class="trigger-checkbox">
-                                <input type="checkbox" id="trig-title-change" checked />
-                                <span class="trigger-custom-check"></span>
-                                <span class="trigger-label">📝 Title Change</span>
-                            </label>
-
-                            <label class="trigger-checkbox">
-                                <input type="checkbox" id="trig-category-change" checked />
-                                <span class="trigger-custom-check"></span>
-                                <span class="trigger-label">🎮 Category Change</span>
-                            </label>
-
-                            <div class="trigger-title-contains-row">
-                                <label class="trigger-checkbox">
-                                    <input type="checkbox" id="trig-title-contains-enabled" />
-                                    <span class="trigger-custom-check"></span>
-                                    <span class="trigger-label">🔍 Title/Category contains:</span>
-                                </label>
-                                <input type="text" id="trig-title-contains-text" placeholder="e.g. drops, tournament"
-                                    class="input-title-contains" />
-                                <span class="trigger-hint">(any-case, comma-separated)</span>
-                            </div>
-
-                            <div class="trigger-viewer-row">
-                                <label class="trigger-checkbox">
-                                    <input type="checkbox" id="trig-viewer-enabled" />
-                                    <span class="trigger-custom-check"></span>
-                                    <span class="trigger-label">👁️ Viewers ></span>
-                                </label>
-                                <input type="number" id="trig-viewer-threshold" min="0" step="1" value="5000"
-                                    class="input-threshold" />
-                                <span class="trigger-hint">(and increased)</span>
-                            </div>
-
-                            <div class="trigger-viewer-step-row">
-                                <label class="trigger-checkbox">
-                                    <input type="checkbox" id="trig-viewer-step-enabled" />
-                                    <span class="trigger-custom-check"></span>
-                                    <span class="trigger-label">📈 Viewers every +</span>
-                                </label>
-                                <input type="number" id="trig-viewer-step-count" min="2" step="1" value="100"
-                                    class="input-threshold" />
-                                <span class="trigger-hint">viewers (step milestone)</span>
-                            </div>
-
-                            <div class="trigger-runtime-row">
-                                <label class="trigger-checkbox">
-                                    <input type="checkbox" id="trig-runtime-enabled" />
-                                    <span class="trigger-custom-check"></span>
-                                    <span class="trigger-label">⏱️ Live ></span>
-                                </label>
-                                <input type="number" id="trig-runtime-threshold" min="1" step="1" value="30"
-                                    class="input-threshold" />
-                                <span class="trigger-hint">mins</span>
-                            </div>
-
-                            <div class="trigger-runtime-interval-row">
-                                <label class="trigger-checkbox">
-                                    <input type="checkbox" id="trig-runtime-interval-enabled" />
-                                    <span class="trigger-custom-check"></span>
-                                    <span class="trigger-label">⏳ Live every +</span>
-                                </label>
-                                <input type="number" id="trig-runtime-interval-hours" min="0" max="999" step="1"
-                                    value="0" class="input-threshold-unit" />
-                                <span class="trigger-hint">hrs</span>
-                                <input type="number" id="trig-runtime-interval-minutes" min="0" max="59" step="1"
-                                    value="30" class="input-threshold-unit" />
-                                <span class="trigger-hint">mins</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions-row">
-                        <button type="submit" class="btn btn-primary" id="btn-submit-streamer">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                class="btn-icon">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            <span id="btn-submit-text">Save Streamer</span>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Quick Preset Streamers -->
-                <div class="presets-row">
-                    <span class="presets-label">Quick Presets:</span>
-                    <button type="button" class="btn-preset" data-preset="lofi">
-                        <span class="platform-dot dot-youtube"></span> + YouTube Lofi Girl
-                    </button>
-                    <button type="button" class="btn-preset" data-preset="shroud">
-                        <span class="platform-dot dot-twitch"></span> + Shroud (Twitch + YT)
-                    </button>
-                    <button type="button" class="btn-preset" data-preset="xqc">
-                        <span class="platform-dot dot-kick"></span> + xQc (Kick + Twitch + YT)
-                    </button>
-                </div>
-
-                <!-- Streamers List -->
-                <div class="users-list-wrapper">
-                    <div class="users-list-header">
-                        <div class="users-list-header-left">
-                            <span id="streamer-count-label">Configured Streamers (0)</span>
-                        </div>
-                        <div class="list-header-actions">
-                            <div class="streamer-search-box">
-                                <input type="text" id="input-search-streamers" class="streamer-search-input"
-                                    placeholder="🔍 Filter / search... (Ctrl+F)" autocomplete="off"
-                                    spellcheck="false" />
-                                <button type="button" id="btn-clear-search" class="btn-clear-search"
-                                    title="Clear filter" style="display: none;">✕</button>
-                            </div>
-                            <button type="button" class="btn-sm-action" id="btn-check-all">
-                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-                                </svg>
-                                Check All Now
-                            </button>
-                        </div>
-                    </div>
-                    <ul id="streamers-list" class="streamers-list">
-                        <!-- Dynamic items rendered by settings.js -->
-                    </ul>
-                </div>
-            </section>
-
-            <!-- Section 3: Live Status & Background Task Logs Console -->
-            <section class="settings-card log-card">
-                <div class="card-header flex-between">
-                    <div>
-                        <h2>Live Status & Background Task Logs</h2>
-                        <span class="card-subtitle">Latest activity shown below (click DevTools to view full live
-                            console logs)</span>
-                    </div>
-                    <div class="log-actions">
-                        <button type="button" class="btn btn-sm btn-secondary" id="btn-open-devtools">
-                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <polyline points="16 18 22 12 16 6"></polyline>
-                                <polyline points="8 6 2 12 8 18"></polyline>
-                            </svg>
-                            DevTools
-                        </button>
-                        <button type="button" class="btn btn-sm btn-secondary" id="btn-clear-logs">Clear</button>
-                    </div>
-                </div>
-
-                <div id="log-terminal" class="log-terminal">
-                    <div class="log-entry system-log">
-                        <span class="log-time">[System]</span>
-                        <span class="log-msg">Ready. Multi-URL live tracking with auto short-circuiting & 5s cooldown
-                            active.</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 4: Window Behavior & Controls -->
-            <section class="settings-card">
-                <div class="card-header">
-                    <h2>Overlay Window Controls</h2>
-                    <span class="card-subtitle">Toggle display behavior and transparency</span>
-                </div>
-
-                <div class="checkbox-group">
-                    <label class="toggle-control">
-                        <input type="checkbox" id="chk-show-overlay" checked />
-                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                        <div class="toggle-label-group">
-                            <span class="toggle-title">Show Overlay Window</span>
-                            <span class="toggle-description">Show or hide the transparent avatar circles on
+            <main class="settings-content">
+                <!-- Section 1: Avatar Display, Size, Alignment & Sorting Strategy -->
+                <section class="settings-card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2>Avatar Ordering Strategy</h2>
+                            <span class="card-subtitle">Choose how avatar circles are prioritized & sorted on
                                 screen</span>
                         </div>
-                    </label>
+                    </div>
 
-                    <label class="toggle-control">
-                        <input type="checkbox" id="chk-always-on-top" checked />
-                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                        <div class="toggle-label-group">
-                            <span class="toggle-title">Always on Top</span>
-                            <span class="toggle-description">Keep avatar circles above other application windows</span>
-                        </div>
-                    </label>
-
-                    <label class="toggle-control">
-                        <input type="checkbox" id="chk-smart-click-through" />
-                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                        <div class="toggle-label-group">
-                            <span class="toggle-title">Smart Click-Through</span>
-                            <span class="toggle-description">Auto enables click-through on transparent areas while
-                                keeping avatar circles and drag anchor interactive</span>
-                        </div>
-                    </label>
-
-                    <label class="toggle-control">
-                        <input type="checkbox" id="chk-click-through" />
-                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                        <div class="toggle-label-group">
-                            <span class="toggle-title">Static Click-Through Mode</span>
-                            <span class="toggle-description">Pass all mouse clicks unconditionally through the entire
-                                overlay</span>
-                        </div>
-                    </label>
-
-                    <label class="toggle-control">
-                        <input type="checkbox" id="chk-show-boundary-corners" />
-                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-                        <div class="toggle-label-group">
-                            <span class="toggle-title">Show Window Boundary Corners</span>
-                            <span class="toggle-description">Display 4 blue corner guide markers at window edges for
-                                exact resizing</span>
-                        </div>
-                    </label>
-                </div>
-
-                <!-- Multiple Window States Configuration -->
-                <div class="avatar-appearance-box"
-                    style="margin-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
-                    <div class="appearance-group full-width-group">
-                        <div class="appearance-header">
-                            <span class="appearance-label">Multiple Window States (Form Pos / Size):</span>
-                            <span id="window-state-badge" class="size-val-badge">State 1 of 1</span>
-                        </div>
-                        <div class="size-controls-row"
-                            style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                            <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                                <label for="input-window-states-count"
-                                    style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap;">Number of States (>
-                                    0):</label>
-                                <input type="number" id="input-window-states-count" min="1" max="10" step="1" value="1"
-                                    class="form-input" style="width: 75px; text-align: center; padding: 4px 8px;" />
-                                <div id="window-states-buttons" class="size-preset-buttons"
-                                    style="display: flex; flex-wrap: wrap; gap: 6px; flex: 1;">
-                                    <!-- Dynamic state buttons -->
-                                </div>
+                    <div class="sort-options-grid">
+                        <label class="sort-card">
+                            <input type="radio" name="sort-order" value="last-triggered" checked />
+                            <div class="sort-card-content">
+                                <span class="sort-title">⚡ Last Triggered</span>
+                                <span class="sort-desc">Priority to avatars with latest events (Going live, Title
+                                    change,
+                                    Keyword match, Viewer spike)</span>
                             </div>
-                            <span class="card-subtitle" style="margin: 0; line-height: 1.4;">
-                                Clicking the top drag anchor rotates through these window states. Move or resize the
-                                overlay window normally on screen to automatically save the position and size for the
-                                active state.
-                            </span>
+                        </label>
+
+                        <label class="sort-card">
+                            <input type="radio" name="sort-order" value="viewers" />
+                            <div class="sort-card-content">
+                                <span class="sort-title">👁️ Viewer Count</span>
+                                <span class="sort-desc">Highest live viewer count first, then offline</span>
+                            </div>
+                        </label>
+
+                        <label class="sort-card">
+                            <input type="radio" name="sort-order" value="longest-live" />
+                            <div class="sort-card-content">
+                                <span class="sort-title">⏱️ Longest Live</span>
+                                <span class="sort-desc">Started earliest (longest active uptime) first</span>
+                            </div>
+                        </label>
+
+                        <label class="sort-card">
+                            <input type="radio" name="sort-order" value="last-started" />
+                            <div class="sort-card-content">
+                                <span class="sort-title">🆕 Last to Start</span>
+                                <span class="sort-desc">Most recently went live first</span>
+                            </div>
+                        </label>
+
+                        <label class="sort-card">
+                            <input type="radio" name="sort-order" value="manual" />
+                            <div class="sort-card-content">
+                                <span class="sort-title">📋 Manual Order</span>
+                                <span class="sort-desc">Exact list position configured below</span>
+                            </div>
+                        </label>
+
+                        <label class="sort-card">
+                            <input type="radio" name="sort-order" value="name" />
+                            <div class="sort-card-content">
+                                <span class="sort-title">🔤 Alphabetical</span>
+                                <span class="sort-desc">A to Z by custom nickname</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Avatar Appearance: Size & Alignment -->
+                    <div class="avatar-appearance-box">
+                        <div class="appearance-group">
+                            <div class="appearance-header">
+                                <span class="appearance-label">Avatar Circle Size:</span>
+                                <span id="avatar-size-display" class="size-val-badge">80px</span>
+                            </div>
+                            <div class="size-controls-row">
+                                <div class="size-preset-buttons">
+                                    <button type="button" class="btn-size-preset" data-size="60">Small (60px)</button>
+                                    <button type="button" class="btn-size-preset" data-size="80">Medium (80px)</button>
+                                    <button type="button" class="btn-size-preset" data-size="100">Large (100px)</button>
+                                    <button type="button" class="btn-size-preset" data-size="120">XL (120px)</button>
+                                </div>
+                                <input type="range" id="avatar-size-slider" min="50" max="140" step="2" value="80"
+                                    class="size-slider" />
+                            </div>
+                        </div>
+
+                        <div class="appearance-group">
+                            <div class="appearance-header">
+                                <span class="appearance-label">Text & Tag Font Size:</span>
+                                <span id="font-size-display" class="size-val-badge">12px</span>
+                            </div>
+                            <div class="size-controls-row">
+                                <div class="size-preset-buttons font-size-preset-buttons">
+                                    <button type="button" class="btn-font-preset" data-size="10">Small (10px)</button>
+                                    <button type="button" class="btn-font-preset" data-size="12">Normal (12px)</button>
+                                    <button type="button" class="btn-font-preset" data-size="14">Large (14px)</button>
+                                    <button type="button" class="btn-font-preset" data-size="16">XL (16px)</button>
+                                </div>
+                                <input type="range" id="font-size-slider" min="9" max="22" step="1" value="12"
+                                    class="size-slider" />
+                            </div>
+                        </div>
+
+                        <div class="appearance-group full-width-group">
+                            <div class="appearance-header">
+                                <span class="appearance-label">Avatar & Tag Alignment:</span>
+                            </div>
+                            <div class="alignment-buttons-row">
+                                <button type="button" id="btn-align-left" class="btn-align-toggle active"
+                                    data-align="left">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <line x1="3" y1="12" x2="15" y2="12"></line>
+                                        <line x1="3" y1="18" x2="18" y2="18"></line>
+                                    </svg>
+                                    Align Left
+                                </button>
+                                <button type="button" id="btn-align-right" class="btn-align-toggle" data-align="right">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <line x1="9" y1="12" x2="21" y2="12"></line>
+                                        <line x1="6" y1="18" x2="21" y2="18"></line>
+                                    </svg>
+                                    Align Right
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="appearance-group full-width-group">
+                            <div class="appearance-header">
+                                <span class="appearance-label">Streamer List Orientation:</span>
+                            </div>
+                            <div class="orientation-controls-row">
+                                <div class="orientation-radios-group">
+                                    <label class="orientation-radio-label">
+                                        <input type="radio" name="layout-orientation" value="vertical" checked />
+                                        <span class="radio-custom"></span>
+                                        <span>↕ Vertical (Column)</span>
+                                    </label>
+                                    <label class="orientation-radio-label">
+                                        <input type="radio" name="layout-orientation" value="horizontal" />
+                                        <span class="radio-custom"></span>
+                                        <span>↔ Horizontal (Row)</span>
+                                    </label>
+                                </div>
+                                <label class="toggle-control reverse-toggle">
+                                    <input type="checkbox" id="chk-layout-reversed" />
+                                    <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                    <div class="toggle-label-group">
+                                        <span class="toggle-title">Reverse Order</span>
+                                        <span class="toggle-description">Inverts list direction (Bottom-to-Top or
+                                            Right-to-Left)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="appearance-group full-width-group">
+                            <label class="toggle-control">
+                                <input type="checkbox" id="chk-show-nickname-tag" />
+                                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                <div class="toggle-label-group">
+                                    <span class="toggle-title">Show Nickname as Tag</span>
+                                    <span class="toggle-description">Displays white nickname tag on 50% transparent
+                                        black
+                                        badge above viewer count</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="appearance-group full-width-group">
+                            <label class="toggle-control">
+                                <input type="checkbox" id="chk-hide-offline-enabled" />
+                                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                <div class="toggle-label-group">
+                                    <span class="toggle-title">Hide Inactive Offline Streamers</span>
+                                    <span class="toggle-description">Hide streamers from the overlay window if offline
+                                        for
+                                        more than specified duration (0 days & 0 hrs = hide all offline; missing offline
+                                        timestamp is always hidden)</span>
+                                </div>
+                            </label>
+                            <div id="hide-offline-days-row" class="hide-offline-days-row">
+                                <span class="hide-offline-label">Hide if offline for more than:</span>
+                                <input type="number" id="input-hide-offline-days" min="0" max="365" step="1" value="7"
+                                    class="form-input input-hide-offline-days" />
+                                <span class="hide-offline-label">day(s)</span>
+                                <input type="number" id="input-hide-offline-hours" min="0" max="23" step="1" value="0"
+                                    class="form-input input-hide-offline-days" />
+                                <span class="hide-offline-label">hour(s)</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Section 5: Opacity Slider Selection -->
-            <section class="settings-card">
-                <div class="card-header">
-                    <h2>Opacity / Transparency</h2>
-                    <span class="card-subtitle">Choose the transparency level for the avatar overlay</span>
-                </div>
-
-                <div class="appearance-group">
-                    <div class="appearance-header">
-                        <span class="appearance-label">Overlay Opacity:</span>
-                        <span id="opacity-val-display" class="size-val-badge">100%</span>
-                    </div>
-                    <div class="size-controls-row">
-                        <input type="range" id="opacity-slider" min="10" max="100" step="1" value="100"
-                            class="size-slider" />
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 6: Avatar Emote Sources & Community Links -->
-            <section class="settings-card links-card">
-                <div class="card-header">
-                    <h2>Avatar Sources & Useful Links</h2>
-                    <span class="card-subtitle">Get animated GIF, WebP, or PNG streamer avatars and emotes from these
-                        community platforms (click to open in browser)</span>
-                </div>
-                <div class="links-grid">
-                    <a href="#" class="external-link-card" data-url="https://7tv.app/emotes">
-                        <div class="link-card-header">
-                            <span class="link-brand-title">7TV Emotes</span>
-                            <span class="link-external-icon">↗</span>
+                <!-- Section 2: Streamer Profile & Multi-URL Configuration -->
+                <section class="settings-card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2 id="form-section-title">Streamers Configuration</h2>
+                            <span class="card-subtitle">Configure custom nickname, avatar image, multi-platform URL
+                                checks,
+                                and triggers</span>
                         </div>
-                        <span class="link-card-url">https://7tv.app/emotes</span>
-                        <span class="link-card-desc">Thousands of animated WebP, AVIF, and custom streamer
-                            emotes.</span>
-                    </a>
-
-                    <a href="#" class="external-link-card" data-url="https://betterttv.com/emotes/popular">
-                        <div class="link-card-header">
-                            <span class="link-brand-title">BetterTTV (BTTV)</span>
-                            <span class="link-external-icon">↗</span>
-                        </div>
-                        <span class="link-card-url">https://betterttv.com/emotes/popular</span>
-                        <span class="link-card-desc">Popular Twitch & YouTube animated GIF and PNG emotes.</span>
-                    </a>
-
-                    <a href="#" class="external-link-card" data-url="https://www.frankerfacez.com/emoticons/">
-                        <div class="link-card-header">
-                            <span class="link-brand-title">FrankerFaceZ (FFZ)</span>
-                            <span class="link-external-icon">↗</span>
-                        </div>
-                        <span class="link-card-url">https://www.frankerfacez.com/emoticons/</span>
-                        <span class="link-card-desc">Extensive library of community streamer icons and emotes.</span>
-                    </a>
-                </div>
-            </section>
-
-            <!-- Section 7: Common Group Rules (Action -> Streamers[] & Color -> Streamers[]) -->
-            <section class="settings-card group-rules-card" id="group-rules-section">
-                <div class="card-header flex-between">
-                    <div>
-                        <h2>⚡ Common Group Rules (Action ➔ Streamers[] & Color ➔ Streamers[])</h2>
-                        <span class="card-subtitle">Define common actions and avatar colors once, then assign them to
-                            multiple streamers</span>
+                        <button type="button" class="btn btn-sm btn-secondary" id="btn-cancel-edit"
+                            style="display: none;">Cancel Edit</button>
                     </div>
-                </div>
 
-                <!-- Sub-Section A: Live Action Scripts (Action -> Streamers[]) -->
-                <div class="group-rule-box">
                     <div class="group-rule-header flex-between">
                         <div>
-                            <h3 class="group-rule-title">🚀 On-Live Script / Batch Command (Action ➔ Streamers[])</h3>
-                            <span class="group-rule-subtitle">Automatically runs a script/batch command when any
-                                assigned streamer goes live. <code>%_1</code> is replaced by the live stream URL.</span>
+                            <h3 class="group-rule-title">Add or Edit
+                            </h3>
+                            <span class="group-rule-subtitle"></span>
                         </div>
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-add-action-rule">+ Add Action
-                            Rule</button>
                     </div>
 
-                    <!-- Action Rule Editor Form -->
-                    <div id="action-rule-editor" class="rule-editor-box" style="display: none;">
-                        <input type="hidden" id="action-rule-id" value="" />
+                    <form id="streamer-form" class="streamer-config-form">
+                        <input type="hidden" id="edit-streamer-id" value="" />
+
+                        <!-- Nickname and Avatar Image Row -->
                         <div class="form-grid-two">
                             <div class="form-group">
-                                <label for="action-rule-name">Rule Name / Description</label>
-                                <input type="text" id="action-rule-name"
-                                    placeholder="e.g. Open in Player / Run Batch Script" />
-                            </div>
-                            <div class="form-group">
-                                <label for="action-rule-command">Batch Path / Command Line (with <code>%_1</code>) <span
+                                <label for="streamer-name-input">Nickname / Display Name <span
                                         class="req">*</span></label>
+                                <input type="text" id="streamer-name-input" placeholder="e.g. My Favorite Streamer"
+                                    maxlength="40" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="streamer-avatar-input">Avatar Image (Path or URL)</label>
                                 <div class="avatar-input-wrapper">
-                                    <input type="text" id="action-rule-command" placeholder="e.g. C:\live.bat %_1" />
-                                    <button type="button" class="btn btn-secondary btn-sm"
-                                        id="btn-browse-command">Browse...</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Streamer Multi-Select Checklist -->
-                        <div class="form-group">
-                            <div class="flex-between streamer-picker-header">
-                                <label>Assign Streamers to this Action:</label>
-                                <div class="picker-quick-buttons">
-                                    <button type="button" class="btn-picker-link" id="btn-action-select-all">Select
-                                        All</button>
-                                    <button type="button" class="btn-picker-link" id="btn-action-deselect-all">Deselect
-                                        All</button>
-                                </div>
-                            </div>
-                            <div id="action-streamers-picker" class="streamers-multi-picker">
-                                <!-- Dynamic streamer checkboxes rendered by JS -->
-                            </div>
-                        </div>
-
-                        <div class="form-actions-row flex-between" style="margin-top: 10px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <button type="button" class="btn btn-secondary btn-sm" id="btn-test-action-rule">🧪 Test
-                                    Run Command</button>
-                                <span id="action-test-result" class="action-test-result-badge"
-                                    style="display: none;"></span>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button type="button" class="btn btn-secondary btn-sm"
-                                    id="btn-cancel-action-rule">Cancel</button>
-                                <button type="button" class="btn btn-primary btn-sm" id="btn-save-action-rule">Save
-                                    Action Rule</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- List of Saved Action Rules -->
-                    <div id="action-rules-list" class="rules-cards-list">
-                        <!-- Dynamic rendered by JS -->
-                    </div>
-                </div>
-
-                <!-- Sub-Section B: Live Avatar Border Colors (Color -> Streamers[]) -->
-                <div class="group-rule-box" style="margin-top: 24px;">
-                    <div class="group-rule-header flex-between">
-                        <div>
-                            <h3 class="group-rule-title">🎨 Custom Live Border Colors (Color ➔ Streamers[])</h3>
-                            <span class="group-rule-subtitle">Assign custom live avatar circle border & glow colors
-                                instead of default green for a list of streamers.</span>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-primary" id="btn-add-color-rule">+ Add Color
-                            Rule</button>
-                    </div>
-
-                    <!-- Color Rule Editor Form -->
-                    <div id="color-rule-editor" class="rule-editor-box" style="display: none;">
-                        <input type="hidden" id="color-rule-id" value="" />
-                        <div class="form-grid-two">
-                            <div class="form-group">
-                                <label for="color-rule-name">Group Label / Name</label>
-                                <input type="text" id="color-rule-name" placeholder="e.g. VIP Red Group, Favorites" />
-                            </div>
-                            <div class="form-group">
-                                <label>Avatar Live Circle Color</label>
-                                <div class="color-picker-row">
-                                    <input type="color" id="color-rule-picker" value="#ef4444"
-                                        class="color-swatch-input" />
-                                    <input type="text" id="color-rule-hex" value="#ef4444"
-                                        class="form-input color-hex-input" maxlength="7" />
-                                    <div class="color-preset-palette">
-                                        <button type="button" class="btn-color-dot" data-color="#ef4444"
-                                            style="background:#ef4444;" title="Red"></button>
-                                        <button type="button" class="btn-color-dot" data-color="#f59e0b"
-                                            style="background:#f59e0b;" title="Amber"></button>
-                                        <button type="button" class="btn-color-dot" data-color="#3b82f6"
-                                            style="background:#3b82f6;" title="Blue"></button>
-                                        <button type="button" class="btn-color-dot" data-color="#a855f7"
-                                            style="background:#a855f7;" title="Purple"></button>
-                                        <button type="button" class="btn-color-dot" data-color="#ec4899"
-                                            style="background:#ec4899;" title="Pink"></button>
-                                        <button type="button" class="btn-color-dot" data-color="#06b6d4"
-                                            style="background:#06b6d4;" title="Cyan"></button>
-                                        <button type="button" class="btn-color-dot" data-color="#22c55e"
-                                            style="background:#22c55e;" title="Green (Default)"></button>
+                                    <input type="text" id="streamer-avatar-input"
+                                        placeholder="Leave empty for initials (e.g. C:\avatar.png, https://...)" />
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-avatar"
+                                        title="Browse local file">Browse...</button>
+                                    <div id="avatar-form-preview" class="avatar-form-preview" title="Avatar preview">
+                                        <span id="avatar-preview-fallback">?</span>
+                                        <img id="avatar-preview-img" style="display: none;" alt="Preview" />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Streamer Multi-Select Checklist -->
-                        <div class="form-group">
-                            <div class="flex-between streamer-picker-header">
-                                <label>Assign Streamers to this Color:</label>
-                                <div class="picker-quick-buttons">
-                                    <button type="button" class="btn-picker-link" id="btn-color-select-all">Select
-                                        All</button>
-                                    <button type="button" class="btn-picker-link" id="btn-color-deselect-all">Deselect
-                                        All</button>
+                        <!-- Following Date and Note Row -->
+                        <div class="form-grid-two">
+                            <div class="form-group">
+                                <label for="streamer-following-date-input">Following Date</label>
+                                <input type="date" id="streamer-following-date-input" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="streamer-note-input">Note</label>
+                                <input type="text" id="streamer-note-input"
+                                    placeholder="e.g. How you found them, stream schedule, recommendations..."
+                                    maxlength="250" />
+                            </div>
+                        </div>
+
+                        <!-- Multi-URL List Section with per-link frequency -->
+                        <div class="form-urls-section">
+                            <div class="flex-between urls-section-header">
+                                <label>Multi-Platform Stream URLs & Check Frequencies <span class="req">*</span></label>
+                                <span class="urls-hint-badge">Checked top-to-bottom • Stops at 1st live link</span>
+                            </div>
+
+                            <div id="urls-input-list" class="urls-input-list">
+                                <!-- Dynamic URL input rows with per-link frequency added via JS -->
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-secondary btn-add-url" id="btn-add-url-row">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                + Add Another Platform URL (Kick, Twitch, YouTube)
+                            </button>
+                        </div>
+
+                        <!-- Trigger Rules Configuration -->
+                        <div class="triggers-config-box">
+                            <div class="triggers-title-row">
+                                <span class="triggers-heading">⚡ Priority Triggers</span>
+                                <span class="triggers-subtitle">Fired events boost avatar priority when sorted by Last
+                                    Triggered</span>
+                            </div>
+
+                            <div class="triggers-grid">
+                                <label class="trigger-checkbox">
+                                    <input type="checkbox" id="trig-going-live" checked />
+                                    <span class="trigger-custom-check"></span>
+                                    <span class="trigger-label">🔴 Going Live</span>
+                                </label>
+
+                                <label class="trigger-checkbox">
+                                    <input type="checkbox" id="trig-title-change" checked />
+                                    <span class="trigger-custom-check"></span>
+                                    <span class="trigger-label">📝 Title Change</span>
+                                </label>
+
+                                <label class="trigger-checkbox">
+                                    <input type="checkbox" id="trig-category-change" checked />
+                                    <span class="trigger-custom-check"></span>
+                                    <span class="trigger-label">🎮 Category Change</span>
+                                </label>
+
+                                <div class="trigger-title-contains-row">
+                                    <label class="trigger-checkbox">
+                                        <input type="checkbox" id="trig-title-contains-enabled" />
+                                        <span class="trigger-custom-check"></span>
+                                        <span class="trigger-label">🔍 Title/Category contains:</span>
+                                    </label>
+                                    <input type="text" id="trig-title-contains-text"
+                                        placeholder="e.g. drops, tournament" class="input-title-contains" />
+                                    <span class="trigger-hint">(any-case, comma-separated)</span>
+                                </div>
+
+                                <div class="trigger-viewer-row">
+                                    <label class="trigger-checkbox">
+                                        <input type="checkbox" id="trig-viewer-enabled" />
+                                        <span class="trigger-custom-check"></span>
+                                        <span class="trigger-label">👁️ Viewers ></span>
+                                    </label>
+                                    <input type="number" id="trig-viewer-threshold" min="0" step="1" value="5000"
+                                        class="input-threshold" />
+                                    <span class="trigger-hint">(and increased)</span>
+                                </div>
+
+                                <div class="trigger-viewer-step-row">
+                                    <label class="trigger-checkbox">
+                                        <input type="checkbox" id="trig-viewer-step-enabled" />
+                                        <span class="trigger-custom-check"></span>
+                                        <span class="trigger-label">📈 Viewers every +</span>
+                                    </label>
+                                    <input type="number" id="trig-viewer-step-count" min="2" step="1" value="100"
+                                        class="input-threshold" />
+                                    <span class="trigger-hint">viewers (step milestone)</span>
+                                </div>
+
+                                <div class="trigger-runtime-row">
+                                    <label class="trigger-checkbox">
+                                        <input type="checkbox" id="trig-runtime-enabled" />
+                                        <span class="trigger-custom-check"></span>
+                                        <span class="trigger-label">⏱️ Live ></span>
+                                    </label>
+                                    <input type="number" id="trig-runtime-threshold" min="1" step="1" value="30"
+                                        class="input-threshold" />
+                                    <span class="trigger-hint">mins</span>
+                                </div>
+
+                                <div class="trigger-runtime-interval-row">
+                                    <label class="trigger-checkbox">
+                                        <input type="checkbox" id="trig-runtime-interval-enabled" />
+                                        <span class="trigger-custom-check"></span>
+                                        <span class="trigger-label">⏳ Live every +</span>
+                                    </label>
+                                    <input type="number" id="trig-runtime-interval-hours" min="0" max="999" step="1"
+                                        value="0" class="input-threshold-unit" />
+                                    <span class="trigger-hint">hrs</span>
+                                    <input type="number" id="trig-runtime-interval-minutes" min="0" max="59" step="1"
+                                        value="30" class="input-threshold-unit" />
+                                    <span class="trigger-hint">mins</span>
                                 </div>
                             </div>
-                            <div id="color-streamers-picker" class="streamers-multi-picker">
-                                <!-- Dynamic streamer checkboxes rendered by JS -->
-                            </div>
                         </div>
 
-                        <div class="form-actions-row flex-between" style="margin-top: 10px;">
-                            <div></div>
-                            <div style="display: flex; gap: 8px;">
-                                <button type="button" class="btn btn-secondary btn-sm"
-                                    id="btn-cancel-color-rule">Cancel</button>
-                                <button type="button" class="btn btn-primary btn-sm" id="btn-save-color-rule">Save Color
-                                    Rule</button>
-                            </div>
+                        <div class="form-actions-row">
+                            <button type="submit" class="btn btn-primary" id="btn-submit-streamer">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    class="btn-icon">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span id="btn-submit-text">Save Streamer</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Quick Preset Streamers -->
+                    <div class="presets-row">
+                        <span class="presets-label">Quick Presets:</span>
+                        <button type="button" class="btn-preset" data-preset="lofi">
+                            <span class="platform-dot dot-youtube"></span> + YouTube Lofi Girl
+                        </button>
+                        <button type="button" class="btn-preset" data-preset="shroud">
+                            <span class="platform-dot dot-twitch"></span> + Shroud (Twitch + YT)
+                        </button>
+                        <button type="button" class="btn-preset" data-preset="xqc">
+                            <span class="platform-dot dot-kick"></span> + xQc (Kick + Twitch + YT)
+                        </button>
+                    </div>
+
+
+                    <div class="group-rule-header flex-between">
+                        <div>
+                            <h3 class="group-rule-title">Streamer List
+                            </h3>
+                            <span class="group-rule-subtitle"></span>
                         </div>
                     </div>
 
-                    <!-- List of Saved Color Rules -->
-                    <div id="color-rules-list" class="rules-cards-list">
-                        <!-- Dynamic rendered by JS -->
+                    <!-- Streamers List -->
+                    <div class="users-list-wrapper">
+                        <div class="users-list-header">
+                            <div class="users-list-header-left">
+                                <span id="streamer-count-label">Configured Streamers (0)</span>
+                            </div>
+                            <div class="list-header-actions">
+                                <div class="streamer-search-box">
+                                    <input type="text" id="input-search-streamers" class="streamer-search-input"
+                                        placeholder="🔍 Filter / search... (Ctrl+F)" autocomplete="off"
+                                        spellcheck="false" />
+                                    <button type="button" id="btn-clear-search" class="btn-clear-search"
+                                        title="Clear filter" style="display: none;">✕</button>
+                                </div>
+                                <button type="button" class="btn-sm-action" id="btn-check-all">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                                    </svg>
+                                    Check All Now
+                                </button>
+                            </div>
+                        </div>
+                        <ul id="streamers-list" class="streamers-list">
+                            <!-- Dynamic items rendered by settings.js -->
+                        </ul>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Section 8: Quick Action Buttons -->
-            <section class="settings-card actions-card">
-                <div class="card-header">
-                    <h2>Quick Actions</h2>
-                </div>
-                <div class="action-buttons-row">
-                    <button type="button" class="btn btn-secondary" id="btn-center-overlay">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                            <path d="M3 3v5h5"></path>
-                        </svg>
-                        Reset UI
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="btn-toggle-overlay">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        Toggle Overlay
-                    </button>
-                    <button type="button" class="btn btn-danger" id="btn-quit-app">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                            <line x1="12" y1="2" x2="12" y2="12"></line>
-                        </svg>
-                        Quit App
-                    </button>
-                </div>
-            </section>
-        </main>
+                <!-- Section 3: Live Status & Background Task Logs Console -->
+                <section class="settings-card log-card">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2>Live Status & Background Task Logs</h2>
+                            <span class="card-subtitle">Latest activity shown below (click DevTools to view full live
+                                console logs)</span>
+                        </div>
+                        <div class="log-actions">
+                            <button type="button" class="btn btn-sm btn-secondary" id="btn-open-devtools">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="16 18 22 12 16 6"></polyline>
+                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                </svg>
+                                DevTools
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" id="btn-clear-logs">Clear</button>
+                        </div>
+                    </div>
 
-        <footer class="settings-footer">
-            <span>LiveStreamers Overlay • Multi-URL Check with Per-Link Frequency • Priority Triggers</span>
-        </footer>
+                    <div id="log-terminal" class="log-terminal">
+                        <div class="log-entry system-log">
+                            <span class="log-time">[System]</span>
+                            <span class="log-msg">Ready. Multi-URL live tracking with auto short-circuiting & 5s
+                                cooldown
+                                active.</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 4: Window Behavior & Controls -->
+                <section class="settings-card">
+                    <div class="card-header">
+                        <h2>Overlay Window Controls</h2>
+                        <span class="card-subtitle">Toggle display behavior and transparency</span>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label class="toggle-control">
+                            <input type="checkbox" id="chk-show-overlay" checked />
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <div class="toggle-label-group">
+                                <span class="toggle-title">Show Overlay Window</span>
+                                <span class="toggle-description">Show or hide the transparent avatar circles on
+                                    screen</span>
+                            </div>
+                        </label>
+
+                        <label class="toggle-control">
+                            <input type="checkbox" id="chk-always-on-top" checked />
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <div class="toggle-label-group">
+                                <span class="toggle-title">Always on Top</span>
+                                <span class="toggle-description">Keep avatar circles above other application
+                                    windows</span>
+                            </div>
+                        </label>
+
+                        <label class="toggle-control">
+                            <input type="checkbox" id="chk-smart-click-through" />
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <div class="toggle-label-group">
+                                <span class="toggle-title">Smart Click-Through</span>
+                                <span class="toggle-description">Auto enables click-through on transparent areas while
+                                    keeping avatar circles and drag anchor interactive</span>
+                            </div>
+                        </label>
+
+                        <label class="toggle-control">
+                            <input type="checkbox" id="chk-click-through" />
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <div class="toggle-label-group">
+                                <span class="toggle-title">Static Click-Through Mode</span>
+                                <span class="toggle-description">Pass all mouse clicks unconditionally through the
+                                    entire
+                                    overlay</span>
+                            </div>
+                        </label>
+
+                        <label class="toggle-control">
+                            <input type="checkbox" id="chk-show-boundary-corners" />
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <div class="toggle-label-group">
+                                <span class="toggle-title">Show Window Boundary Corners</span>
+                                <span class="toggle-description">Display 4 blue corner guide markers at window edges for
+                                    exact resizing</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Multiple Window States Configuration -->
+                    <div class="avatar-appearance-box"
+                        style="margin-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px;">
+                        <div class="appearance-group full-width-group">
+                            <div class="appearance-header">
+                                <span class="appearance-label">Multiple Window States (Form Pos / Size):</span>
+                                <span id="window-state-badge" class="size-val-badge">State 1 of 1</span>
+                            </div>
+                            <div class="size-controls-row"
+                                style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                    <label for="input-window-states-count"
+                                        style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap;">Number of States
+                                        (>
+                                        0):</label>
+                                    <input type="number" id="input-window-states-count" min="1" max="10" step="1"
+                                        value="1" class="form-input"
+                                        style="width: 75px; text-align: center; padding: 4px 8px;" />
+                                    <div id="window-states-buttons" class="size-preset-buttons"
+                                        style="display: flex; flex-wrap: wrap; gap: 6px; flex: 1;">
+                                        <!-- Dynamic state buttons -->
+                                    </div>
+                                </div>
+                                <span class="card-subtitle" style="margin: 0; line-height: 1.4;">
+                                    Clicking the top drag anchor rotates through these window states. Move or resize the
+                                    overlay window normally on screen to automatically save the position and size for
+                                    the
+                                    active state.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Opacity Slider Selection -->
+                <section class="settings-card">
+                    <div class="card-header">
+                        <h2>Opacity / Transparency</h2>
+                        <span class="card-subtitle">Choose the transparency level for the avatar overlay</span>
+                    </div>
+
+                    <div class="appearance-group">
+                        <div class="appearance-header">
+                            <span class="appearance-label">Overlay Opacity:</span>
+                            <span id="opacity-val-display" class="size-val-badge">100%</span>
+                        </div>
+                        <div class="size-controls-row">
+                            <input type="range" id="opacity-slider" min="10" max="100" step="1" value="100"
+                                class="size-slider" />
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 6: Avatar Emote Sources & Community Links -->
+                <section class="settings-card links-card">
+                    <div class="card-header">
+                        <h2>Avatar Sources & Useful Links</h2>
+                        <span class="card-subtitle">Get animated GIF, WebP, or PNG streamer avatars and emotes from
+                            these
+                            community platforms (click to open in browser)</span>
+                    </div>
+                    <div class="links-grid">
+                        <a href="#" class="external-link-card" data-url="https://7tv.app/emotes">
+                            <div class="link-card-header">
+                                <span class="link-brand-title">7TV Emotes</span>
+                                <span class="link-external-icon">↗</span>
+                            </div>
+                            <span class="link-card-url">https://7tv.app/emotes</span>
+                            <span class="link-card-desc">Thousands of animated WebP, AVIF, and custom streamer
+                                emotes.</span>
+                        </a>
+
+                        <a href="#" class="external-link-card" data-url="https://betterttv.com/emotes/popular">
+                            <div class="link-card-header">
+                                <span class="link-brand-title">BetterTTV (BTTV)</span>
+                                <span class="link-external-icon">↗</span>
+                            </div>
+                            <span class="link-card-url">https://betterttv.com/emotes/popular</span>
+                            <span class="link-card-desc">Popular Twitch & YouTube animated GIF and PNG emotes.</span>
+                        </a>
+
+                        <a href="#" class="external-link-card" data-url="https://www.frankerfacez.com/emoticons/">
+                            <div class="link-card-header">
+                                <span class="link-brand-title">FrankerFaceZ (FFZ)</span>
+                                <span class="link-external-icon">↗</span>
+                            </div>
+                            <span class="link-card-url">https://www.frankerfacez.com/emoticons/</span>
+                            <span class="link-card-desc">Extensive library of community streamer icons and
+                                emotes.</span>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- Section 7: Common Group Rules (Action -> Streamers[] & Color -> Streamers[]) -->
+                <section class="settings-card group-rules-card" id="group-rules-section">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2>Group Rules</h2>
+                            <span class="card-subtitle">Define common actions and avatar colors once, then assign them
+                                to
+                                multiple streamers</span>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Section A: Live Action Scripts (Action -> Streamers[]) -->
+                    <div class="group-rule-box">
+                        <div class="group-rule-header flex-between">
+                            <div>
+                                <h3 class="group-rule-title">On-Live Script / Batch Command (Action ➔ Streamers[])
+                                </h3>
+                                <span class="group-rule-subtitle">Automatically runs a script/batch command when any
+                                    assigned streamer goes live. <code>%_1</code> is replaced by the live stream
+                                    URL.</span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-add-action-rule">+ Add Action
+                                Rule</button>
+                        </div>
+
+                        <!-- Action Rule Editor Form -->
+                        <div id="action-rule-editor" class="rule-editor-box" style="display: none;">
+                            <input type="hidden" id="action-rule-id" value="" />
+                            <div class="form-grid-two">
+                                <div class="form-group">
+                                    <label for="action-rule-name">Rule Name / Description</label>
+                                    <input type="text" id="action-rule-name"
+                                        placeholder="e.g. Open in Player / Run Batch Script" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="action-rule-command">Batch Path / Command Line (with <code>%_1</code>)
+                                        <span class="req">*</span></label>
+                                    <div class="avatar-input-wrapper">
+                                        <input type="text" id="action-rule-command"
+                                            placeholder="e.g. C:\live.bat %_1" />
+                                        <button type="button" class="btn btn-secondary btn-sm"
+                                            id="btn-browse-command">Browse...</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Streamer Multi-Select Checklist -->
+                            <div class="form-group">
+                                <div class="flex-between streamer-picker-header">
+                                    <label>Assign Streamers to this Action:</label>
+                                    <div class="picker-quick-buttons">
+                                        <button type="button" class="btn-picker-link" id="btn-action-select-all">Select
+                                            All</button>
+                                        <button type="button" class="btn-picker-link"
+                                            id="btn-action-deselect-all">Deselect
+                                            All</button>
+                                    </div>
+                                </div>
+                                <div id="action-streamers-picker" class="streamers-multi-picker">
+                                    <!-- Dynamic streamer checkboxes rendered by JS -->
+                                </div>
+                            </div>
+
+                            <div class="form-actions-row flex-between" style="margin-top: 10px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-test-action-rule">🧪
+                                        Test
+                                        Run Command</button>
+                                    <span id="action-test-result" class="action-test-result-badge"
+                                        style="display: none;"></span>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                        id="btn-cancel-action-rule">Cancel</button>
+                                    <button type="button" class="btn btn-primary btn-sm" id="btn-save-action-rule">Save
+                                        Action Rule</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- List of Saved Action Rules -->
+                        <div id="action-rules-list" class="rules-cards-list">
+                            <!-- Dynamic rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Sub-Section B: Live Avatar Border Colors (Color -> Streamers[]) -->
+                    <div class="group-rule-box" style="margin-top: 24px;">
+                        <div class="group-rule-header flex-between">
+                            <div>
+                                <h3 class="group-rule-title">Custom Live Border Colors (Color ➔ Streamers[])</h3>
+                                <span class="group-rule-subtitle">Assign custom live avatar circle border & glow colors
+                                    instead of default green for a list of streamers.</span>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary" id="btn-add-color-rule">+ Add Color
+                                Rule</button>
+                        </div>
+
+                        <!-- Color Rule Editor Form -->
+                        <div id="color-rule-editor" class="rule-editor-box" style="display: none;">
+                            <input type="hidden" id="color-rule-id" value="" />
+                            <div class="form-grid-two">
+                                <div class="form-group">
+                                    <label for="color-rule-name">Group Label / Name</label>
+                                    <input type="text" id="color-rule-name"
+                                        placeholder="e.g. VIP Red Group, Favorites" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Avatar Live Circle Color</label>
+                                    <div class="color-picker-row">
+                                        <input type="color" id="color-rule-picker" value="#ef4444"
+                                            class="color-swatch-input" />
+                                        <input type="text" id="color-rule-hex" value="#ef4444"
+                                            class="form-input color-hex-input" maxlength="7" />
+                                        <div class="color-preset-palette">
+                                            <button type="button" class="btn-color-dot" data-color="#ef4444"
+                                                style="background:#ef4444;" title="Red"></button>
+                                            <button type="button" class="btn-color-dot" data-color="#f59e0b"
+                                                style="background:#f59e0b;" title="Amber"></button>
+                                            <button type="button" class="btn-color-dot" data-color="#3b82f6"
+                                                style="background:#3b82f6;" title="Blue"></button>
+                                            <button type="button" class="btn-color-dot" data-color="#a855f7"
+                                                style="background:#a855f7;" title="Purple"></button>
+                                            <button type="button" class="btn-color-dot" data-color="#ec4899"
+                                                style="background:#ec4899;" title="Pink"></button>
+                                            <button type="button" class="btn-color-dot" data-color="#06b6d4"
+                                                style="background:#06b6d4;" title="Cyan"></button>
+                                            <button type="button" class="btn-color-dot" data-color="#22c55e"
+                                                style="background:#22c55e;" title="Green (Default)"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Streamer Multi-Select Checklist -->
+                            <div class="form-group">
+                                <div class="flex-between streamer-picker-header">
+                                    <label>Assign Streamers to this Color:</label>
+                                    <div class="picker-quick-buttons">
+                                        <button type="button" class="btn-picker-link" id="btn-color-select-all">Select
+                                            All</button>
+                                        <button type="button" class="btn-picker-link"
+                                            id="btn-color-deselect-all">Deselect
+                                            All</button>
+                                    </div>
+                                </div>
+                                <div id="color-streamers-picker" class="streamers-multi-picker">
+                                    <!-- Dynamic streamer checkboxes rendered by JS -->
+                                </div>
+                            </div>
+
+                            <div class="form-actions-row flex-between" style="margin-top: 10px;">
+                                <div></div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                        id="btn-cancel-color-rule">Cancel</button>
+                                    <button type="button" class="btn btn-primary btn-sm" id="btn-save-color-rule">Save
+                                        Color
+                                        Rule</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- List of Saved Color Rules -->
+                        <div id="color-rules-list" class="rules-cards-list">
+                            <!-- Dynamic rendered by JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 8: Quick Action Buttons -->
+                <section class="settings-card actions-card">
+                    <div class="card-header">
+                        <h2>Quick Actions</h2>
+                    </div>
+                    <div class="action-buttons-row">
+                        <button type="button" class="btn btn-secondary" id="btn-center-overlay">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                class="btn-icon">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                <path d="M3 3v5h5"></path>
+                            </svg>
+                            Reset UI
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="btn-toggle-overlay">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                class="btn-icon">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Toggle Overlay
+                        </button>
+                        <button type="button" class="btn btn-danger" id="btn-quit-app">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                class="btn-icon">
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                                <line x1="12" y1="2" x2="12" y2="12"></line>
+                            </svg>
+                            Quit App
+                        </button>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="settings-footer">
+                <span>LiveStreamers Overlay • Multi-URL Check with Per-Link Frequency • Priority Triggers</span>
+            </footer>
+        </div>
     </div>
 
     <script src="settings.js"></script>
