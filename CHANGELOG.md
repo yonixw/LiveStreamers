@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Live Runtime Addition / Interval Trigger (`runtimeIntervalEnabled`, `runtimeIntervalMinutes`)**: Added hours + minutes input in [`src/settings/settings.html`](src/settings/settings.html:349) and [`src/settings/settings.js`](src/settings/settings.js:635) that converts to total minutes and periodically fires every $X$ elapsed minutes live in [`src/tasks/stream-checker.js:evaluateTriggers()`](src/tasks/stream-checker.js:300).
   - Extended streamer schema in [`src/tasks/storage.js:normalizeStreamerConfig()`](src/tasks/storage.js:250) to persist and validate both trigger configurations.
 
+### Changed
+- **Sequential Chained Background Checker Scheduling**:
+  - Replaced rigid `setInterval()` in [`src/tasks/stream-checker.js:StreamLiveCheckerService`](src/tasks/stream-checker.js:678) with an asynchronous chained `setTimeout()` loop ([`runLoop()`](src/tasks/stream-checker.js:716)).
+  - Ensured each background live check batch completely awaits all streamers in the FIFO queue before incrementing `minuteCounter` and scheduling the subsequent check cycle, eliminating race conditions and skipped streamer checks during long crawler sweeps.
+
 ### Fixed
 - **Action & Color Rule Assigned Streamer Pills Rendering**:
   - Fixed initial load order in [`src/settings/settings.js:applySettingsToUI()`](src/settings/settings.js:2477) so `streamers` are populated into `localStreamers` before `renderActionRules()` and `renderColorRules()` execute, resolving a bug where "0 streamers assigned" was briefly displayed on settings page open until subsequent live check cycles.

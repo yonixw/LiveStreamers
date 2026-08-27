@@ -703,17 +703,34 @@ class StreamLiveCheckerService {
     this.isRunning = true;
     this.onLog(
       "StreamChecker",
-      `Background Live Checker started (1m tick, sequential streamer FIFO, 5s yt-dlp cooldown).`,
+      `Background Live Checker started (chained setTimeout, sequential streamer FIFO, 5s yt-dlp cooldown).`,
     );
 
-    // Initial check
-    this.checkAll(false);
+    // Start recursive loop using setTimeout after each full cycle completes
+    this.runLoop();
+  }
 
-    // Regular 1-minute interval
-    this.timer = setInterval(() => {
-      this.minuteCounter++;
-      this.checkAll(false);
-    }, this.intervalMs);
+  /**
+   * Main checking loop that executes full checkAll() and schedules the next run upon completion.
+   */
+  async runLoop() {
+    if (!this.isRunning) return;
+
+    try {
+      await this.checkAll(false);
+    } catch (err) {
+      this.onLog(
+        "StreamChecker",
+        `Error during background check loop: ${err?.message || err}`,
+      );
+    } finally {
+      if (this.isRunning) {
+        this.minuteCounter++;
+        this.timer = setTimeout(() => {
+          this.runLoop();
+        }, this.intervalMs);
+      }
+    }
   }
 
   /**
@@ -722,16 +739,17 @@ class StreamLiveCheckerService {
   stop() {
     this.isRunning = false;
     if (this.timer) {
-      clearInterval(this.timer);
+      clearTimeout(this.timer);
       this.timer = null;
     }
     this.onLog("StreamChecker", "Background Live Checker stopped.");
   }
 
   /**
-   * Checks all streamers strictly sequentially in FIFO order.
+   * Checks all streamers strictly sequentially in FIFO order and awaits full batch completion.
    * Avatar 1 finishes all its links before Avatar 2 starts.
    * @param {boolean} [isManual=false]
+   * @returns {Promise<Array>}
    */
   async checkAll(isManual = false) {
     const streamers = this.getStreamers ? this.getStreamers() : [];
@@ -741,7 +759,7 @@ class StreamLiveCheckerService {
 
     for (const streamer of streamers) {
       if (!streamer || !streamer.id) continue;
-      this.enqueueStreamerCheck(streamer, isManual);
+      await this.enqueueStreamerCheck(streamer, isManual);
     }
   }
 
