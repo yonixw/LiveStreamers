@@ -75,6 +75,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const trigRuntimeIntervalMinutes = document.getElementById(
     "trig-runtime-interval-minutes",
   );
+  const streamerAutoSnoozeEnabled = document.getElementById(
+    "streamer-auto-snooze-enabled",
+  );
+  const streamerAutoSnoozeKeywords = document.getElementById(
+    "streamer-auto-snooze-keywords",
+  );
+  const streamerAutoSnoozeDuration = document.getElementById(
+    "streamer-auto-snooze-duration",
+  );
 
   // Streamers List Elements
   const streamersListEl = document.getElementById("streamers-list");
@@ -115,6 +124,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   );
   const inputHideOfflineHours = document.getElementById(
     "input-hide-offline-hours",
+  );
+  const chkAutoSnoozeKeywordsEnabled = document.getElementById(
+    "chk-auto-snooze-keywords-enabled",
+  );
+  const inputAutoSnoozeKeywords = document.getElementById(
+    "input-auto-snooze-keywords",
+  );
+  const inputAutoSnoozeDurationHours = document.getElementById(
+    "input-auto-snooze-duration-hours",
   );
   const inputWindowStatesCount = document.getElementById(
     "input-window-states-count",
@@ -537,6 +555,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div><strong>Streamer:</strong> ${res.streamerName} (${res.streamerId})</div>
                 <div><strong>Status:</strong> ${res.isLive ? "LIVE 🟢" : "OFFLINE ⚫"}</div>
                 <div><strong>Trigger Evaluated:</strong> ${triggerHtml}</div>
+                ${
+                  res.autoSnooze
+                    ? `<div><strong>Auto-Snooze:</strong> <span style='color:#f59e0b;'>💤 Auto-snoozed for ${res.autoSnooze.durationHours}h (matched "${res.autoSnooze.matchedKeyword}")</span></div>`
+                    : ""
+                }
                 ${
                   res.cachedInfo
                     ? `<div><strong>Metadata:</strong> "${res.cachedInfo.title}" • <em>${res.cachedInfo.category || "No game"}</em> • ${res.cachedInfo.viewerCount ? Number(res.cachedInfo.viewerCount).toLocaleString() + " viewers" : "N/A"}</div>`
@@ -1223,6 +1246,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (trigRuntimeIntervalEnabled) trigRuntimeIntervalEnabled.checked = false;
     if (trigRuntimeIntervalHours) trigRuntimeIntervalHours.value = "0";
     if (trigRuntimeIntervalMinutes) trigRuntimeIntervalMinutes.value = "30";
+    if (streamerAutoSnoozeEnabled) streamerAutoSnoozeEnabled.checked = false;
+    if (streamerAutoSnoozeKeywords) streamerAutoSnoozeKeywords.value = "";
+    if (streamerAutoSnoozeDuration) streamerAutoSnoozeDuration.value = "24";
 
     updateAvatarPreview();
   }
@@ -1296,6 +1322,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (trigRuntimeIntervalMinutes) {
       trigRuntimeIntervalMinutes.value = String(intervalTotalMins % 60);
     }
+    if (streamerAutoSnoozeEnabled) {
+      streamerAutoSnoozeEnabled.checked = Boolean(
+        streamer.autoSnoozeKeywordsEnabled,
+      );
+    }
+    if (streamerAutoSnoozeKeywords) {
+      streamerAutoSnoozeKeywords.value = streamer.autoSnoozeKeywords || "";
+    }
+    if (streamerAutoSnoozeDuration) {
+      streamerAutoSnoozeDuration.value = String(
+        streamer.autoSnoozeDurationHours || 24,
+      );
+    }
 
     updateAvatarPreview();
     streamerForm.scrollIntoView({ behavior: "smooth" });
@@ -1366,6 +1405,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         ) || 30,
     };
 
+    const autoSnoozeKeywordsEnabled = streamerAutoSnoozeEnabled
+      ? streamerAutoSnoozeEnabled.checked
+      : false;
+    const autoSnoozeKeywords = streamerAutoSnoozeKeywords
+      ? streamerAutoSnoozeKeywords.value.trim()
+      : "";
+    const autoSnoozeDurationHours = streamerAutoSnoozeDuration
+      ? Math.max(1, parseInt(streamerAutoSnoozeDuration.value, 10) || 24)
+      : 24;
+
     const editingId = editStreamerIdInput.value;
 
     if (editingId) {
@@ -1381,6 +1430,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             checkFreqOnlineMinutes,
             urls,
             triggers,
+            autoSnoozeKeywordsEnabled,
+            autoSnoozeKeywords,
+            autoSnoozeDurationHours,
           };
         }
         return s;
@@ -1411,6 +1463,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           checkFreqOnlineMinutes,
           urls,
           triggers,
+          autoSnoozeKeywordsEnabled,
+          autoSnoozeKeywords,
+          autoSnoozeDurationHours,
         });
         renderStreamersList(result);
       }
@@ -2409,6 +2464,60 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
+  if (chkAutoSnoozeKeywordsEnabled) {
+    chkAutoSnoozeKeywordsEnabled.addEventListener("change", () => {
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          autoSnoozeKeywordsEnabled: chkAutoSnoozeKeywordsEnabled.checked,
+        });
+        appendLog(
+          `Auto-Snooze Keywords ${chkAutoSnoozeKeywordsEnabled.checked ? "enabled" : "disabled"}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  }
+
+  const handleAutoSnoozeSettingsChange = () => {
+    const keywords = (inputAutoSnoozeKeywords?.value || "").trim();
+    const duration = Math.max(
+      1,
+      parseInt(inputAutoSnoozeDurationHours?.value, 10) || 24,
+    );
+    if (inputAutoSnoozeDurationHours) {
+      inputAutoSnoozeDurationHours.value = String(duration);
+    }
+    if (window.electronAPI && window.electronAPI.updateSettings) {
+      window.electronAPI.updateSettings({
+        autoSnoozeKeywords: keywords,
+        autoSnoozeDurationHours: duration,
+      });
+      appendLog(
+        `Auto-Snooze settings updated (Keywords: "${keywords}", Duration: ${duration}h)`,
+        "info",
+        "Settings",
+      );
+    }
+  };
+
+  if (inputAutoSnoozeKeywords) {
+    inputAutoSnoozeKeywords.addEventListener(
+      "change",
+      handleAutoSnoozeSettingsChange,
+    );
+  }
+  if (inputAutoSnoozeDurationHours) {
+    inputAutoSnoozeDurationHours.addEventListener(
+      "change",
+      handleAutoSnoozeSettingsChange,
+    );
+    inputAutoSnoozeDurationHours.addEventListener(
+      "input",
+      handleAutoSnoozeSettingsChange,
+    );
+  }
+
   // Multiple Window States Handlers
   function renderWindowStatesUI(count, activeIndex) {
     const total = Math.max(1, parseInt(count, 10) || 1);
@@ -3370,6 +3479,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       inputHideOfflineHours
     ) {
       inputHideOfflineHours.value = String(settings.hideOfflineHours);
+    }
+    if (
+      typeof settings.autoSnoozeKeywordsEnabled === "boolean" &&
+      chkAutoSnoozeKeywordsEnabled
+    ) {
+      chkAutoSnoozeKeywordsEnabled.checked = settings.autoSnoozeKeywordsEnabled;
+    }
+    if (
+      typeof settings.autoSnoozeKeywords !== "undefined" &&
+      inputAutoSnoozeKeywords
+    ) {
+      inputAutoSnoozeKeywords.value = settings.autoSnoozeKeywords;
+    }
+    if (
+      typeof settings.autoSnoozeDurationHours !== "undefined" &&
+      inputAutoSnoozeDurationHours
+    ) {
+      inputAutoSnoozeDurationHours.value = String(
+        settings.autoSnoozeDurationHours,
+      );
     }
     renderWindowStatesUI(
       settings.windowStatesCount || 1,

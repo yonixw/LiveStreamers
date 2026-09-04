@@ -115,6 +115,9 @@ const defaultSettings = {
   hideOfflineEnabled: false,
   hideOfflineDays: 7,
   hideOfflineHours: 0,
+  autoSnoozeKeywordsEnabled: false,
+  autoSnoozeKeywords: "rerun, re-run, vod, 24/7",
+  autoSnoozeDurationHours: 24,
   windowStatesCount: 1,
   currentWindowStateIndex: 0,
   windowStates: [
@@ -326,6 +329,20 @@ function normalizeStreamerConfig(streamer, index = 0) {
     typeof streamer.snoozedUntil === "string" && streamer.snoozedUntil.trim()
       ? streamer.snoozedUntil.trim()
       : null;
+  const autoSnoozed = Boolean(streamer.autoSnoozed);
+
+  const autoSnoozeKeywordsEnabled =
+    typeof streamer.autoSnoozeKeywordsEnabled === "boolean"
+      ? streamer.autoSnoozeKeywordsEnabled
+      : false;
+  const autoSnoozeKeywords =
+    typeof streamer.autoSnoozeKeywords === "string"
+      ? streamer.autoSnoozeKeywords
+      : "";
+  const autoSnoozeDurationHours =
+    typeof streamer.autoSnoozeDurationHours !== "undefined"
+      ? Math.max(1, parseInt(streamer.autoSnoozeDurationHours, 10) || 24)
+      : 24;
 
   const checkFreqOfflineMinutes =
     typeof streamer.checkFreqOfflineMinutes !== "undefined"
@@ -348,6 +365,10 @@ function normalizeStreamerConfig(streamer, index = 0) {
     note,
     customTag,
     snoozedUntil,
+    autoSnoozed,
+    autoSnoozeKeywordsEnabled,
+    autoSnoozeKeywords,
+    autoSnoozeDurationHours,
     checkFreqOfflineMinutes,
     checkFreqOnlineMinutes,
     urls,
@@ -433,6 +454,18 @@ function loadSettings() {
                 Math.min(23, parseInt(data.hideOfflineHours, 10) || 0),
               )
             : 0,
+        autoSnoozeKeywordsEnabled:
+          typeof data.autoSnoozeKeywordsEnabled === "boolean"
+            ? data.autoSnoozeKeywordsEnabled
+            : false,
+        autoSnoozeKeywords:
+          typeof data.autoSnoozeKeywords === "string"
+            ? data.autoSnoozeKeywords
+            : "rerun, re-run, vod, 24/7",
+        autoSnoozeDurationHours:
+          typeof data.autoSnoozeDurationHours !== "undefined"
+            ? Math.max(1, parseInt(data.autoSnoozeDurationHours, 10) || 24)
+            : 24,
         windowStatesCount,
         currentWindowStateIndex,
         windowStates,

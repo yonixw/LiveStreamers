@@ -125,6 +125,7 @@ const {
   StreamLiveCheckerService,
   checkStreamerLiveTask,
   evaluateTriggers,
+  evaluateAutoSnooze,
   detectPlatform,
   extractStreamerName,
   normalizeUrl,
@@ -539,6 +540,11 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
     case "viewers": {
       return [...enriched].sort((a, b) => {
         if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+
+        const snoozedA = isSnoozed(a);
+        const snoozedB = isSnoozed(b);
+        if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
+
         const viewersA = Number(a.cachedInfo?.viewerCount) || 0;
         const viewersB = Number(b.cachedInfo?.viewerCount) || 0;
         if (viewersA !== viewersB) return viewersB - viewersA;
@@ -549,6 +555,10 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
     case "longest-live": {
       return [...enriched].sort((a, b) => {
         if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+
+        const snoozedA = isSnoozed(a);
+        const snoozedB = isSnoozed(b);
+        if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
 
         if (a.isLive && b.isLive) {
           const startA = a.cachedInfo?.startTime
@@ -585,9 +595,12 @@ function getSortedEnrichedStreamers(sortBy = state.sortBy) {
     }
 
     case "name": {
-      return [...enriched].sort((a, b) =>
-        (a.name || "").localeCompare(b.name || ""),
-      );
+      return [...enriched].sort((a, b) => {
+        const snoozedA = isSnoozed(a);
+        const snoozedB = isSnoozed(b);
+        if (snoozedA !== snoozedB) return snoozedA ? 1 : -1;
+        return (a.name || "").localeCompare(b.name || "");
+      });
     }
 
     case "manual": {
@@ -1085,6 +1098,22 @@ function initBackgroundChecker() {
         );
       }
 
+      if (update.autoSnoozed && update.snoozedUntil) {
+        const targetStreamer = state.streamers.find((s) => s.id === streamerId);
+        if (targetStreamer) {
+          targetStreamer.snoozedUntil = update.snoozedUntil;
+          targetStreamer.autoSnoozed = true;
+          saveSettings(state);
+          const reason = update.autoSnoozeMatchedKeyword
+            ? ` (keyword: "${update.autoSnoozeMatchedKeyword}")`
+            : "";
+          logToWindows(
+            "Auto-Snooze",
+            `Auto-snoozed [${targetStreamer.name}] for ${targetStreamer.autoSnoozeDurationHours || state.autoSnoozeDurationHours || 24}h${reason}`,
+          );
+        }
+      }
+
       state.statusMap[streamerId] = {
         ...current,
         streamerId,
@@ -1452,6 +1481,9 @@ ipcMain.handle(
       streamer.snoozedUntil = durationMs
         ? new Date(Date.now() + durationMs).toISOString()
         : null;
+      if (!durationMs) {
+        streamer.autoSnoozed = false;
+      }
       saveSettings(state);
       broadcastStateUpdate();
       return true;
@@ -1598,6 +1630,21 @@ ipcMain.handle("debug:inject-streamer-metadata", async (_event, payload) => {
     lastError: null,
   };
 
+  // Evaluate auto-snooze against keywords
+  let autoSnoozeResult = null;
+  if (isLive && mockCachedInfo) {
+    autoSnoozeResult = evaluateAutoSnooze(streamer, mockCachedInfo, state);
+    if (autoSnoozeResult) {
+      streamer.snoozedUntil = autoSnoozeResult.snoozedUntil;
+      streamer.autoSnoozed = true;
+      saveSettings(state);
+      logToWindows(
+        "Auto-Snooze",
+        `[Debug Simulator] Auto-snoozed [${streamer.name}] (keyword: "${autoSnoozeResult.matchedKeyword}") until ${autoSnoozeResult.snoozedUntil}`,
+      );
+    }
+  }
+
   // Evaluate trigger rules against current status
   const firedTrigger = evaluateTriggers(streamer, currentResult, current);
   let lastTrigger = current.lastTrigger || null;
@@ -1637,6 +1684,7 @@ ipcMain.handle("debug:inject-streamer-metadata", async (_event, payload) => {
     streamerName: streamer.name,
     isLive,
     firedTrigger,
+    autoSnooze: autoSnoozeResult,
     cachedInfo: mockCachedInfo,
   };
 });

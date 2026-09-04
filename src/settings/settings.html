@@ -237,6 +237,29 @@
                                 <span class="hide-offline-label">hour(s)</span>
                             </div>
                         </div>
+
+                        <div class="appearance-group full-width-group">
+                            <label class="toggle-control">
+                                <input type="checkbox" id="chk-auto-snooze-keywords-enabled" />
+                                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                                <div class="toggle-label-group">
+                                    <span class="toggle-title">Automated Keyword Snooze (Global)</span>
+                                    <span class="toggle-description">Automatically snooze live streams matching re-run /
+                                        VOD / 24/7 keywords in title or game/category and sink them to the bottom</span>
+                                </div>
+                            </label>
+                            <div id="auto-snooze-keywords-row" class="hide-offline-days-row">
+                                <span class="hide-offline-label">Keywords:</span>
+                                <input type="text" id="input-auto-snooze-keywords" value="rerun, re-run, vod, 24/7"
+                                    class="form-input"
+                                    style="flex: 1; max-width: 280px; padding: 3px 8px; font-size: 0.8rem;"
+                                    placeholder="rerun, re-run, vod, 24/7" />
+                                <span class="hide-offline-label">Duration:</span>
+                                <input type="number" id="input-auto-snooze-duration-hours" min="1" max="8760" step="1"
+                                    value="24" class="form-input input-hide-offline-days" />
+                                <span class="hide-offline-label">hour(s)</span>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -423,6 +446,20 @@
                                     <input type="number" id="trig-runtime-interval-minutes" min="0" max="59" step="1"
                                         value="30" class="input-threshold-unit" />
                                     <span class="trigger-hint">mins</span>
+                                </div>
+
+                                <div class="trigger-title-contains-row">
+                                    <label class="trigger-checkbox">
+                                        <input type="checkbox" id="streamer-auto-snooze-enabled" />
+                                        <span class="trigger-custom-check"></span>
+                                        <span class="trigger-label">💤 Auto-Snooze on Keywords:</span>
+                                    </label>
+                                    <input type="text" id="streamer-auto-snooze-keywords"
+                                        placeholder="e.g. rerun, re-run, vod, 24/7" class="input-title-contains" />
+                                    <span class="trigger-hint">for</span>
+                                    <input type="number" id="streamer-auto-snooze-duration" min="1" max="8760" step="1"
+                                        value="24" class="input-threshold-unit" style="width: 50px;" />
+                                    <span class="trigger-hint">hrs</span>
                                 </div>
                             </div>
                         </div>

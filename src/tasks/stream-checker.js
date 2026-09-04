@@ -1,6 +1,6 @@
 const path = require("path");
 const { getStreamMetadata, cleanStreamTitle } = require("./yt-dlp-utils");
-const { loadHistory, saveHistory } = require("./storage");
+const { loadHistory, saveHistory, loadSettings } = require("./storage");
 
 /**
  * Formats elapsed live stream uptime duration string (e.g. "15m", "2h 30m").
@@ -574,6 +574,72 @@ function evaluateTriggers(streamer, current, previous = null) {
 }
 
 /**
+ * Evaluates live stream metadata (title and game/category) against automated snooze keywords.
+ * Supports global keywords/duration and per-streamer overrides.
+ *
+ * @param {object} streamer - Streamer configuration object
+ * @param {object} cachedInfo - Extracted stream metadata (title, category/game)
+ * @param {object} [globalSettings] - Global application settings
+ * @returns {object|null} Snooze decision object { matchedKeyword, durationHours, snoozedUntil } or null
+ */
+function evaluateAutoSnooze(streamer, cachedInfo, globalSettings = null) {
+  if (!streamer || !cachedInfo) return null;
+
+  const settings = globalSettings || {};
+  const globalEnabled = Boolean(settings.autoSnoozeKeywordsEnabled);
+  const streamerEnabled = Boolean(streamer.autoSnoozeKeywordsEnabled);
+
+  // Auto snooze is active if enabled globally or per-streamer
+  if (!globalEnabled && !streamerEnabled) return null;
+
+  // Gather keywords
+  const keywordsList = [];
+  if (
+    streamerEnabled &&
+    typeof streamer.autoSnoozeKeywords === "string" &&
+    streamer.autoSnoozeKeywords.trim()
+  ) {
+    keywordsList.push(...streamer.autoSnoozeKeywords.split(","));
+  }
+  if (
+    globalEnabled &&
+    typeof settings.autoSnoozeKeywords === "string" &&
+    settings.autoSnoozeKeywords.trim()
+  ) {
+    keywordsList.push(...settings.autoSnoozeKeywords.split(","));
+  }
+
+  const cleanedKeywords = keywordsList
+    .map((k) => k.trim().toLowerCase())
+    .filter((k) => k.length > 0);
+
+  if (cleanedKeywords.length === 0) return null;
+
+  const title = (cachedInfo.title || "").toLowerCase();
+  const category = (cachedInfo.category || cachedInfo.game || "").toLowerCase();
+  const combinedText = `${title} ${category}`;
+
+  const matchedKeyword = cleanedKeywords.find((keyword) =>
+    combinedText.includes(keyword),
+  );
+
+  if (!matchedKeyword) return null;
+
+  const durationHours =
+    (streamerEnabled && Number(streamer.autoSnoozeDurationHours)) ||
+    Number(settings.autoSnoozeDurationHours) ||
+    24;
+  const durationMs = durationHours * 60 * 60 * 1000;
+  const snoozedUntil = new Date(Date.now() + durationMs).toISOString();
+
+  return {
+    matchedKeyword,
+    durationHours,
+    snoozedUntil,
+  };
+}
+
+/**
  * Normalizes url entries array into uniform objects { url, freqMinutes }.
  */
 function getNormalizedUrlObjects(streamer) {
@@ -799,6 +865,25 @@ async function checkStreamerLiveTask(
         ? accumulatedErrors.join(" | ")
         : null,
   };
+
+  // Check Auto-Snooze against 24/7 re-runs, vods, etc. in title & game
+  let autoSnoozeResult = null;
+  if (isLive && cachedInfo) {
+    const globalSettings =
+      options.settings ||
+      (typeof loadSettings === "function" ? loadSettings() : {});
+    autoSnoozeResult = evaluateAutoSnooze(streamer, cachedInfo, globalSettings);
+    if (autoSnoozeResult) {
+      streamer.snoozedUntil = autoSnoozeResult.snoozedUntil;
+      streamer.autoSnoozed = true;
+      currentResult.autoSnoozed = true;
+      currentResult.snoozedUntil = autoSnoozeResult.snoozedUntil;
+      currentResult.autoSnoozeMatchedKeyword = autoSnoozeResult.matchedKeyword;
+      console.log(
+        `[${timestamp}] [Auto-Snooze] [${streamerName}] 💤 Auto-snoozed for ${autoSnoozeResult.durationHours}h due to matching keyword "${autoSnoozeResult.matchedKeyword}" in title/game (Until ${autoSnoozeResult.snoozedUntil})`,
+      );
+    }
+  }
 
   // Trigger evaluation
   const firedTrigger = evaluateTriggers(
@@ -1093,6 +1178,7 @@ module.exports = {
   formatElapsedLiveDuration,
   checkSingleUrlLive,
   evaluateTriggers,
+  evaluateAutoSnooze,
   checkStreamerLiveTask,
   StreamLiveCheckerService,
   YtDlpWorkerPool,
