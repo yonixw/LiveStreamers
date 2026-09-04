@@ -875,6 +875,7 @@ async function checkStreamerLiveTask(
         historyMap[streamer.id] = streamerHistory;
         saveHistory(historyMap);
       }
+      currentResult.historyCount = streamerHistory.length;
     } catch (histErr) {
       console.error(
         `[SessionHistory] Failed to record timeline entry for [${streamerName}]:`,

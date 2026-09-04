@@ -29,6 +29,10 @@
             <span id="tooltip-group-tag" class="tooltip-group-tag" style="display: none;">🎨 Group</span>
         </div>
 
+        <div class="tooltip-meta-row">
+            <span id="tooltip-history-tag" class="tooltip-history-tag" style="display: none;">📜 Titles/Games: 0</span>
+        </div>
+
         <div id="tooltip-trigger-chip" class="tooltip-trigger-chip" style="display: none;">
             <span class="tooltip-trigger-icon">⚡</span>
             <span id="tooltip-trigger-msg" class="tooltip-trigger-msg"></span>
@@ -40,6 +44,7 @@
         const nameEl = document.getElementById("tooltip-name");
         const domainEl = document.getElementById("tooltip-domain");
         const groupTagEl = document.getElementById("tooltip-group-tag");
+        const historyTagEl = document.getElementById("tooltip-history-tag");
         const gameRowEl = document.getElementById("tooltip-game-row");
         const gameEl = document.getElementById("tooltip-game");
         const titleEl = document.getElementById("tooltip-title");
@@ -59,6 +64,14 @@
                     groupTagEl.style.display = "inline-block";
                 } else {
                     groupTagEl.style.display = "none";
+                }
+
+                const historyCount = Number(data.historyCount) || 0;
+                if (historyCount > 0) {
+                    historyTagEl.textContent = `📜 Titles/Games: ${historyCount}`;
+                    historyTagEl.style.display = "inline-block";
+                } else {
+                    historyTagEl.style.display = "none";
                 }
 
                 const gameText = data.game && data.game !== "(---)" ? data.game.trim() : "";

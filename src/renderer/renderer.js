@@ -318,6 +318,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       liveBorderColor: streamer.liveBorderColor || null,
       lastTrigger: streamer.lastTrigger || null,
       groupName: streamer.liveGroupName || streamer.groupName || null,
+      historyCount: streamer.historyCount || 0,
       targetRect,
     };
   }

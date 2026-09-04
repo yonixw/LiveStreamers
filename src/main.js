@@ -439,6 +439,10 @@ function getEnrichedStreamer(streamer) {
     lastTrigger: status.lastTrigger || null,
     lastTriggeredAt: status.lastTriggeredAt || null,
     checkedUrlsCount: status.checkedUrlsCount || 0,
+    historyCount:
+      typeof status.historyCount === "number"
+        ? status.historyCount
+        : (loadHistory()[streamer.id] || []).length,
   };
 }
 

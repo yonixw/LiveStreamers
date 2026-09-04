@@ -71,6 +71,20 @@ html, body {
   max-width: 130px;
 }
 
+.tooltip-history-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
 .tooltip-domain-tag {
   font-size: 10px;
   font-weight: 600;
