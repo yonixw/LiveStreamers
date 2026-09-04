@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Snooze Button Handlers
   btnSnoozeOptions.forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const durationMs = parseInt(btn.getAttribute("data-duration"), 10);
+      const durationMs = parseInt(btn.getAttribute("data-duration"), 10) * 1000;
       if (
         currentStreamerId &&
         window.electronAPI &&
@@ -170,6 +170,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.electronAPI.closeWindow();
       }
     });
+  }
+
+  function snoozeCount(snoozedUntil) {
+    const diffMs = new Date(snoozedUntil) - new Date();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    const durationStr =
+      diffDays > 0
+        ? `${diffDays}d`
+        : diffHours > 0
+          ? `${diffHours}h`
+          : diffMins > 0
+            ? `${diffMins}m`
+            : "<1m";
+
+    return `(Snoozed for ~${durationStr})`;
   }
 
   // Render streamer details and link cards
@@ -205,7 +223,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Snooze status badge
     if (isSnoozed && snoozedUntil) {
       const untilDate = new Date(snoozedUntil);
-      popupSnoozeStatus.textContent = `(Snoozed until ${untilDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})`;
+      popupSnoozeStatus.textContent = snoozeCount(snoozedUntil);
       popupSnoozeStatus.style.display = "inline";
       if (btnUnsnooze) btnUnsnooze.style.display = "inline-block";
     } else {
