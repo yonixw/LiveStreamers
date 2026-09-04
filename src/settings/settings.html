@@ -249,8 +249,7 @@
                                 checks,
                                 and triggers</span>
                         </div>
-                        <button type="button" class="btn btn-sm btn-secondary" id="btn-cancel-edit"
-                            style="display: none;">Cancel Edit</button>
+
                     </div>
 
                     <div class="group-rule-header flex-between">
@@ -337,6 +336,8 @@
                                 </svg>
                                 + Add Another Platform URL (Kick, Twitch, YouTube)
                             </button>
+
+
                         </div>
 
                         <!-- Trigger Rules Configuration -->
@@ -427,6 +428,9 @@
                         </div>
 
                         <div class="form-actions-row">
+                            <button type="button" class="btn btn-sm btn-danger" id="btn-cancel-edit"
+                                style="display: none;">Cancel Edit</button>
+
                             <button type="submit" class="btn btn-primary" id="btn-submit-streamer">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                     class="btn-icon">
@@ -525,7 +529,7 @@
                 <section class="settings-card debug-simulator-card" id="debug-simulator-section">
                     <div class="card-header flex-between">
                         <div>
-                            <h2>⚡ Debug Trigger Simulator</h2>
+                            <h2>Debug Trigger Simulator</h2>
                             <span class="card-subtitle">Inject mock stream metadata to test priority triggers, alert
                                 diffs, and on-live scripts instantly</span>
                         </div>
@@ -542,13 +546,13 @@
                         <div class="form-grid-two">
                             <div class="form-group">
                                 <label for="select-simulator-streamer">Target Streamer</label>
-                                <select id="select-simulator-streamer" class="form-select">
+                                <select id="select-simulator-streamer" class="form-select" style="width: 100%;">
                                     <!-- Populated dynamically with streamers -->
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="select-simulator-preset">Quick Preset Payload</label>
-                                <select id="select-simulator-preset" class="form-select">
+                                <select id="select-simulator-preset" class="form-select" style="width: 100%;">
                                     <option value="going-live">Going Live (Offline -> Live)</option>
                                     <option value="title-change">Title Changed (Match 1 -> Grand Finals)</option>
                                     <option value="category-change">Game/Category Switched (Valorant -> Just Chatting)

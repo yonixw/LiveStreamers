@@ -708,9 +708,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     freqUnit.className = "url-freq-label";
     freqUnit.textContent = "m";
 
-    freqWrapper.appendChild(freqLabel);
-    freqWrapper.appendChild(freqInput);
-    freqWrapper.appendChild(freqUnit);
+    // Deprecated old per url freq
+    //freqWrapper.appendChild(freqLabel);
+    //freqWrapper.appendChild(freqInput);
+    //freqWrapper.appendChild(freqUnit);
 
     const actions = document.createElement("div");
     actions.className = "url-row-actions";
