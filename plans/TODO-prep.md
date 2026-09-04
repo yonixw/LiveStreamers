@@ -47,7 +47,16 @@ Replace the single-threaded [`src/tasks/stream-checker.js:YtDlpSequentialQueue`]
 Extend `colorRules` in [`src/tasks/storage.js`](src/tasks/storage.js:88) and streamer settings to include a `borderPattern` property (`solid`, `dashed`, `dotted`, `double`, `dual-gradient`, `striped`). In [`src/renderer/style.css:.circle-frame`](src/renderer/style.css:122) and [`src/renderer/renderer.js:renderAvatarsInPlace()`](src/renderer/renderer.js:458), dynamically apply border styles or `conic-gradient` / `repeating-linear-gradient` masks on `.circle-frame` based on the configured pattern and color pair. In [`src/settings/settings.html`](src/settings/settings.html:600), [`src/settings/settings.css`](src/settings/settings.css:1730), and [`src/settings/settings.js`](src/settings/settings.js:1680), add a pattern dropdown selector and secondary color picker within the Color Rules editor alongside an interactive circular avatar preview widget rendering real-time pattern simulations.
 
 ================================================================================
-### TASK 06: YAML Configuration File Support (data/settings.yaml)
+### TASK 06: Trigger Debug Injection Simulator via JSON Metadata Payload
+================================================================================
+1. **Type:** FEATURE
+2. **Priority:** MEDIUM
+3. **Complexity:** LOW-MEDIUM
+4. **Implementation Suggestion:**
+In [`src/settings/settings.html`](src/settings/settings.html:480) and [`src/settings/settings.js`](src/settings/settings.js:550), add a "Debug Trigger Simulator" panel featuring a JSON textarea (pre-populated with `{ title, category, viewerCount, isLive, startTime }`) and a "Fire Mock Metadata" action button. Expose an IPC endpoint `debug:inject-streamer-metadata` in [`src/main.js`](src/main.js:1500) and [`src/preload.js`](src/preload.js:1) that forwards mock payloads directly into [`src/tasks/stream-checker.js:evaluateTriggers()`](src/tasks/stream-checker.js:250), bypassing network `yt-dlp` extraction to immediately trigger alert rules, action scripts, trigger diff logs, and overlay updates for rapid QA verification.
+
+================================================================================
+### TASK 07: YAML Configuration File Support (data/settings.yaml)
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** LOW-MEDIUM
@@ -55,15 +64,6 @@ Extend `colorRules` in [`src/tasks/storage.js`](src/tasks/storage.js:88) and str
 4. **Implementation Suggestion:**
 Install `js-yaml` or `yaml` dependency in [`package.json`](package.json:13). In [`src/tasks/storage.js`](src/tasks/storage.js:18), add `getSettingsYamlPath()` pointing to `data/settings.yaml`. Update [`src/tasks/storage.js:loadSettings()`](src/tasks/storage.js:60) and `saveSettings()` to check for `settings.yaml` first (with fallback to `settings.json` for backward compatibility), serializing configuration objects using `yaml.dump(data, { indent: 2, quotingType: '"' })` to enable easy, comment-friendly human editing in external text editors.
 
-
-================================================================================
-### TASK 07: Trigger Debug Injection Simulator via JSON Metadata Payload
-================================================================================
-1. **Type:** FEATURE
-2. **Priority:** MEDIUM
-3. **Complexity:** LOW-MEDIUM
-4. **Implementation Suggestion:**
-In [`src/settings/settings.html`](src/settings/settings.html:480) and [`src/settings/settings.js`](src/settings/settings.js:550), add a "Debug Trigger Simulator" panel featuring a JSON textarea (pre-populated with `{ title, category, viewerCount, isLive, startTime }`) and a "Fire Mock Metadata" action button. Expose an IPC endpoint `debug:inject-streamer-metadata` in [`src/main.js`](src/main.js:1500) and [`src/preload.js`](src/preload.js:1) that forwards mock payloads directly into [`src/tasks/stream-checker.js:evaluateTriggers()`](src/tasks/stream-checker.js:250), bypassing network `yt-dlp` extraction to immediately trigger alert rules, action scripts, trigger diff logs, and overlay updates for rapid QA verification.
 
 ================================================================================
 ### TASK 08: Live Session Timeline History in Links Popup & Tooltip Group Badges

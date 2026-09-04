@@ -122,6 +122,7 @@ const {
 const {
   StreamLiveCheckerService,
   checkStreamerLiveTask,
+  evaluateTriggers,
   detectPlatform,
   extractStreamerName,
   normalizeUrl,
@@ -1522,6 +1523,108 @@ ipcMain.handle(
     });
   },
 );
+
+ipcMain.handle("debug:inject-streamer-metadata", async (_event, payload) => {
+  const streamerId = payload?.streamerId;
+  const metadata = payload?.metadata || {};
+
+  if (!streamerId) {
+    return { success: false, error: "Missing streamerId" };
+  }
+
+  const streamer = (state.streamers || []).find((s) => s.id === streamerId);
+  if (!streamer) {
+    return {
+      success: false,
+      error: `Streamer with ID "${streamerId}" not found`,
+    };
+  }
+
+  const current = state.statusMap[streamerId] || {};
+  const isLive =
+    metadata.isLive !== undefined ? Boolean(metadata.isLive) : true;
+  const nowIso = new Date().toISOString();
+  const primaryUrl =
+    streamer.urls && streamer.urls[0]
+      ? typeof streamer.urls[0] === "string"
+        ? streamer.urls[0]
+        : streamer.urls[0].url || ""
+      : "";
+
+  const mockCachedInfo = {
+    title: metadata.title || `${streamer.name} Mock Live Broadcast`,
+    game: metadata.category || metadata.game || "Just Chatting",
+    category: metadata.category || metadata.game || "Just Chatting",
+    viewerCount:
+      typeof metadata.viewerCount === "number"
+        ? metadata.viewerCount
+        : parseInt(metadata.viewerCount, 10) || 1500,
+    startTime: metadata.startTime || metadata.liveTime || nowIso,
+    liveTime: metadata.liveTime || metadata.startTime || nowIso,
+    description: metadata.description || null,
+    thumbnail: metadata.thumbnail || null,
+    channel: metadata.channel || streamer.name,
+    channelUrl: metadata.channelUrl || primaryUrl,
+    url: metadata.url || primaryUrl,
+    platform: metadata.platform || detectPlatform(primaryUrl),
+    cachedAt: nowIso,
+  };
+
+  const currentResult = {
+    streamerId,
+    success: true,
+    isLive,
+    offlineSince: isLive ? null : current.offlineSince || nowIso,
+    activeUrl: mockCachedInfo.url,
+    activePlatform: mockCachedInfo.platform,
+    checkedUrlsCount: 1,
+    cachedInfo: isLive ? mockCachedInfo : null,
+    lastChecked: nowIso,
+    lastError: null,
+  };
+
+  // Evaluate trigger rules against current status
+  const firedTrigger = evaluateTriggers(streamer, currentResult, current);
+  let lastTrigger = current.lastTrigger || null;
+  let lastTriggeredAt = current.lastTriggeredAt || null;
+
+  if (firedTrigger) {
+    lastTrigger = firedTrigger;
+    lastTriggeredAt = firedTrigger.timestamp;
+    console.log(
+      `[Debug Simulator] [${streamer.name}] ⚡ Trigger Alert: ${firedTrigger.label} - ${firedTrigger.message}`,
+    );
+  }
+
+  const wasOffline = !current.isLive;
+  if (wasOffline && isLive) {
+    executeLiveActionRules(streamerId, mockCachedInfo.url);
+  }
+
+  state.statusMap[streamerId] = {
+    ...current,
+    ...currentResult,
+    checkStatus: isLive ? "live" : "offline",
+    lastTrigger,
+    lastTriggeredAt,
+  };
+
+  saveStatus(state.statusMap);
+  broadcastStateUpdate();
+
+  console.log(
+    `[Debug Simulator] Injected mock metadata for [${streamer.name}] (isLive: ${isLive}, Viewers: ${mockCachedInfo.viewerCount}, Title: "${mockCachedInfo.title}", Category: "${mockCachedInfo.category}")`,
+  );
+
+  return {
+    success: true,
+    streamerId,
+    streamerName: streamer.name,
+    isLive,
+    firedTrigger,
+    cachedInfo: mockCachedInfo,
+  };
+});
 
 ipcMain.handle("settings:open", () => {
   createSettingsWindow();

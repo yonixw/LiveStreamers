@@ -128,6 +128,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnClearLogs = document.getElementById("btn-clear-logs");
   const logTerminal = document.getElementById("log-terminal");
 
+  // Debug Trigger Simulator Elements
+  const selectSimulatorStreamer = document.getElementById(
+    "select-simulator-streamer",
+  );
+  const selectSimulatorPreset = document.getElementById(
+    "select-simulator-preset",
+  );
+  const simulatorJsonPayload = document.getElementById(
+    "simulator-json-payload",
+  );
+  const btnResetSimulatorJson = document.getElementById(
+    "btn-reset-simulator-json",
+  );
+  const btnFireMockMetadata = document.getElementById("btn-fire-mock-metadata");
+  const simulatorResultBox = document.getElementById("simulator-result-box");
+  const simulatorResultBadge = document.getElementById(
+    "simulator-result-badge",
+  );
+  const simulatorResultContent = document.getElementById(
+    "simulator-result-content",
+  );
+
   // Common Group Rules Elements (Action -> Streamers[] & Color -> Streamers[])
   const btnAddActionRule = document.getElementById("btn-add-action-rule");
   const actionRuleEditor = document.getElementById("action-rule-editor");
@@ -280,6 +302,207 @@ document.addEventListener("DOMContentLoaded", async () => {
     btnOpenDevTools.addEventListener("click", () => {
       if (window.electronAPI && window.electronAPI.toggleDevTools) {
         window.electronAPI.toggleDevTools();
+      }
+    });
+  }
+
+  // --- Debug Trigger Simulator Logic ---
+  function getSimulatorPresetPayload(presetKey, targetStreamer = null) {
+    const sName = targetStreamer ? targetStreamer.name : "Streamer";
+    const nowIso = new Date().toISOString();
+
+    switch (presetKey) {
+      case "going-live":
+        return {
+          isLive: true,
+          title: `🔴 LIVE! ${sName} Starting Community Stream`,
+          category: "Just Chatting",
+          viewerCount: 8500,
+          startTime: nowIso,
+        };
+      case "title-change":
+        return {
+          isLive: true,
+          title: `🏆 GRAND FINALS! ${sName} Match 5 Decider [Drops Enabled]`,
+          category: "Valorant",
+          viewerCount: 24500,
+          startTime: new Date(Date.now() - 3600000).toISOString(),
+        };
+      case "category-change":
+        return {
+          isLive: true,
+          title: `Switching games now! Testing new season patch`,
+          category: "Apex Legends",
+          viewerCount: 16800,
+          startTime: new Date(Date.now() - 7200000).toISOString(),
+        };
+      case "viewer-spike":
+        return {
+          isLive: true,
+          title: `RAID INCOMING! 50k Viewers Hype Train with ${sName}`,
+          category: "Gaming",
+          viewerCount: 52000,
+          startTime: new Date(Date.now() - 5400000).toISOString(),
+        };
+      case "going-offline":
+        return {
+          isLive: false,
+          title: null,
+          category: null,
+          viewerCount: null,
+        };
+      default:
+        return {
+          isLive: true,
+          title: `${sName} Live Stream Simulation`,
+          category: "Variety",
+          viewerCount: 12000,
+          startTime: nowIso,
+        };
+    }
+  }
+
+  function updateSimulatorJsonTextarea() {
+    if (!simulatorJsonPayload) return;
+    const preset = selectSimulatorPreset?.value || "going-live";
+    const sId = selectSimulatorStreamer?.value;
+    const streamer = localStreamers.find((s) => s.id === sId) || null;
+    const payload = getSimulatorPresetPayload(preset, streamer);
+    simulatorJsonPayload.value = JSON.stringify(payload, null, 2);
+  }
+
+  function populateSimulatorStreamers() {
+    if (!selectSimulatorStreamer) return;
+    const currentVal = selectSimulatorStreamer.value;
+    selectSimulatorStreamer.innerHTML = "";
+    if (localStreamers.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No streamers available";
+      selectSimulatorStreamer.appendChild(opt);
+      return;
+    }
+    localStreamers.forEach((s) => {
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = `${s.name} (${s.id})`;
+      selectSimulatorStreamer.appendChild(opt);
+    });
+    if (currentVal && localStreamers.some((s) => s.id === currentVal)) {
+      selectSimulatorStreamer.value = currentVal;
+    }
+  }
+
+  if (selectSimulatorPreset) {
+    selectSimulatorPreset.addEventListener(
+      "change",
+      updateSimulatorJsonTextarea,
+    );
+  }
+  if (selectSimulatorStreamer) {
+    selectSimulatorStreamer.addEventListener(
+      "change",
+      updateSimulatorJsonTextarea,
+    );
+  }
+  if (btnResetSimulatorJson) {
+    btnResetSimulatorJson.addEventListener(
+      "click",
+      updateSimulatorJsonTextarea,
+    );
+  }
+
+  if (btnFireMockMetadata) {
+    btnFireMockMetadata.addEventListener("click", async () => {
+      const streamerId = selectSimulatorStreamer?.value;
+      if (!streamerId) {
+        alert("Please select a target streamer for simulation.");
+        return;
+      }
+
+      let payloadObj;
+      try {
+        payloadObj = JSON.parse(simulatorJsonPayload?.value || "{}");
+      } catch (err) {
+        alert(`Invalid JSON payload format: ${err.message}`);
+        simulatorJsonPayload?.focus();
+        return;
+      }
+
+      try {
+        if (btnFireMockMetadata) {
+          btnFireMockMetadata.disabled = true;
+          btnFireMockMetadata.textContent = "Injecting...";
+        }
+
+        const res = await window.electronAPI.injectMockMetadata({
+          streamerId,
+          metadata: payloadObj,
+        });
+
+        if (simulatorResultBox) {
+          simulatorResultBox.style.display = "block";
+          if (res && res.success) {
+            if (simulatorResultBadge) {
+              simulatorResultBadge.className = `rule-card-badge ${res.isLive ? "status-live" : "status-offline"}`;
+              simulatorResultBadge.textContent = res.isLive
+                ? "Live Injected"
+                : "Offline Injected";
+            }
+            if (simulatorResultContent) {
+              let triggerHtml =
+                "<span style='color:var(--text-muted);'>No trigger rule matched</span>";
+              if (res.firedTrigger) {
+                triggerHtml = `<strong style='color:#ffe600;'>⚡ ${res.firedTrigger.label}:</strong> ${res.firedTrigger.message}`;
+              }
+              simulatorResultContent.innerHTML = `
+                <div><strong>Streamer:</strong> ${res.streamerName} (${res.streamerId})</div>
+                <div><strong>Status:</strong> ${res.isLive ? "LIVE 🟢" : "OFFLINE ⚫"}</div>
+                <div><strong>Trigger Evaluated:</strong> ${triggerHtml}</div>
+                ${
+                  res.cachedInfo
+                    ? `<div><strong>Metadata:</strong> "${res.cachedInfo.title}" • <em>${res.cachedInfo.category || "No game"}</em> • ${res.cachedInfo.viewerCount ? Number(res.cachedInfo.viewerCount).toLocaleString() + " viewers" : "N/A"}</div>`
+                    : ""
+                }
+              `;
+            }
+            appendLog(
+              `[Simulator] Injected metadata for ${res.streamerName} (${res.isLive ? "LIVE" : "OFFLINE"})${res.firedTrigger ? ` - ⚡ Trigger: ${res.firedTrigger.label}` : ""}`,
+              "info",
+              "Simulator",
+            );
+          } else {
+            if (simulatorResultBadge) {
+              simulatorResultBadge.className = "rule-card-badge status-offline";
+              simulatorResultBadge.textContent = "Error";
+            }
+            if (simulatorResultContent) {
+              simulatorResultContent.textContent =
+                res?.error || "Simulation failed";
+            }
+          }
+        }
+      } catch (err) {
+        if (simulatorResultBox) {
+          simulatorResultBox.style.display = "block";
+          if (simulatorResultBadge) {
+            simulatorResultBadge.className = "rule-card-badge status-offline";
+            simulatorResultBadge.textContent = "Error";
+          }
+          if (simulatorResultContent) {
+            simulatorResultContent.textContent = err.message || String(err);
+          }
+        }
+      } finally {
+        if (btnFireMockMetadata) {
+          btnFireMockMetadata.disabled = false;
+          btnFireMockMetadata.innerHTML = `
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Fire Mock Metadata
+          `;
+        }
       }
     });
   }
@@ -982,6 +1205,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderStreamersList(streamers) {
     if (streamers != null) {
       localStreamers = Array.isArray(streamers) ? streamers : [];
+      populateSimulatorStreamers();
+      if (!simulatorJsonPayload || !simulatorJsonPayload.value) {
+        updateSimulatorJsonTextarea();
+      }
     }
     const query = (inputSearchStreamers?.value || "").trim().toLowerCase();
     const isSearching = query.length > 0;

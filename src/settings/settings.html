@@ -521,6 +521,65 @@
                     </div>
                 </section>
 
+                <!-- Debug Trigger Simulator Panel -->
+                <section class="settings-card debug-simulator-card" id="debug-simulator-section">
+                    <div class="card-header flex-between">
+                        <div>
+                            <h2>⚡ Debug Trigger Simulator</h2>
+                            <span class="card-subtitle">Inject mock stream metadata to test priority triggers, alert
+                                diffs, and on-live scripts instantly</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" id="btn-fire-mock-metadata">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            Fire Mock Metadata
+                        </button>
+                    </div>
+
+                    <div class="simulator-body">
+                        <div class="form-grid-two">
+                            <div class="form-group">
+                                <label for="select-simulator-streamer">Target Streamer</label>
+                                <select id="select-simulator-streamer" class="form-select">
+                                    <!-- Populated dynamically with streamers -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="select-simulator-preset">Quick Preset Payload</label>
+                                <select id="select-simulator-preset" class="form-select">
+                                    <option value="going-live">Going Live (Offline -> Live)</option>
+                                    <option value="title-change">Title Changed (Match 1 -> Grand Finals)</option>
+                                    <option value="category-change">Game/Category Switched (Valorant -> Just Chatting)
+                                    </option>
+                                    <option value="viewer-spike">Viewer Surge (+25,000 Viewers)</option>
+                                    <option value="going-offline">Going Offline (Live -> Offline)</option>
+                                    <option value="custom">Custom JSON Payload</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="flex-between" style="margin-bottom: 6px;">
+                                <label for="simulator-json-payload">JSON Stream Metadata Payload</label>
+                                <button type="button" class="btn-picker-link" id="btn-reset-simulator-json">Reset
+                                    Payload</button>
+                            </div>
+                            <textarea id="simulator-json-payload" class="form-textarea code-editor-textarea" rows="6"
+                                spellcheck="false"></textarea>
+                        </div>
+
+                        <div id="simulator-result-box" class="simulator-result-box" style="display: none;">
+                            <div class="simulator-result-header">
+                                <span class="result-status-title">Simulation Result:</span>
+                                <span id="simulator-result-badge" class="rule-card-badge status-live">Success</span>
+                            </div>
+                            <div id="simulator-result-content" class="simulator-result-content"></div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Section 4: Window Behavior & Controls -->
                 <section class="settings-card">
                     <div class="card-header">

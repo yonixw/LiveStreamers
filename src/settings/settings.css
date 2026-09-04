@@ -2015,6 +2015,52 @@ body {
   border-color: #ffffff;
 }
 
+.debug-simulator-card {
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.code-editor-textarea {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.45);
+  color: #a5f3fc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  padding: 8px 10px;
+  width: 100%;
+  resize: vertical;
+}
+
+.code-editor-textarea:focus {
+  border-color: #eab308;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2);
+}
+
+.simulator-result-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-sm);
+}
+
+.simulator-result-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.simulator-result-content {
+  font-size: 0.78rem;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
 .streamer-picker-header {
   margin-bottom: 6px;
 }

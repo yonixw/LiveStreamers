@@ -24,11 +24,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
   snoozeStreamer: (streamerId, durationMs) =>
     ipcRenderer.invoke("popup:snooze-streamer", { streamerId, durationMs }),
 
-  // Node.js Side Tasks
+  // Node.js Side Tasks & Debug Simulator
   runPetAvatarTask: (userName) =>
     ipcRenderer.invoke("task:run-pet-avatar", userName),
   runStreamerCheckTask: (streamer) =>
     ipcRenderer.invoke("task:run-streamer-check", streamer),
+  injectMockMetadata: (data) =>
+    ipcRenderer.invoke("debug:inject-streamer-metadata", data),
 
   // Event Listeners
   onSettingsUpdated: (callback) => {
