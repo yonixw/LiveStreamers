@@ -84,23 +84,23 @@ In [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-chec
 In [`src/popup/popup.html:43`](src/popup/popup.html:43) and [`src/popup/popup.js`](src/popup/popup.js:105), add snooze duration buttons `<button data-snooze="30d">30d</button>` and `<button data-snooze="1y">1y</button>`. In [`src/main.js:ipcMain.handle('popup:snooze-streamer')`](src/main.js:740) and [`src/settings/settings.js`](src/settings/settings.js:726), extend duration calculation switch cases to calculate `30 * 24 * 60 * 60 * 1000` (30 days) and `365 * 24 * 60 * 60 * 1000` (1 year) from `Date.now()`, saving `snoozedUntil` in [`src/tasks/storage.js`](src/tasks/storage.js:169) and sinking snoozed streamers to the bottom of the overlay list.
 
 ================================================================================
-### TASK 10: Color Rules Case-Insensitive Search in Tags & Metadata
-================================================================================
-1. **Type:** FEATURE
-2. **Priority:** LOW-MEDIUM
-3. **Complexity:** LOW
-4. **Implementation Suggestion:**
-In [`src/settings/settings.html`](src/settings/settings.html:610), add a search input `#input-search-color-rules` with clear button `#btn-clear-search-color-rules` to the Color Rules section header, reusing the active search highlight styles (`#ffe600`) from `#input-search-streamers` in [`src/settings/settings.css:770`](src/settings/settings.css:770). In [`src/settings/settings.js:renderColorRules()`](src/settings/settings.js:1800), implement case-insensitive text filtering against rule names, color hex codes, and assigned streamer names/tags (`rule.name.toLowerCase().includes(term)` or `streamer.name.toLowerCase().includes(term)`), instantly hiding non-matching rule cards in the settings list without requiring sorting overhead.
-
-
-================================================================================
-### TASK 11: Header State Indicator Formatting ("01" - "99" Zero-Padded Layout)
+### TASK 10: Header State Indicator Formatting ("01" - "99" Zero-Padded Layout)
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** LOW
 3. **Complexity:** LOW
 4. **Implementation Suggestion:**
 In [`src/renderer/renderer.js`](src/renderer/renderer.js:16) and [`src/settings/settings.js`](src/settings/settings.js:1235), modify the drag header state badge rendering logic from the fractional format (`${stateIndex + 1}/${totalStates}`) to a uniform two-digit zero-padded index: `String(stateIndex + 1).padStart(2, "0")` (e.g. `"01"`, `"02"`, up to `"99"`). In [`src/renderer/style.css:#header-state-indicator`](src/renderer/style.css:60), set a fixed character width with `font-variant-numeric: tabular-nums` to ensure stable layout alignment without width shifts when rotating between saved window presets.
+
+
+================================================================================
+### TASK 11: Color Rules Case-Insensitive Search in Tags & Metadata
+================================================================================
+1. **Type:** FEATURE
+2. **Priority:** LOW-MEDIUM
+3. **Complexity:** LOW
+4. **Implementation Suggestion:**
+In [`src/settings/settings.html`](src/settings/settings.html:610), add a search input `#input-search-color-rules` with clear button `#btn-clear-search-color-rules` to the Color Rules section header, reusing the active search highlight styles (`#ffe600`) from `#input-search-streamers` in [`src/settings/settings.css:770`](src/settings/settings.css:770). In [`src/settings/settings.js:renderColorRules()`](src/settings/settings.js:1800), implement case-insensitive text filtering against rule names, color hex codes, and assigned streamer names/tags (`rule.name.toLowerCase().includes(term)` or `streamer.name.toLowerCase().includes(term)`), instantly hiding non-matching rule cards in the settings list without requiring sorting overhead.
 
 ================================================================================
 ### TASK 12: Keyword-Based Automated Stream Snoozing (Against 24/7 Re-Runs in Title & Game)

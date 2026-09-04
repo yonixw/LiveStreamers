@@ -87,6 +87,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnCheckAll = document.getElementById("btn-check-all");
   const presetButtons = document.querySelectorAll(".btn-preset");
 
+  // Delete Streamer Dialog Elements
+  const deleteStreamerDialog = document.getElementById(
+    "delete-streamer-dialog",
+  );
+  const deleteStreamerNameEl = document.getElementById("delete-streamer-name");
+  const btnCancelDelete = document.getElementById("btn-cancel-delete");
+  const btnConfirmDelete = document.getElementById("btn-confirm-delete");
+  let streamerIdToDelete = null;
+
   // Window Controls
   const chkShowNicknameTag = document.getElementById("chk-show-nickname-tag");
   const chkShowOverlay = document.getElementById("chk-show-overlay");
@@ -1543,11 +1552,20 @@ document.addEventListener("DOMContentLoaded", async () => {
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       `;
-      deleteBtn.addEventListener("click", async () => {
-        if (window.electronAPI && window.electronAPI.removeStreamer) {
-          const updated = await window.electronAPI.removeStreamer(streamer.id);
-          renderStreamersList(updated);
-          appendLog(`Removed streamer: ${streamer.name}`, "info", "Streamer");
+      deleteBtn.addEventListener("click", () => {
+        streamerIdToDelete = streamer.id;
+        if (deleteStreamerNameEl) {
+          deleteStreamerNameEl.textContent = streamer.name || "this streamer";
+        }
+        if (
+          deleteStreamerDialog &&
+          typeof deleteStreamerDialog.showModal === "function"
+        ) {
+          deleteStreamerDialog.showModal();
+        } else if (
+          confirm(`Are you sure you want to remove "${streamer.name}"?`)
+        ) {
+          executeDeleteStreamer(streamer.id, streamer.name);
         }
       });
 
@@ -1564,6 +1582,58 @@ document.addEventListener("DOMContentLoaded", async () => {
       streamersListEl.appendChild(li);
 
       updateItemPetTaskUI(li, streamer.id);
+    });
+  }
+
+  // Execute Streamer Deletion
+  async function executeDeleteStreamer(streamerId, streamerName) {
+    if (!streamerId) return;
+    if (editStreamerIdInput && editStreamerIdInput.value === streamerId) {
+      resetStreamerForm();
+    }
+    if (window.electronAPI && window.electronAPI.removeStreamer) {
+      const updated = await window.electronAPI.removeStreamer(streamerId);
+      renderStreamersList(updated);
+      appendLog(
+        `Removed streamer: ${streamerName || streamerId}`,
+        "info",
+        "Streamer",
+      );
+    }
+  }
+
+  // Delete Streamer Dialog Event Listeners
+  if (btnCancelDelete && deleteStreamerDialog) {
+    btnCancelDelete.addEventListener("click", () => {
+      streamerIdToDelete = null;
+      deleteStreamerDialog.close();
+    });
+  }
+
+  if (btnConfirmDelete && deleteStreamerDialog) {
+    btnConfirmDelete.addEventListener("click", async () => {
+      if (streamerIdToDelete) {
+        const streamer = localStreamers.find(
+          (s) => s.id === streamerIdToDelete,
+        );
+        const name = streamer ? streamer.name : streamerIdToDelete;
+        const idToDelete = streamerIdToDelete;
+        streamerIdToDelete = null;
+        deleteStreamerDialog.close();
+        await executeDeleteStreamer(idToDelete, name);
+      }
+    });
+  }
+
+  if (deleteStreamerDialog) {
+    deleteStreamerDialog.addEventListener("click", (e) => {
+      if (e.target === deleteStreamerDialog) {
+        streamerIdToDelete = null;
+        deleteStreamerDialog.close();
+      }
+    });
+    deleteStreamerDialog.addEventListener("cancel", () => {
+      streamerIdToDelete = null;
     });
   }
 

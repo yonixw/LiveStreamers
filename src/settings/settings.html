@@ -1019,6 +1019,34 @@
         </div>
     </div>
 
+    <!-- Confirm Streamer Delete Dialog -->
+    <dialog id="delete-streamer-dialog" class="modal-dialog">
+        <div class="modal-dialog-content">
+            <div class="modal-dialog-header">
+                <div class="modal-dialog-icon modal-dialog-icon-danger">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="modal-dialog-title">Delete Streamer</h3>
+                    <p class="modal-dialog-subtitle">This action cannot be undone.</p>
+                </div>
+            </div>
+            <div class="modal-dialog-body">
+                <p>Are you sure you want to remove <strong id="delete-streamer-name"></strong> from your configured
+                    streamers?</p>
+            </div>
+            <div class="modal-dialog-actions">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-delete">Cancel</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btn-confirm-delete">Delete Streamer</button>
+            </div>
+        </div>
+    </dialog>
+
     <script src="settings.js"></script>
 </body>
 
