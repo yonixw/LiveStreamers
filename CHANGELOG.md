@@ -8,13 +8,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.11.0] - 2026-09-04
 
 ### Added
-- **Concurrent Worker Pool & Per-Domain Crawler Throttling**:
-  - Replaced the single-threaded `YtDlpSequentialQueue` with a high-throughput `YtDlpWorkerPool` in [`src/tasks/stream-checker.js:YtDlpWorkerPool`](src/tasks/stream-checker.js:19).
-  - Configured global concurrency limit (up to 4 parallel workers) combined with per-domain serialization (max 1 concurrent check for `twitch.tv`, `kick.com`, `youtube.com`, etc.) and cooldown timers, enabling parallel sweeps across distinct streaming platforms without IP rate-limiting.
-  - Updated [`src/tasks/stream-checker.js:StreamLiveCheckerService`](src/tasks/stream-checker.js:828) to dispatch streamer checks concurrently across the worker pool while maintaining per-streamer link order and short-circuiting.
-- **yt-dlp Process PID & Performance Timing Telemetry**:
-  - Captured child process PID from the `yt-dlp` runner and recorded duration using `performance.now()` in [`src/tasks/yt-dlp-utils.js:getRawStreamInfo()`](src/tasks/yt-dlp-utils.js:450).
-  - Output structured console telemetry on process spawn and termination: `[yt-dlp] [PID: ${pid}] [START] ${url}` and `[yt-dlp] [PID: ${pid}] [DONE in ${elapsedMs}ms] ${url}`, streaming automatically into the Settings DevTools Activity Log.
+- **Configurable Crawler Concurrency Limit & Per-Domain Throttling with PID Logging**:
+  - Replaced the single-threaded queue with a concurrent worker pool supporting global concurrency limits (e.g. 4 parallel workers) and per-domain throttling (`twitch.tv`, `kick.com`, `youtube.com`) in [`src/tasks/stream-checker.js:YtDlpSequentialQueue`](src/tasks/stream-checker.js:8).
+  - Captured child process PID and execution time with structured telemetry logging in [`src/tasks/yt-dlp-utils.js:getStreamMetadata()`](src/tasks/yt-dlp-utils.js:325).
+- **Avatar Circle Border Patterns & Interactive Live Preview**:
+  - Extended `colorRules` and streamer settings in [`src/tasks/storage.js`](src/tasks/storage.js:88) with `borderPattern` options (`solid`, `dashed`, `dotted`, `double`, `dual-gradient`, `striped`).
+  - Added dynamic border styling and `conic-gradient` / `repeating-linear-gradient` masks in [`src/renderer/style.css:.circle-frame`](src/renderer/style.css:122) and [`src/renderer/renderer.js:renderAvatarsInPlace()`](src/renderer/renderer.js:458).
+  - Added pattern selector dropdown, secondary color picker, and live circular avatar preview in [`src/settings/settings.html`](src/settings/settings.html:600), [`src/settings/settings.css`](src/settings/settings.css:1730), and [`src/settings/settings.js`](src/settings/settings.js:1680).
+- **Trigger Debug Injection Simulator**:
+  - Added "Debug Trigger Simulator" panel in [`src/settings/settings.html`](src/settings/settings.html:480) and [`src/settings/settings.js`](src/settings/settings.js:550) with customizable JSON payload editor and trigger firing button.
+  - Exposed `debug:inject-streamer-metadata` IPC handler in [`src/main.js`](src/main.js:1500) and [`src/preload.js`](src/preload.js:1) feeding mock metadata directly into [`src/tasks/stream-checker.js:evaluateTriggers()`](src/tasks/stream-checker.js:250).
+- **YAML Configuration File Support (`data/settings.yaml`)**:
+  - Added YAML configuration loading and serialization via `js-yaml` in [`src/tasks/storage.js`](src/tasks/storage.js:18), checking `data/settings.yaml` first with fallback to `settings.json`.
+- **Live Session Timeline History & Tooltip Group Badges**:
+  - Recorded session history checkpoints on metadata changes and hourly in [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:825), persisting sessions in `./data/history.json` via [`src/tasks/storage.js:saveHistory()`](src/tasks/storage.js:583).
+  - Added "Session Timeline" carousel card with previous/next navigation buttons in [`src/popup/popup.html`](src/popup/popup.html:30), [`src/popup/popup.css`](src/popup/popup.css:129), and [`src/popup/popup.js`](src/popup/popup.js:30).
+  - Displayed timeline count (`📜 Timeline`), trigger chip (`⚡`), and assigned color rule group tag (`🎨 Group`) in [`src/tooltip-win/tooltip.html`](src/tooltip-win/tooltip.html:33) and [`src/tooltip-win/tooltip.css`](src/tooltip-win/tooltip.css:74).
+- **Extended Snooze Presets (30 Days & 1 Year)**:
+  - Added `30d` and `1y` duration buttons in [`src/popup/popup.html:43`](src/popup/popup.html:43) and [`src/popup/popup.js`](src/popup/popup.js:105), persisted via [`src/main.js:ipcMain.handle('popup:snooze-streamer')`](src/main.js:740) and [`src/tasks/storage.js`](src/tasks/storage.js:169).
+- **Unified Streamer Search Modal with Context Highlight & Tag Pickers**:
+  - Created reusable Streamer Search Modal (`#streamer-search-modal`) in [`src/settings/settings.html`](src/settings/settings.html:1050), [`src/settings/settings.css`](src/settings/settings.css:2395), and [`src/settings/settings.js:openStreamerSearchModal()`](src/settings/settings.js:650) with case-insensitive context highlight snippets (`<mark class="search-match-highlight">`).
+  - Integrated search modal into Trigger Simulator and replaced large streamer checkbox lists in Group Rules (Action/Color) with tag chip managers and "+ Add Streamer" search modal buttons.
+- **Keyword-Based Automated Stream Snoozing**:
+  - Added global and per-streamer auto-snooze keyword filtering (`autoSnoozeKeywordsEnabled`, `autoSnoozeKeywords`, `autoSnoozeDurationHours`) in [`src/tasks/storage.js`](src/tasks/storage.js:88), [`src/settings/settings.html`](src/settings/settings.html:340), and [`src/settings/settings.js`](src/settings/settings.js:460).
+  - Automatically evaluated title and category keywords to snooze rerun broadcasts in [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:580) and sink them in overlay sorting.
+- **Tooltip Opacity Slider**:
+  - Added `tooltipOpacity` setting (10% to 100%) in [`src/tasks/storage.js`](src/tasks/storage.js:88) and [`src/settings/settings.html`](src/settings/settings.html:520), wired via [`src/preload.js`](src/preload.js:55) and `tooltip:set-opacity` handler in [`src/main.js`](src/main.js:1605).
+- **Translucent Dark Backdrop Container & Theme for Avatar Info Lines**:
+  - Added translucent dark backdrop container styling in [`src/renderer/style.css:.streamer-info-lines`](src/renderer/style.css:204).
+  - Added `infoLinesTheme` setting (`dark-badge`, `plain-white`, `plain-dark`) in [`src/tasks/storage.js`](src/tasks/storage.js:88), [`src/settings/settings.html`](src/settings/settings.html:120), and [`src/settings/settings.js`](src/settings/settings.js:1200).
+- **Links Popup Visual Opening Accent**:
+  - Added 2-second high-contrast yellow flash animation (`@keyframes popupYellowFlash`) in [`src/popup/popup.css`](src/popup/popup.css:15) and [`src/popup/popup.js`](src/popup/popup.js:1) upon window launch and data delivery.
+
+### Changed
+- **Header State Indicator Formatting**:
+  - Changed drag header state badge rendering in [`src/renderer/renderer.js`](src/renderer/renderer.js:16) and [`src/settings/settings.js`](src/settings/settings.js:1235) to zero-padded format (`"01"` - `"99"`) with tabular numeric layout in [`src/renderer/style.css:#header-state-indicator`](src/renderer/style.css:60).
+- **Minus Sign Prefix for Offline Duration**:
+  - Prefixed offline elapsed time output with `"- "` in [`src/renderer/renderer.js:formatOfflineDuration()`](src/renderer/renderer.js:74) to clearly contrast offline time from positive uptime.
+- **Tooltip Streamer Header Cleanup**:
+  - Removed redundant `#tooltip-status-badge` (`.tooltip-badge`) element in [`src/tooltip-win/tooltip.html`](src/tooltip-win/tooltip.html:16) and [`src/tooltip-win/tooltip.css`](src/tooltip-win/tooltip.css:60) in favor of live accent borders and domain badges.
+
+### Fixed
+- **Tooltip Flashing on Background Updates**:
+  - Guarded re-render tooltip dispatch in [`src/renderer/renderer.js:renderAvatarsInPlace()`](src/renderer/renderer.js:476) by checking `card.matches(':hover')` and verifying DOM attachment.
+  - Validated cursor coordinates against bounds using `screen.getCursorScreenPoint()` in [`src/main.js:ipcMain.handle('tooltip:show')`](src/main.js:1605) before displaying the tooltip window.
+- **Dual-Frequency Streamer Scheduling & Live Link Lock**:
+  - Supported streamer-level intervals `checkFreqOfflineMinutes` and `checkFreqOnlineMinutes` in [`src/tasks/storage.js:normalizeStreamerConfig()`](src/tasks/storage.js:250).
+  - Locked checks strictly to `activeUrl` every `checkFreqOnlineMinutes` when live in [`src/tasks/stream-checker.js`](src/tasks/stream-checker.js:500), sweeping remaining URLs sequentially only when offline.
+- **Tooltip & Overlay Always-On-Top Z-Order Reinforcement**:
+  - Set `tooltipWindow.setAlwaysOnTop(true, "screen-saver")` in [`src/main.js:createTooltipWindow()`](src/main.js:774).
+  - Added recurring 60-second topmost z-order re-assertion in [`src/main.js`](src/main.js:150) to prevent desktop overlay from losing topmost ordering after fullscreen application changes or explorer shell resets.
+- **Trigger State Cleanup on Transition to Offline**:
+  - Cleaned up active trigger cache fields (`lastTrigger`, `lastTriggeredAt`, `runtimeTriggerMilestones`, `viewerSurgeFired`) upon live-to-offline transitions in [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:620).
 
 ## [1.10.0] - 2026-08-27
 
