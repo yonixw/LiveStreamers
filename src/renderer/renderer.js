@@ -472,15 +472,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const userNick = streamer.customTag || streamer.name || "Streamer";
 
-      // Update tooltip if this card is currently hovered
+      // Update tooltip if this card is currently hovered and pointer is over it
       if (
         currentlyHoveredCard === card &&
+        card.isConnected &&
+        card.matches(":hover") &&
         window.electronAPI &&
         window.electronAPI.showTooltip
       ) {
         window.electronAPI.showTooltip(
           getTooltipDataForStreamer(streamer, card),
         );
+      } else if (
+        currentlyHoveredCard === card &&
+        (!card.isConnected || !card.matches(":hover"))
+      ) {
+        currentlyHoveredCard = null;
+        if (window.electronAPI && window.electronAPI.hideTooltip) {
+          window.electronAPI.hideTooltip();
+        }
       }
 
       // Update Avatar Image / Initials without flash

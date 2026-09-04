@@ -1604,6 +1604,24 @@ ipcMain.handle("window:set-ignore-mouse-events", (_event, ignore, options) => {
 
 ipcMain.handle("tooltip:show", (_event, data) => {
   if (!state.overlayVisible) return false;
+  if (
+    overlayWindow &&
+    !overlayWindow.isDestroyed() &&
+    overlayWindow.isVisible()
+  ) {
+    const cursor = screen.getCursorScreenPoint();
+    const bounds = overlayWindow.getBounds();
+    const isInsideOverlay =
+      cursor.x >= bounds.x &&
+      cursor.x <= bounds.x + bounds.width &&
+      cursor.y >= bounds.y &&
+      cursor.y <= bounds.y + bounds.height;
+    if (!isInsideOverlay) {
+      hideTooltipWindow();
+      return false;
+    }
+  }
+
   const win = createTooltipWindow();
   latestTooltipTarget = data?.targetRect || null;
 
@@ -1613,7 +1631,9 @@ ipcMain.handle("tooltip:show", (_event, data) => {
     positionTooltipWindow(latestTooltipTarget);
   }
 
-  win.showInactive();
+  if (!win.isVisible()) {
+    win.showInactive();
+  }
   startTooltipCursorTracking();
   return true;
 });
