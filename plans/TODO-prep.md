@@ -28,12 +28,13 @@ Ensure the tooltip window permanently maintains topmost z-index by setting `tool
 The multi-URL checking logic in [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:529) currently evaluates link check frequencies independently per URL, causing false offline status flips when a secondary link is checked while the primary live link is skipped. Refactor the scheduler schema in [`src/tasks/storage.js:normalizeStreamerConfig()`](src/tasks/storage.js:250) to support streamer-level intervals: `checkFreqOfflineMinutes` (default e.g. 5m) and `checkFreqOnlineMinutes` (default e.g. 2m), maintaining backward compatibility with legacy `url.freqMinutes` entries. In [`src/tasks/stream-checker.js`](src/tasks/stream-checker.js:500), when a streamer is already flagged as `isLive`, lock checks strictly to `activeUrl` every `checkFreqOnlineMinutes`; only when `activeUrl` goes offline should the engine revert to sweeping all configured URLs sequentially at the `checkFreqOfflineMinutes` interval.
 
 ================================================================================
-### TASK 04: Configurable Crawler Concurrency Limit & Per-Domain Throttling with PID Logging
+### TASK 04: Configurable Crawler Concurrency Limit & Per-Domain Throttling with PID Logging [COMPLETED]
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** MEDIUM
 3. **Complexity:** MEDIUM-HIGH
-4. **Implementation Suggestion:**
+4. **Status:** COMPLETED
+5. **Implementation Suggestion:**
 Replace the single-threaded [`src/tasks/stream-checker.js:YtDlpSequentialQueue`](src/tasks/stream-checker.js:8) with a concurrent worker pool that supports a global concurrency limit (e.g. 4 parallel workers) combined with per-domain task queues (max 1 concurrent check for `twitch.tv`, `kick.com`, `youtube.com`) to eliminate IP rate limiting while enabling parallel sweeps across distinct streaming services. In [`src/tasks/yt-dlp-utils.js:getStreamMetadata()`](src/tasks/yt-dlp-utils.js:325), capture the spawned child process PID from the `yt-dlp` runner and record `performance.now()`, outputting structured console telemetry on process spawn and termination: `[yt-dlp] [PID: ${pid}] [START] ${url}` and `[yt-dlp] [PID: ${pid}] [DONE in ${elapsedMs}ms] ${url}` to mirror through the main process log ring buffer into the Settings DevTools console.
 
 ================================================================================

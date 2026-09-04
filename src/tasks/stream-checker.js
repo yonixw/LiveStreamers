@@ -2,63 +2,157 @@ const path = require("path");
 const { getStreamMetadata, cleanStreamTitle } = require("./yt-dlp-utils");
 
 /**
- * Sequential FIFO Execution Queue for yt-dlp with a 5-second cooldown between calls.
- * Prevents concurrent yt-dlp execution and rate-limiting across all streamers.
+ * Extracts normalized domain name or platform key for per-domain queue throttling.
+ * @param {string} url
+ * @returns {string} Domain identifier (e.g. "twitch.tv", "kick.com", "youtube.com")
  */
-class YtDlpSequentialQueue {
-  constructor(cooldownMs = 5000) {
-    this.cooldownMs = cooldownMs;
+function extractDomainKey(url) {
+  if (!url || typeof url !== "string") return "default";
+  const lower = url.toLowerCase();
+  if (lower.includes("twitch.tv")) return "twitch.tv";
+  if (lower.includes("kick.com")) return "kick.com";
+  if (lower.includes("youtube.com") || lower.includes("youtu.be"))
+    return "youtube.com";
+  try {
+    const parsed = new URL(normalizeUrl(url));
+    return parsed.hostname.toLowerCase() || "default";
+  } catch {
+    return "default";
+  }
+}
+
+/**
+ * Concurrent Worker Pool for yt-dlp with global concurrency limit and per-domain throttling/cooldown.
+ * Prevents IP rate limiting on individual streaming services while enabling parallel sweeps across distinct platforms.
+ */
+class YtDlpWorkerPool {
+  constructor(options = {}) {
+    this.maxGlobalConcurrency = options.maxGlobalConcurrency || 4;
+    this.maxPerDomainConcurrency = options.maxPerDomainConcurrency || 1;
+    this.domainCooldownMs =
+      typeof options.domainCooldownMs === "number"
+        ? options.domainCooldownMs
+        : typeof options.cooldownMs === "number"
+          ? options.cooldownMs
+          : 3000;
     this.queue = [];
-    this.isProcessing = false;
-    this.lastExecutedTime = 0;
+    this.activeWorkers = 0;
+    this.activeDomainWorkers = new Map();
+    this.domainLastExecutedTime = new Map();
+    this.cooldownTimer = null;
   }
 
   /**
    * Enqueues an async task and returns a Promise for its result.
    * @param {() => Promise<any>} taskFn
+   * @param {string} [urlOrDomain]
    * @returns {Promise<any>}
    */
-  enqueue(taskFn) {
+  enqueue(taskFn, urlOrDomain = "") {
+    const domain = extractDomainKey(urlOrDomain);
     return new Promise((resolve, reject) => {
-      this.queue.push({ taskFn, resolve, reject });
-      this.processNext();
+      this.queue.push({
+        taskFn,
+        domain,
+        urlOrDomain,
+        resolve,
+        reject,
+        enqueuedAt: Date.now(),
+      });
+      this.processQueue();
     });
   }
 
-  async processNext() {
-    if (this.isProcessing || this.queue.length === 0) {
+  processQueue() {
+    if (this.queue.length === 0) {
       return;
     }
 
-    this.isProcessing = true;
-    const { taskFn, resolve, reject } = this.queue.shift();
-
-    // Enforce 5-second cooldown since last execution completed
-    const now = Date.now();
-    const timeSinceLast = now - this.lastExecutedTime;
-    if (this.lastExecutedTime > 0 && timeSinceLast < this.cooldownMs) {
-      const waitTime = this.cooldownMs - timeSinceLast;
-      await new Promise((r) => setTimeout(r, waitTime));
+    if (this.activeWorkers >= this.maxGlobalConcurrency) {
+      return;
     }
 
+    const now = Date.now();
+    let minWaitTime = Infinity;
+
+    for (let i = 0; i < this.queue.length; i++) {
+      if (this.activeWorkers >= this.maxGlobalConcurrency) {
+        break;
+      }
+
+      const item = this.queue[i];
+      const domain = item.domain;
+      const domainActive = this.activeDomainWorkers.get(domain) || 0;
+
+      // Check per-domain concurrency
+      if (domainActive >= this.maxPerDomainConcurrency) {
+        continue;
+      }
+
+      // Check per-domain cooldown
+      const lastExec = this.domainLastExecutedTime.get(domain) || 0;
+      const elapsed = now - lastExec;
+      if (lastExec > 0 && elapsed < this.domainCooldownMs) {
+        const remaining = this.domainCooldownMs - elapsed;
+        if (remaining < minWaitTime) {
+          minWaitTime = remaining;
+        }
+        continue;
+      }
+
+      // Found a task ready to execute
+      this.queue.splice(i, 1);
+      i--; // Adjust loop counter
+
+      this.activeWorkers++;
+      this.activeDomainWorkers.set(domain, domainActive + 1);
+
+      this.executeTask(item, domain);
+    }
+
+    // Schedule next check if any pending task is waiting for cooldown
+    if (minWaitTime < Infinity && minWaitTime > 0) {
+      if (this.cooldownTimer) {
+        clearTimeout(this.cooldownTimer);
+      }
+      this.cooldownTimer = setTimeout(() => {
+        this.cooldownTimer = null;
+        this.processQueue();
+      }, minWaitTime + 10);
+    }
+  }
+
+  async executeTask(item, domain) {
+    const { taskFn, resolve, reject } = item;
     try {
       const result = await taskFn();
       resolve(result);
     } catch (err) {
       reject(err);
     } finally {
-      this.lastExecutedTime = Date.now();
-      this.isProcessing = false;
-      // Process next queued task
-      if (this.queue.length > 0) {
-        setTimeout(() => this.processNext(), 50);
+      this.activeWorkers--;
+      const currentActive = (this.activeDomainWorkers.get(domain) || 1) - 1;
+      if (currentActive <= 0) {
+        this.activeDomainWorkers.delete(domain);
+      } else {
+        this.activeDomainWorkers.set(domain, currentActive);
       }
+      this.domainLastExecutedTime.set(domain, Date.now());
+
+      if (this.domainCooldownMs > 0) {
+        setTimeout(() => this.processQueue(), this.domainCooldownMs);
+      }
+      this.processQueue();
     }
   }
 }
 
-// Global shared yt-dlp queue with 5-second cooldown
-const globalYtDlpQueue = new YtDlpSequentialQueue(5000);
+// Global shared yt-dlp concurrent worker pool
+const globalYtDlpQueue = new YtDlpWorkerPool({
+  maxGlobalConcurrency: 4,
+  maxPerDomainConcurrency: 1,
+  domainCooldownMs: 3000,
+});
 
 /**
  * Detects the streaming platform from a given URL.
@@ -130,7 +224,7 @@ function extractStreamerName(url) {
 }
 
 /**
- * Performs a single live check for a single URL using yt-dlp-utils via sequential queue.
+ * Performs a single live check for a single URL using yt-dlp-utils via concurrent worker pool.
  * @param {string} url
  * @param {string} [streamerName]
  * @returns {Promise<object>}
@@ -210,7 +304,7 @@ async function checkSingleUrlLive(url, streamerName = "Streamer") {
         error: errMsg,
       };
     }
-  });
+  }, targetUrl);
 }
 
 /**
@@ -713,7 +807,7 @@ async function checkStreamerLiveTask(
 }
 
 /**
- * Background Scheduler Class to check streamer links with per-link frequencies and sequential FIFO across streamers.
+ * Background Scheduler Class to check streamer links with per-link frequencies and concurrent worker pool.
  */
 class StreamLiveCheckerService {
   constructor({
@@ -722,17 +816,19 @@ class StreamLiveCheckerService {
     onStatusUpdate,
     onLog,
     intervalMs = 60000,
+    maxConcurrency = 4,
   }) {
     this.getStreamers = getStreamers;
     this.getStatusMap = getStatusMap;
     this.onStatusUpdate = onStatusUpdate;
     this.onLog = onLog || console.log;
     this.intervalMs = intervalMs;
+    this.maxConcurrency = maxConcurrency;
     this.timer = null;
     this.isRunning = false;
     this.minuteCounter = 0;
     this.streamerQueue = [];
-    this.isProcessingStreamerQueue = false;
+    this.activeStreamerChecks = 0;
   }
 
   /**
@@ -743,7 +839,7 @@ class StreamLiveCheckerService {
     this.isRunning = true;
     this.onLog(
       "StreamChecker",
-      `Background Live Checker started (chained setTimeout, sequential streamer FIFO, 5s yt-dlp cooldown).`,
+      `Background Live Checker started (chained setTimeout, concurrent worker pool, per-domain throttling).`,
     );
 
     // Start recursive loop using setTimeout after each full cycle completes
@@ -786,25 +882,25 @@ class StreamLiveCheckerService {
   }
 
   /**
-   * Checks all streamers strictly sequentially in FIFO order and awaits full batch completion.
-   * Avatar 1 finishes all its links before Avatar 2 starts.
+   * Checks all configured streamers concurrently up to the worker pool limits.
    * @param {boolean} [isManual=false]
    * @returns {Promise<Array>}
    */
   async checkAll(isManual = false) {
     const streamers = this.getStreamers ? this.getStreamers() : [];
     if (!streamers || streamers.length === 0) {
-      return;
+      return [];
     }
 
-    for (const streamer of streamers) {
-      if (!streamer || !streamer.id) continue;
-      await this.enqueueStreamerCheck(streamer, isManual);
-    }
+    const tasks = streamers
+      .filter((streamer) => streamer && streamer.id)
+      .map((streamer) => this.enqueueStreamerCheck(streamer, isManual));
+
+    return await Promise.all(tasks);
   }
 
   /**
-   * Enqueues a single streamer check into the streamer FIFO queue.
+   * Enqueues a single streamer check into the streamer queue.
    * @param {object} streamer
    * @param {boolean} [isManual=false]
    * @returns {Promise<object>}
@@ -824,23 +920,34 @@ class StreamLiveCheckerService {
   }
 
   /**
-   * Processes the streamer queue strictly in FIFO order.
-   * Avatar 1 finishes completely before Avatar 2 starts.
+   * Processes the streamer queue with concurrent dispatching.
    */
-  async processStreamerQueue() {
-    if (this.isProcessingStreamerQueue || this.streamerQueue.length === 0) {
-      return;
+  processStreamerQueue() {
+    while (
+      this.activeStreamerChecks < this.maxConcurrency &&
+      this.streamerQueue.length > 0
+    ) {
+      const item = this.streamerQueue.shift();
+      this.activeStreamerChecks++;
+      this.runStreamerCheck(item).finally(() => {
+        this.activeStreamerChecks--;
+        this.processStreamerQueue();
+      });
     }
+  }
 
-    this.isProcessingStreamerQueue = true;
-    const { streamer, isManual, resolve, reject } = this.streamerQueue.shift();
+  /**
+   * Runs check task for a single streamer item.
+   * @param {object} item
+   */
+  async runStreamerCheck(item) {
+    const { streamer, isManual, resolve, reject } = item;
     const streamerId = streamer.id;
 
     try {
       const statusMap = this.getStatusMap ? this.getStatusMap() : {};
       const previousStatus = statusMap[streamerId] || null;
 
-      // Check streamer across all its links (Avatar 1 completes all links before next avatar)
       const result = await checkStreamerLiveTask(streamer, previousStatus, {
         isManual,
         minuteCounter: this.minuteCounter,
@@ -877,22 +984,20 @@ class StreamLiveCheckerService {
         });
       }
       reject(err);
-    } finally {
-      this.isProcessingStreamerQueue = false;
-      if (this.streamerQueue.length > 0) {
-        setTimeout(() => this.processStreamerQueue(), 50);
-      }
     }
   }
 }
 
 module.exports = {
   detectPlatform,
+  extractDomainKey,
   normalizeUrl,
   extractStreamerName,
   checkSingleUrlLive,
   evaluateTriggers,
   checkStreamerLiveTask,
   StreamLiveCheckerService,
+  YtDlpWorkerPool,
+  YtDlpSequentialQueue: YtDlpWorkerPool,
   globalYtDlpQueue,
 };

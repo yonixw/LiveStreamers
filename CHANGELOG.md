@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-09-04
+
+### Added
+- **Concurrent Worker Pool & Per-Domain Crawler Throttling**:
+  - Replaced the single-threaded `YtDlpSequentialQueue` with a high-throughput `YtDlpWorkerPool` in [`src/tasks/stream-checker.js:YtDlpWorkerPool`](src/tasks/stream-checker.js:19).
+  - Configured global concurrency limit (up to 4 parallel workers) combined with per-domain serialization (max 1 concurrent check for `twitch.tv`, `kick.com`, `youtube.com`, etc.) and cooldown timers, enabling parallel sweeps across distinct streaming platforms without IP rate-limiting.
+  - Updated [`src/tasks/stream-checker.js:StreamLiveCheckerService`](src/tasks/stream-checker.js:828) to dispatch streamer checks concurrently across the worker pool while maintaining per-streamer link order and short-circuiting.
+- **yt-dlp Process PID & Performance Timing Telemetry**:
+  - Captured child process PID from the `yt-dlp` runner and recorded duration using `performance.now()` in [`src/tasks/yt-dlp-utils.js:getRawStreamInfo()`](src/tasks/yt-dlp-utils.js:450).
+  - Output structured console telemetry on process spawn and termination: `[yt-dlp] [PID: ${pid}] [START] ${url}` and `[yt-dlp] [PID: ${pid}] [DONE in ${elapsedMs}ms] ${url}`, streaming automatically into the Settings DevTools Activity Log.
+
 ## [1.10.0] - 2026-08-27
 
 ### Added

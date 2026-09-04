@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { performance } = require("perf_hooks");
 const YTDlpWrapModule = require("yt-dlp-wrap-plus");
 
 // Handle ESM default export or CommonJS module export
@@ -459,7 +460,25 @@ async function getRawStreamInfo(targetUrl, options = {}) {
   ];
 
   const args = [...defaultArgs, ...extraArgs];
-  const output = await ytDlp.execPromise(args);
+  const startTime = performance.now();
+  const execPromise = ytDlp.execPromise(args);
+  const pid =
+    execPromise && execPromise.ytDlpProcess && execPromise.ytDlpProcess.pid
+      ? execPromise.ytDlpProcess.pid
+      : "unknown";
+
+  console.log(`[yt-dlp] [PID: ${pid}] [START] ${targetUrl}`);
+
+  let output;
+  try {
+    output = await execPromise;
+    const elapsedMs = Math.round(performance.now() - startTime);
+    console.log(`[yt-dlp] [PID: ${pid}] [DONE in ${elapsedMs}ms] ${targetUrl}`);
+  } catch (err) {
+    const elapsedMs = Math.round(performance.now() - startTime);
+    console.log(`[yt-dlp] [PID: ${pid}] [DONE in ${elapsedMs}ms] ${targetUrl}`);
+    throw err;
+  }
 
   try {
     return JSON.parse(output);
