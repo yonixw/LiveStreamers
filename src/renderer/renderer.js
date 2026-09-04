@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         parseInt(settings.currentWindowStateIndex, 10) || 0,
       );
       if (stateCount > 1) {
-        headerStateIndicator.textContent = `${currentIdx + 1}/${stateCount}`;
+        headerStateIndicator.textContent = `${(currentIdx + 1).toString().padStart(2, "0")}`;
         headerStateIndicator.style.display = "inline-block";
       } else {
         headerStateIndicator.textContent = "";
