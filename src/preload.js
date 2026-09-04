@@ -56,6 +56,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   showTooltip: (data) => ipcRenderer.invoke("tooltip:show", data),
   hideTooltip: () => ipcRenderer.invoke("tooltip:hide"),
   updateTooltipSize: (size) => ipcRenderer.invoke("tooltip:update-size", size),
+  setTooltipOpacity: (opacity) =>
+    ipcRenderer.invoke("tooltip:set-opacity", opacity),
   onTooltipData: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on("tooltip:set-data", handler);

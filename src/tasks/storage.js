@@ -111,6 +111,7 @@ const defaultSettings = {
     },
   ],
   currentOpacity: 1.0,
+  tooltipOpacity: 1.0,
   overlayVisible: true,
   overlayBounds: {
     x: null,

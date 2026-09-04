@@ -108,6 +108,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const windowStateBadge = document.getElementById("window-state-badge");
   const opacitySlider = document.getElementById("opacity-slider");
   const opacityValDisplay = document.getElementById("opacity-val-display");
+  const tooltipOpacitySlider = document.getElementById(
+    "tooltip-opacity-slider",
+  );
+  const tooltipOpacityValDisplay = document.getElementById(
+    "tooltip-opacity-val-display",
+  );
 
   const btnCenterOverlay = document.getElementById("btn-center-overlay");
   const btnToggleOverlay = document.getElementById("btn-toggle-overlay");
@@ -1784,6 +1790,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     opacitySlider.addEventListener("change", handleOpacityChange);
   }
 
+  // Tooltip Opacity slider
+  if (tooltipOpacitySlider) {
+    const handleTooltipOpacityChange = (e) => {
+      const pct = Math.max(
+        10,
+        Math.min(100, parseInt(e.target.value, 10) || 100),
+      );
+      if (tooltipOpacityValDisplay) {
+        tooltipOpacityValDisplay.textContent = `${pct}%`;
+      }
+      const opacityVal = pct / 100;
+      if (window.electronAPI) {
+        if (window.electronAPI.setTooltipOpacity) {
+          window.electronAPI.setTooltipOpacity(opacityVal);
+        }
+        if (window.electronAPI.updateSettings) {
+          window.electronAPI.updateSettings({
+            tooltipOpacity: opacityVal,
+          });
+        }
+      }
+    };
+    tooltipOpacitySlider.addEventListener("input", handleTooltipOpacityChange);
+    tooltipOpacitySlider.addEventListener("change", handleTooltipOpacityChange);
+  }
+
   // Quick Action buttons
   btnCenterOverlay.addEventListener("click", () => {
     if (window.electronAPI && window.electronAPI.centerOverlay) {
@@ -2472,6 +2504,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       if (opacityValDisplay) {
         opacityValDisplay.textContent = `${pct}%`;
+      }
+    }
+    if (typeof settings.tooltipOpacity === "number") {
+      const tipPct = Math.max(
+        10,
+        Math.min(100, Math.round(settings.tooltipOpacity * 100)),
+      );
+      if (tooltipOpacitySlider) {
+        tooltipOpacitySlider.value = String(tipPct);
+      }
+      if (tooltipOpacityValDisplay) {
+        tooltipOpacityValDisplay.textContent = `${tipPct}%`;
       }
     }
     if (Array.isArray(settings.streamers)) {

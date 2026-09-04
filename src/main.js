@@ -182,6 +182,7 @@ const state = {
           },
         ],
   currentOpacity: persistedSettings.currentOpacity ?? 1.0,
+  tooltipOpacity: persistedSettings.tooltipOpacity ?? 1.0,
   overlayVisible: persistedSettings.overlayVisible ?? true,
   overlayBounds: persistedSettings.overlayBounds || null,
   popupBounds: persistedSettings.popupBounds || null,
@@ -787,6 +788,8 @@ function createTooltipWindow() {
     focusable: false,
     resizable: false,
     hasShadow: false,
+    opacity:
+      typeof state.tooltipOpacity === "number" ? state.tooltipOpacity : 1.0,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -795,6 +798,7 @@ function createTooltipWindow() {
     },
   });
 
+  tooltipWindow.setAlwaysOnTop(true, "screen-saver");
   tooltipWindow.loadFile(path.join(__dirname, "tooltip-win", "tooltip.html"));
 
   tooltipWindow.on("closed", () => {
@@ -1339,6 +1343,16 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     }
   }
 
+  if (typeof partialSettings.tooltipOpacity === "number") {
+    state.tooltipOpacity = Math.max(
+      0.1,
+      Math.min(1.0, partialSettings.tooltipOpacity),
+    );
+    if (tooltipWindow && !tooltipWindow.isDestroyed()) {
+      tooltipWindow.setOpacity(state.tooltipOpacity);
+    }
+  }
+
   if (typeof partialSettings.overlayVisible === "boolean") {
     state.overlayVisible = partialSettings.overlayVisible;
     if (overlayWindow && !overlayWindow.isDestroyed()) {
@@ -1656,6 +1670,16 @@ ipcMain.handle("tooltip:update-size", (_event, size) => {
     }
   }
   return true;
+});
+
+ipcMain.handle("tooltip:set-opacity", (_event, opacity) => {
+  state.tooltipOpacity = Math.max(0.1, Math.min(1.0, opacity));
+  if (tooltipWindow && !tooltipWindow.isDestroyed()) {
+    tooltipWindow.setOpacity(state.tooltipOpacity);
+  }
+  saveSettings({ tooltipOpacity: state.tooltipOpacity });
+  broadcastStateUpdate();
+  return state.tooltipOpacity;
 });
 
 ipcMain.handle("window:rotate-state", () => {
