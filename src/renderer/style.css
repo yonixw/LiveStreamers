@@ -186,6 +186,8 @@ body {
   -webkit-app-region: no-drag;
   cursor: pointer;
   flex-shrink: 0;
+  max-width: calc(var(--avatar-size, 80px) + 0px);
+  min-width: 0;
 }
 
 .avatars-container.align-left .avatar-card {
@@ -379,14 +381,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  width: max-content;
-  max-width: 100%;
+  width: 100%;
+  max-width: calc(var(--avatar-size, 80px) + 50px);
+  min-width: 0;
   pointer-events: none;
   background: rgba(0, 0, 0, 0.72);
   border-radius: 4px;
   padding: 2px 6px;
   margin-top: 4px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Theme: dark-badge */
@@ -479,13 +483,13 @@ body.info-theme-plain-dark .card-offline .streamer-runtime {
   display: flex;
   align-items: baseline;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   font-size: var(--font-size-base, 12px);
   font-weight: 700;
   color: #f8fafc;
   line-height: 1.25;
-
- 
 }
 
 .avatars-container.align-left .streamer-line-1 {
@@ -501,6 +505,10 @@ body.info-theme-plain-dark .card-offline .streamer-runtime {
 }
 
 .streamer-category {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -508,6 +516,7 @@ body.info-theme-plain-dark .card-offline .streamer-runtime {
   padding: 0 3px;
   paint-order: stroke fill;
   text-shadow: none;
+  box-sizing: border-box;
 }
 
 .card-offline .streamer-category {
@@ -519,6 +528,8 @@ body.info-theme-plain-dark .card-offline .streamer-runtime {
   display: flex;
   align-items: baseline;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   font-size: calc(var(--font-size-base, 12px) * 0.9);
   font-weight: 600;
@@ -539,15 +550,18 @@ body.info-theme-plain-dark .card-offline .streamer-runtime {
 }
 
 .streamer-runtime {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  
   -webkit-text-stroke: 3px #000000;
   padding: 0 3px;
   paint-order: stroke fill;
   text-shadow: none;
-
+  box-sizing: border-box;
 }
 
 .card-offline .streamer-runtime {
