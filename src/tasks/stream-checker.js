@@ -645,7 +645,7 @@ async function checkStreamerLiveTask(
     : Math.max(
         1,
         parseInt(streamer.checkFreqOfflineMinutes, 10) ||
-          parseInt(urlObjects[0]?.freqMinutes, 10) ||
+          parseInt(/*Legacy per url:*/ urlObjects[0]?.freqMinutes, 10) ||
           5,
       );
 
