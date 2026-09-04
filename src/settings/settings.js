@@ -30,6 +30,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     "streamer-following-date-input",
   );
   const streamerNoteInput = document.getElementById("streamer-note-input");
+  const streamerCheckOfflineFreq = document.getElementById(
+    "streamer-check-offline-freq",
+  );
+  const streamerCheckOnlineFreq = document.getElementById(
+    "streamer-check-online-freq",
+  );
   const btnBrowseAvatar = document.getElementById("btn-browse-avatar");
   const avatarFormPreview = document.getElementById("avatar-form-preview");
   const avatarPreviewFallback = document.getElementById(
@@ -596,6 +602,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (streamerNoteInput) {
       streamerNoteInput.value = "";
     }
+    if (streamerCheckOfflineFreq) {
+      streamerCheckOfflineFreq.value = "5";
+    }
+    if (streamerCheckOnlineFreq) {
+      streamerCheckOnlineFreq.value = "2";
+    }
     setFormUrls([{ url: "", freqMinutes: getRandomDefaultFreq() }]);
 
     trigGoingLive.checked = true;
@@ -633,6 +645,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (streamerNoteInput) {
       streamerNoteInput.value = streamer.note || "";
+    }
+    if (streamerCheckOfflineFreq) {
+      streamerCheckOfflineFreq.value = String(
+        streamer.checkFreqOfflineMinutes || 5,
+      );
+    }
+    if (streamerCheckOnlineFreq) {
+      streamerCheckOnlineFreq.value = String(
+        streamer.checkFreqOnlineMinutes || 2,
+      );
     }
     setFormUrls(streamer.urls || [{ url: streamer.url, freqMinutes: 1 }]);
 
@@ -697,6 +719,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? streamerFollowingDateInput.value.trim()
         : getTodayDateString();
     const note = streamerNoteInput ? streamerNoteInput.value.trim() : "";
+    const checkFreqOfflineMinutes = streamerCheckOfflineFreq
+      ? Math.max(1, parseInt(streamerCheckOfflineFreq.value, 10) || 5)
+      : 5;
+    const checkFreqOnlineMinutes = streamerCheckOnlineFreq
+      ? Math.max(1, parseInt(streamerCheckOnlineFreq.value, 10) || 2)
+      : 2;
     const urls = getFormUrls();
 
     if (!name || urls.length === 0) {
@@ -750,6 +778,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             avatarImage,
             followingDate,
             note,
+            checkFreqOfflineMinutes,
+            checkFreqOnlineMinutes,
             urls,
             triggers,
           };
@@ -778,6 +808,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           avatarImage,
           followingDate,
           note,
+          checkFreqOfflineMinutes,
+          checkFreqOnlineMinutes,
           urls,
           triggers,
         });

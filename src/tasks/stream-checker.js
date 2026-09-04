@@ -525,15 +525,19 @@ async function checkStreamerLiveTask(
     };
   }
 
-  // Filter links to check: check link strictly when (minuteCounter % freqMinutes === 0) or if isManual
-  const linksToCheck = urlObjects.filter((linkObj) => {
-    if (isManual) return true;
-    const freq = Math.max(1, parseInt(linkObj.freqMinutes, 10) || 1);
-    return minuteCounter % freq === 0;
-  });
+  const isPreviouslyLive = Boolean(
+    previousStatus && previousStatus.isLive && previousStatus.activeUrl,
+  );
+  const streamFreq = isPreviouslyLive
+    ? Math.max(1, parseInt(streamer.checkFreqOnlineMinutes, 10) || 2)
+    : Math.max(
+        1,
+        parseInt(streamer.checkFreqOfflineMinutes, 10) ||
+          parseInt(urlObjects[0]?.freqMinutes, 10) ||
+          5,
+      );
 
-  // If no links for this streamer meet their frequency this minute, maintain previous status
-  if (linksToCheck.length === 0) {
+  if (!isManual && minuteCounter % streamFreq !== 0) {
     return {
       ...previousStatus,
       streamerId: streamer.id,
@@ -545,49 +549,85 @@ async function checkStreamerLiveTask(
     options.onCheckStart();
   }
 
-  console.log(
-    `[${timestamp}] [Background Live Check] Checking streamer "${streamerName}" (${linksToCheck.length}/${urlObjects.length} link(s) due at minute #${minuteCounter})...`,
-  );
-
   let firstLiveResult = null;
-  let lastCheckedUrl = linksToCheck[0].url;
-  let lastPlatform = detectPlatform(linksToCheck[0].url);
+  let lastCheckedUrl = urlObjects[0].url;
+  let lastPlatform = detectPlatform(urlObjects[0].url);
   let accumulatedErrors = [];
   let checkedCount = 0;
 
-  // Check each due URL sequentially (with 5s cooldown handled by queue)
-  for (let i = 0; i < linksToCheck.length; i++) {
-    const linkObj = linksToCheck[i];
-    checkedCount++;
-
-    if (linkObj.url && linkObj.url.startsWith("!")) {
-      // This is for popup only, skip.
-      // Like links that are 3rd party embeds etc.
-      continue;
-    }
-
-    const plat = detectPlatform(linkObj.url);
+  if (isPreviouslyLive) {
+    // When online, lock check strictly to activeUrl
+    const activeUrl = previousStatus.activeUrl;
+    const plat = detectPlatform(activeUrl);
     console.log(
-      `[${timestamp}] [Background Live Check] [${streamerName}] [Link ${i + 1}/${linksToCheck.length}] Checking ${plat.toUpperCase()} (freq: ${linkObj.freqMinutes}m): ${linkObj.url}...`,
+      `[${timestamp}] [Background Live Check] [${streamerName}] Checking active LIVE URL (${plat.toUpperCase()}, online freq ${streamFreq}m): ${activeUrl}...`,
     );
-
-    console.log(`[${timestamp}] [Background Live Check] 1sec cooldown`);
-    await new Promise((ok, _) => setTimeout(ok, 1_0000)); // 1sec cooldown
-
-    const singleResult = await checkSingleUrlLive(linkObj.url, streamerName);
+    checkedCount++;
+    const singleResult = await checkSingleUrlLive(activeUrl, streamerName);
     lastCheckedUrl = singleResult.url;
     lastPlatform = singleResult.platform;
 
     if (singleResult.isLive) {
-      console.log(
-        `[${timestamp}] [Background Live Check] [${streamerName}] Link ${i + 1} (${plat.toUpperCase()}) is LIVE! Short-circuiting remaining ${linksToCheck.length - i - 1} due link(s).`,
-      );
       firstLiveResult = singleResult;
-      break; // Short-circuit: no need to check other links on this avatar, moves on to next streamer
+    } else {
+      console.log(
+        `[${timestamp}] [Background Live Check] [${streamerName}] Active URL went OFFLINE. Sweeping remaining configured URLs...`,
+      );
+      // Active URL went offline: sweep remaining URLs
+      const otherUrls = urlObjects.filter(
+        (u) =>
+          normalizeUrl(u.url) !== normalizeUrl(activeUrl) &&
+          !u.url.startsWith("!"),
+      );
+      for (let i = 0; i < otherUrls.length; i++) {
+        const linkObj = otherUrls[i];
+        checkedCount++;
+        const otherPlat = detectPlatform(linkObj.url);
+        console.log(
+          `[${timestamp}] [Background Live Check] [${streamerName}] [URL ${i + 1}/${otherUrls.length}] Checking ${otherPlat.toUpperCase()}: ${linkObj.url}...`,
+        );
+        const res = await checkSingleUrlLive(linkObj.url, streamerName);
+        lastCheckedUrl = res.url;
+        lastPlatform = res.platform;
+        if (res.isLive) {
+          firstLiveResult = res;
+          break;
+        }
+        if (!res.success && res.error) {
+          accumulatedErrors.push(`${otherPlat}: ${res.error}`);
+        }
+      }
     }
+  } else {
+    // When offline, sweep URLs in priority order until live link is found
+    const validUrls = urlObjects.filter((u) => !u.url.startsWith("!"));
+    console.log(
+      `[${timestamp}] [Background Live Check] Checking offline streamer "${streamerName}" (${validUrls.length} link(s), offline freq ${streamFreq}m)...`,
+    );
 
-    if (!singleResult.success && singleResult.error) {
-      accumulatedErrors.push(`${plat}: ${singleResult.error}`);
+    for (let i = 0; i < validUrls.length; i++) {
+      const linkObj = validUrls[i];
+      checkedCount++;
+      const plat = detectPlatform(linkObj.url);
+      console.log(
+        `[${timestamp}] [Background Live Check] [${streamerName}] [Link ${i + 1}/${validUrls.length}] Checking ${plat.toUpperCase()}: ${linkObj.url}...`,
+      );
+
+      const singleResult = await checkSingleUrlLive(linkObj.url, streamerName);
+      lastCheckedUrl = singleResult.url;
+      lastPlatform = singleResult.platform;
+
+      if (singleResult.isLive) {
+        console.log(
+          `[${timestamp}] [Background Live Check] [${streamerName}] Link ${i + 1} (${plat.toUpperCase()}) is LIVE! Short-circuiting remaining ${validUrls.length - i - 1} link(s).`,
+        );
+        firstLiveResult = singleResult;
+        break;
+      }
+
+      if (!singleResult.success && singleResult.error) {
+        accumulatedErrors.push(`${plat}: ${singleResult.error}`);
+      }
     }
   }
 

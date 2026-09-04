@@ -37,6 +37,8 @@ const defaultStreamers = [
     avatarImage: "",
     followingDate: "2026-08-20",
     note: "Cozy lo-fi beats stream",
+    checkFreqOfflineMinutes: 5,
+    checkFreqOnlineMinutes: 2,
     urls: [{ url: "https://www.youtube.com/@LofiGirl/live", freqMinutes: 1 }],
     triggers: {
       titleChange: true,
@@ -52,6 +54,8 @@ const defaultStreamers = [
     avatarImage: "",
     followingDate: "2026-08-20",
     note: "FPS / shooter gameplay",
+    checkFreqOfflineMinutes: 5,
+    checkFreqOnlineMinutes: 2,
     urls: [
       { url: "https://www.twitch.tv/shroud", freqMinutes: 1 },
       { url: "https://www.youtube.com/@shroud/live", freqMinutes: 2 },
@@ -70,6 +74,8 @@ const defaultStreamers = [
     avatarImage: "",
     followingDate: "2026-08-20",
     note: "Variety / gaming",
+    checkFreqOfflineMinutes: 5,
+    checkFreqOnlineMinutes: 2,
     urls: [
       { url: "https://kick.com/xqc", freqMinutes: 1 },
       { url: "https://www.twitch.tv/xqcow", freqMinutes: 1 },
@@ -289,6 +295,15 @@ function normalizeStreamerConfig(streamer, index = 0) {
       ? streamer.snoozedUntil.trim()
       : null;
 
+  const checkFreqOfflineMinutes =
+    typeof streamer.checkFreqOfflineMinutes !== "undefined"
+      ? Math.max(1, parseInt(streamer.checkFreqOfflineMinutes, 10) || 5)
+      : 5;
+  const checkFreqOnlineMinutes =
+    typeof streamer.checkFreqOnlineMinutes !== "undefined"
+      ? Math.max(1, parseInt(streamer.checkFreqOnlineMinutes, 10) || 2)
+      : 2;
+
   return {
     id: streamer.id || `streamer-${Date.now()}-${index}`,
     name:
@@ -301,6 +316,8 @@ function normalizeStreamerConfig(streamer, index = 0) {
     note,
     customTag,
     snoozedUntil,
+    checkFreqOfflineMinutes,
+    checkFreqOnlineMinutes,
     urls,
     triggers,
   };
