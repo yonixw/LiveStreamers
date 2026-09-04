@@ -1,6 +1,6 @@
 {
   "name": "live-streamers-circles",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Cross-platform Electron app with live streamers overlay for status",
   "main": "src/main.js",
   "type": "commonjs",
@@ -52,6 +52,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "js-yaml": "^5.4.1",
     "yt-dlp-wrap-plus": "^2.5.0"
   }
 }

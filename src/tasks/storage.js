@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const yaml = require("js-yaml");
 
 // Resolve data storage paths
 function getDataDir() {
@@ -16,6 +17,10 @@ function getDataDir() {
 
 function getSettingsPath() {
   return path.join(getDataDir(), "settings.json");
+}
+
+function getSettingsYamlPath() {
+  return path.join(getDataDir(), "settings.yaml");
 }
 
 function getStatusPath() {
@@ -347,14 +352,30 @@ function normalizeStreamerConfig(streamer, index = 0) {
 }
 
 /**
- * Loads settings from settings.json or initializes default.
+ * Loads settings from settings.yaml (fallback: settings.json) or initializes default.
  */
 function loadSettings() {
-  const filePath = getSettingsPath();
+  const yamlPath = getSettingsYamlPath();
+  const jsonPath = getSettingsPath();
+  let data = null;
+
   try {
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, "utf-8");
-      const data = JSON.parse(raw);
+    if (fs.existsSync(yamlPath)) {
+      const raw = fs.readFileSync(yamlPath, "utf-8");
+      data = yaml.load(raw);
+    } else if (fs.existsSync(jsonPath)) {
+      const raw = fs.readFileSync(jsonPath, "utf-8");
+      data = JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error(
+      "[Storage] Error reading settings file, using defaults:",
+      err,
+    );
+  }
+
+  if (data && typeof data === "object") {
+    try {
       const normalizedStreamers = Array.isArray(data.streamers)
         ? data.streamers.map((s, idx) => normalizeStreamerConfig(s, idx))
         : defaultStreamers;
@@ -419,12 +440,9 @@ function loadSettings() {
         colorRules: normalizedColorRules,
         streamers: normalizedStreamers,
       };
+    } catch (err) {
+      console.error("[Storage] Error parsing settings data:", err);
     }
-  } catch (err) {
-    console.error(
-      "[Storage] Error reading settings.json, using defaults:",
-      err,
-    );
   }
 
   saveSettings(defaultSettings);
@@ -432,10 +450,10 @@ function loadSettings() {
 }
 
 /**
- * Saves settings to settings.json atomically.
+ * Saves settings to settings.yaml atomically using YAML format.
  */
 function saveSettings(settings) {
-  const filePath = getSettingsPath();
+  const filePath = getSettingsYamlPath();
   try {
     const toSave = {
       sortBy: settings.sortBy || "last-triggered",
@@ -500,10 +518,11 @@ function saveSettings(settings) {
         ? settings.streamers.map((s, idx) => normalizeStreamerConfig(s, idx))
         : defaultStreamers,
     };
-    fs.writeFileSync(filePath, JSON.stringify(toSave, null, 2), "utf-8");
+    const yamlString = yaml.dump(toSave, { indent: 2, quotingType: '"' });
+    fs.writeFileSync(filePath, yamlString, "utf-8");
     return true;
   } catch (err) {
-    console.error("[Storage] Failed to save settings.json:", err);
+    console.error("[Storage] Failed to save settings.yaml:", err);
     return false;
   }
 }
@@ -541,6 +560,7 @@ function saveStatus(statusMap) {
 module.exports = {
   getDataDir,
   getSettingsPath,
+  getSettingsYamlPath,
   getStatusPath,
   defaultStreamers,
   defaultSettings,
