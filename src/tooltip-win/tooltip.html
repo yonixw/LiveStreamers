@@ -30,7 +30,7 @@
         </div>
 
         <div class="tooltip-meta-row">
-            <span id="tooltip-history-tag" class="tooltip-history-tag" style="display: none;">📜 Titles/Games: 0</span>
+            <span id="tooltip-history-tag" class="tooltip-history-tag" style="display: none;">📜 Timeline: 0</span>
         </div>
 
         <div id="tooltip-trigger-chip" class="tooltip-trigger-chip" style="display: none;">
@@ -68,7 +68,7 @@
 
                 const historyCount = Number(data.historyCount) || 0;
                 if (historyCount > 0) {
-                    historyTagEl.textContent = `📜 Titles/Games: ${historyCount}`;
+                    historyTagEl.textContent = `📜 Timeline: ${historyCount}`;
                     historyTagEl.style.display = "inline-block";
                 } else {
                     historyTagEl.style.display = "none";

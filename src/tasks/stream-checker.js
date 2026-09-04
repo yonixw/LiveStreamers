@@ -821,9 +821,13 @@ async function checkStreamerLiveTask(
   currentResult.lastTriggeredAt = lastTriggeredAt;
   currentResult.newTriggerFired = Boolean(firedTrigger);
 
-  // Live Session Timeline History Recording [category, title, viewer, local_time, live_time]
+  // Live Session Timeline History Recording [category, title, viewer, local_time, live_time, timestamp_ms]
   if (isLive) {
     try {
+      const MAX_HISTORY_ENTRIES = 24 * 7; // Max 168 timeline events (retaining up to 7 days for 24/7 streams)
+      const ONE_HOUR_MS = 60 * 60 * 1000;
+      const nowEpochMs = Date.now();
+
       const historyMap = loadHistory();
       let streamerHistory = Array.isArray(historyMap[streamer.id])
         ? historyMap[streamer.id]
@@ -838,42 +842,54 @@ async function checkStreamerLiveTask(
         cachedInfo?.startTime || cachedInfo?.liveTime || nowIso;
       const currLiveTime = formatElapsedLiveDuration(startTimeStr);
 
-      if (isStartOfSession) {
+      if (isStartOfSession || streamerHistory.length === 0) {
         // Initial stream start event: start fresh session history
         streamerHistory = [
-          [currCat, currTitle, currViewers, currLocalTime, currLiveTime],
+          [
+            currCat,
+            currTitle,
+            currViewers,
+            currLocalTime,
+            currLiveTime,
+            nowEpochMs,
+          ],
         ];
         historyMap[streamer.id] = streamerHistory;
         saveHistory(historyMap);
-      } else if (streamerHistory.length > 0) {
+      } else {
         const lastEntry = streamerHistory[streamerHistory.length - 1];
         const prevCat = (lastEntry[0] || "").trim();
         const prevTitle = (lastEntry[1] || "").trim();
+        const lastTimestamp =
+          typeof lastEntry[5] === "number" ? lastEntry[5] : null;
 
         const catChanged = currCat.toLowerCase() !== prevCat.toLowerCase();
         const titleChanged = currTitle !== prevTitle;
+        const hourPassed =
+          lastTimestamp !== null
+            ? nowEpochMs - lastTimestamp >= ONE_HOUR_MS
+            : false;
 
-        if (catChanged || titleChanged) {
+        if (catChanged || titleChanged || hourPassed) {
           streamerHistory.push([
             currCat,
             currTitle,
             currViewers,
             currLocalTime,
             currLiveTime,
+            nowEpochMs,
           ]);
+          if (streamerHistory.length > MAX_HISTORY_ENTRIES) {
+            streamerHistory = streamerHistory.slice(-MAX_HISTORY_ENTRIES);
+          }
+          historyMap[streamer.id] = streamerHistory;
+          saveHistory(historyMap);
+        } else if (lastTimestamp === null) {
+          // Backfill timestamp for existing entry if missing
+          lastEntry[5] = nowEpochMs;
           historyMap[streamer.id] = streamerHistory;
           saveHistory(historyMap);
         }
-      } else {
-        streamerHistory.push([
-          currCat,
-          currTitle,
-          currViewers,
-          currLocalTime,
-          currLiveTime,
-        ]);
-        historyMap[streamer.id] = streamerHistory;
-        saveHistory(historyMap);
       }
       currentResult.historyCount = streamerHistory.length;
     } catch (histErr) {
