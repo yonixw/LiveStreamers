@@ -1,23 +1,76 @@
+tooltip flashing?
+    YES! on update? 
+        On update for those who are not in list?
+            Made offline - still bug happens? YES!!!
+            
+    Just add mouse check inside show()? triggered by html refresh?
 
+tooltip -> always top
+    some transperancy slider in setting? 
+    no need for offline/online tag next to streamer name..
 
+concurrent limit like 4??
+    per domain concurrent -> twitch.com etc... 
+    print on process start/stop with pid - time took 
+    
+Circles with patterns also? like 2 color dotted etc...
+    With preview in setting editor
+    
+Debug trigger-> let me push new meta{} while edit the json
 
---------- V2:
+Add to tooltip 
+    latest trigger 
+    name groups of color if contained
 
-Chat triggers
-    Kick / Twitch / YT / Destiny
-        Websocket for common trigger?
-        Rate
-        Rate of word - emote
-            +1 ? until "read"
-        word mentioned
-            +1 ? until "read"
+snooze also for 30d and 1y
 
-Get screenshot from live?
-    Video - from random timestamps?
+color rules -> search inside it... like streamer link
+    or sort a/z; newest etc...
 
-    YT-DLP?
+config in YAML!!! easier to edit..
 
-    Chrome tab screenshot after 10sec of waiting to load?
-        Muted tab?
+state text not 1/2 but just "01"... so "99" can even
+
+state->
+    Write list what get saved in state... 
+    [d, reverse, wrap]
+        direction
+        wrap
+            grid/wrap -> for a lot of ... 
+    g[]
+    filter by groups? with regex? so any=*
+        This way I can have "low_prio" group to use only on rare occasions ... 
+    [x,y,z,alpha,g[]_filter]         
+        SPOTLIGHT: top X-Y (1+) -> 
+            Triggered/Sorted -> But grouped together into single place (not just single)
+                How to expand? Maybe random every Z minutes? or just make user change view...
+            showcase lower stuff ... 
+            lower transperancy (org*spotlight) but cant be from 0to10
+            ignore snozzed
+    Offline max time
+
+snooze if "x" in [title,game] -> mainly against inf 24h re-runs
+
+"minus (-)" next offline time
+
+link popup - flash yellow (border? bg?) for 2 sec because its blending to my eyes...
+
+overlay sometimes looses TopMost -> do it once a minute?
+
+White/Dark mode for 2 lines bellow avatar? 
+    Or just add dark background? As they aren't clickable anyway...
+    
+Bug:
+    if 2 links at different time -> 
+        1 might be live but the other will make me offline (until the 1st be due...)
+        -> So make the live link only be checked once it singaled me its alive. 
+    PLUSSS 
+        Just change per streamer:
+            1) When offline EVERY X 
+            2) When online EVERY Y (lower?)
+            
+            + Backword compatible if contain time per link
+
+After offline -> clear triggers, they are used for ~other live session
 
 

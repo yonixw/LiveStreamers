@@ -1,0 +1,19 @@
+--------- V2:
+
+Chat triggers
+    Kick / Twitch / YT / Destiny
+        Websocket for common trigger?
+        Rate
+        Rate of word - emote
+            +1 ? until "read"
+        word mentioned
+            +1 ? until "read"
+
+Get screenshot from live?
+    Video - from random timestamps?
+
+    YT-DLP?
+
+    Chrome tab screenshot after 10sec of waiting to load?
+        Muted tab?
+
