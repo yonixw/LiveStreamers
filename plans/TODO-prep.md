@@ -94,13 +94,15 @@ In [`src/renderer/renderer.js`](src/renderer/renderer.js:16) and [`src/settings/
 
 
 ================================================================================
-### TASK 11: Color Rules Case-Insensitive Search in Tags & Metadata
+### [COMPLETED] TASK 11: Unified Streamer Search Modal with Context Highlight & Tag Pickers
 ================================================================================
-1. **Type:** FEATURE
-2. **Priority:** LOW-MEDIUM
-3. **Complexity:** LOW
-4. **Implementation Suggestion:**
-In [`src/settings/settings.html`](src/settings/settings.html:610), add a search input `#input-search-color-rules` with clear button `#btn-clear-search-color-rules` to the Color Rules section header, reusing the active search highlight styles (`#ffe600`) from `#input-search-streamers` in [`src/settings/settings.css:770`](src/settings/settings.css:770). In [`src/settings/settings.js:renderColorRules()`](src/settings/settings.js:1800), implement case-insensitive text filtering against rule names, color hex codes, and assigned streamer names/tags (`rule.name.toLowerCase().includes(term)` or `streamer.name.toLowerCase().includes(term)`), instantly hiding non-matching rule cards in the settings list without requiring sorting overhead.
+1. **Type:** FEATURE / UX ENHANCEMENT
+2. **Priority:** HIGH
+3. **Complexity:** MEDIUM
+4. **Implementation:**
+Created a reusable, unified Streamer Search Modal (`#streamer-search-modal`) in [`src/settings/settings.html`](src/settings/settings.html:1050), [`src/settings/settings.css`](src/settings/settings.css:2395), and [`src/settings/settings.js:openStreamerSearchModal()`](src/settings/settings.js:650). The modal requires an active text search before rendering results, limits output to max 20 matches for optimal performance, and renders streamer avatars, nicknames, names, and case-insensitive context matching with up to 250 characters of highlighted text snippets (`... <mark class="search-match-highlight"> ...`). Integrated search buttons into:
+- **Debug Trigger Simulator**: Added quick-search buttons (`#btn-search-simulator-streamer`, `#btn-open-simulator-search`) next to the target streamer dropdown with note context search.
+- **Group Rules (Action Rules & Color Rules)**: Replaced massive full-streamer checkbox lists with a tag/chip manager and "+ Add Streamer" search modal buttons (`#btn-search-add-action-streamer`, `#btn-search-add-color-streamer`) with note context search.
 
 ================================================================================
 ### TASK 12: Keyword-Based Automated Stream Snoozing (Against 24/7 Re-Runs in Title & Game)

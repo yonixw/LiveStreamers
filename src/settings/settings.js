@@ -141,6 +141,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const selectSimulatorStreamer = document.getElementById(
     "select-simulator-streamer",
   );
+  const btnSearchSimulatorStreamer = document.getElementById(
+    "btn-search-simulator-streamer",
+  );
+  const btnOpenSimulatorSearch = document.getElementById(
+    "btn-open-simulator-search",
+  );
   const selectSimulatorPreset = document.getElementById(
     "select-simulator-preset",
   );
@@ -166,12 +172,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const actionRuleNameInput = document.getElementById("action-rule-name");
   const actionRuleCommandInput = document.getElementById("action-rule-command");
   const btnBrowseCommand = document.getElementById("btn-browse-command");
-  const btnActionSelectAll = document.getElementById("btn-action-select-all");
   const btnActionDeselectAll = document.getElementById(
     "btn-action-deselect-all",
   );
-  const actionStreamersPicker = document.getElementById(
-    "action-streamers-picker",
+  const btnSearchAddActionStreamer = document.getElementById(
+    "btn-search-add-action-streamer",
+  );
+  const actionAssignedCount = document.getElementById("action-assigned-count");
+  const actionAssignedStreamersContainer = document.getElementById(
+    "action-assigned-streamers-container",
   );
   const btnTestActionRule = document.getElementById("btn-test-action-rule");
   const actionTestResult = document.getElementById("action-test-result");
@@ -200,14 +209,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   const secondaryColorPresetButtons = document.querySelectorAll(
     ".btn-secondary-color-dot",
   );
-  const btnColorSelectAll = document.getElementById("btn-color-select-all");
   const btnColorDeselectAll = document.getElementById("btn-color-deselect-all");
-  const colorStreamersPicker = document.getElementById(
-    "color-streamers-picker",
+  const btnSearchAddColorStreamer = document.getElementById(
+    "btn-search-add-color-streamer",
+  );
+  const colorAssignedCount = document.getElementById("color-assigned-count");
+  const colorAssignedStreamersContainer = document.getElementById(
+    "color-assigned-streamers-container",
   );
   const btnCancelColorRule = document.getElementById("btn-cancel-color-rule");
   const btnSaveColorRule = document.getElementById("btn-save-color-rule");
   const colorRulesListEl = document.getElementById("color-rules-list");
+
+  // Unified Streamer Search Modal Elements
+  const streamerSearchModal = document.getElementById("streamer-search-modal");
+  const streamerSearchModalTitle = document.getElementById(
+    "streamer-search-modal-title",
+  );
+  const streamerSearchModalSubtitle = document.getElementById(
+    "streamer-search-modal-subtitle",
+  );
+  const streamerSearchModalInput = document.getElementById(
+    "streamer-search-modal-input",
+  );
+  const btnClearStreamerSearchModal = document.getElementById(
+    "btn-clear-streamer-search-modal",
+  );
+  const streamerSearchResults = document.getElementById(
+    "streamer-search-modal-results",
+  );
+  const btnCloseStreamerSearchModal = document.getElementById(
+    "btn-close-streamer-search-modal",
+  );
+  const btnCancelStreamerSearch = document.getElementById(
+    "btn-cancel-streamer-search",
+  );
+
+  let activeSearchModalCallback = null;
+  let activeSearchModalGetContext = null;
+
+  let editingActionStreamerIds = [];
+  let editingColorStreamerIds = [];
 
   let localStreamers = [];
   let localActionRules = [];
@@ -421,6 +463,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
+  function openSimulatorStreamerSearch() {
+    openStreamerSearchModal({
+      title: "Select Debug Target Streamer",
+      subtitle: "Search streamer by name, nickname, or notes",
+      getContext: (s) => s.note || "",
+      onSelect: (streamer) => {
+        if (selectSimulatorStreamer) {
+          selectSimulatorStreamer.value = streamer.id;
+          updateSimulatorJsonTextarea();
+        }
+      },
+    });
+  }
+
+  if (btnSearchSimulatorStreamer) {
+    btnSearchSimulatorStreamer.addEventListener(
+      "click",
+      openSimulatorStreamerSearch,
+    );
+  }
+  if (btnOpenSimulatorSearch) {
+    btnOpenSimulatorSearch.addEventListener(
+      "click",
+      openSimulatorStreamerSearch,
+    );
+  }
+
   if (btnFireMockMetadata) {
     btnFireMockMetadata.addEventListener("click", async () => {
       const streamerId = selectSimulatorStreamer?.value;
@@ -514,6 +583,289 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
     });
+  }
+
+  // Helper functions for escaping HTML and search highlights
+  function escapeHtml(str) {
+    if (!str) return "";
+    const div = document.createElement("div");
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  function highlightMatchHtml(text, query) {
+    if (!text) return "";
+    if (!query) return escapeHtml(text);
+    const escapedText = escapeHtml(text);
+    const escapedQuery = escapeHtml(query);
+    const regex = new RegExp(
+      `(${escapedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi",
+    );
+    return escapedText.replace(
+      regex,
+      '<span class="search-match-highlight">$1</span>',
+    );
+  }
+
+  function getContextSnippetHtml(contextStr, query, maxChars = 250) {
+    if (!contextStr) return "";
+    const str = String(contextStr).trim();
+    if (!str) return "";
+    if (!query) {
+      const truncated =
+        str.length > maxChars ? str.slice(0, maxChars) + "..." : str;
+      return escapeHtml(truncated);
+    }
+
+    const queryLower = query.toLowerCase();
+    const contextLower = str.toLowerCase();
+    const idx = contextLower.indexOf(queryLower);
+
+    if (idx === -1) {
+      const truncated =
+        str.length > maxChars ? str.slice(0, maxChars) + "..." : str;
+      return escapeHtml(truncated);
+    }
+
+    const leadChars = 40;
+    let start = Math.max(0, idx - leadChars);
+    let end = Math.min(str.length, start + maxChars);
+    if (end - start < maxChars && start > 0) {
+      start = Math.max(0, end - maxChars);
+    }
+
+    const snippet = str.substring(start, end);
+    const prefix = start > 0 ? "... " : "";
+    const suffix = end < str.length ? " ..." : "";
+
+    const highlightedSnippet = highlightMatchHtml(snippet, query);
+    return `${prefix}${highlightedSnippet}${suffix}`;
+  }
+
+  // --- Unified Streamer Search Modal Controller ---
+  function closeStreamerSearchModal() {
+    if (
+      streamerSearchModal &&
+      typeof streamerSearchModal.close === "function"
+    ) {
+      streamerSearchModal.close();
+    }
+    activeSearchModalCallback = null;
+    activeSearchModalGetContext = null;
+  }
+
+  if (btnCloseStreamerSearchModal) {
+    btnCloseStreamerSearchModal.addEventListener(
+      "click",
+      closeStreamerSearchModal,
+    );
+  }
+  if (btnCancelStreamerSearch) {
+    btnCancelStreamerSearch.addEventListener("click", closeStreamerSearchModal);
+  }
+  if (btnClearStreamerSearchModal) {
+    btnClearStreamerSearchModal.addEventListener("click", () => {
+      if (streamerSearchModalInput) {
+        streamerSearchModalInput.value = "";
+        streamerSearchModalInput.focus();
+        renderSearchModalResults();
+      }
+    });
+  }
+
+  function renderSearchModalResults() {
+    if (!streamerSearchResults || !streamerSearchModalInput) return;
+    const query = streamerSearchModalInput.value.trim();
+    if (btnClearStreamerSearchModal) {
+      btnClearStreamerSearchModal.style.display =
+        query.length > 0 ? "block" : "none";
+    }
+
+    // Do not show the list until a search is in the text input, and do not show more than 20 for performance reasons.
+    if (!query) {
+      streamerSearchResults.innerHTML = `
+        <div class="streamer-search-empty-prompt">
+          🔍 Type in the search box above to find streamers by nickname, name, or notes.<br>
+          <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px; display: inline-block;">(Displays up to 20 matching results)</span>
+        </div>
+      `;
+      return;
+    }
+
+    const queryLower = query.toLowerCase();
+    const matches = [];
+
+    for (let i = 0; i < localStreamers.length; i++) {
+      const s = localStreamers[i];
+      const name = s.name || "";
+      const nickname = s.nickname || s.name || "";
+      const id = s.id || "";
+      let context = "";
+      if (typeof activeSearchModalGetContext === "function") {
+        context = activeSearchModalGetContext(s, i) || "";
+      } else {
+        context = s.note || "";
+      }
+
+      const nameMatch = name.toLowerCase().includes(queryLower);
+      const nickMatch = nickname.toLowerCase().includes(queryLower);
+      const idMatch = id.toLowerCase().includes(queryLower);
+      const contextMatch = context.toLowerCase().includes(queryLower);
+
+      if (nameMatch || nickMatch || idMatch || contextMatch) {
+        matches.push({
+          streamer: s,
+          index: i,
+          name,
+          nickname,
+          context,
+          nameMatch,
+          nickMatch,
+          contextMatch,
+        });
+      }
+
+      if (matches.length >= 20) {
+        break;
+      }
+    }
+
+    if (matches.length === 0) {
+      streamerSearchResults.innerHTML = `
+        <div class="streamer-search-empty-prompt">
+          No streamers found matching <strong>"${escapeHtml(query)}"</strong>.
+        </div>
+      `;
+      return;
+    }
+
+    streamerSearchResults.innerHTML = "";
+    matches.forEach(
+      ({ streamer, index, name, nickname, context, contextMatch }) => {
+        const itemEl = document.createElement("div");
+        itemEl.className = "streamer-search-item";
+
+        const leftEl = document.createElement("div");
+        leftEl.className = "streamer-search-item-left";
+
+        // Mini Avatar
+        const avatarDiv = document.createElement("div");
+        avatarDiv.className = "streamer-search-avatar";
+        if (streamer.avatarImage) {
+          const img = document.createElement("img");
+          let imgPath = streamer.avatarImage;
+          if (
+            !imgPath.startsWith("http") &&
+            !imgPath.startsWith("data:") &&
+            !imgPath.startsWith("file:")
+          ) {
+            imgPath = `file:///${imgPath.replace(/\\/g, "/")}`;
+          }
+          img.src = imgPath;
+          img.alt = nickname || name;
+          img.onerror = () => {
+            img.remove();
+            avatarDiv.textContent = getInitials(nickname || name);
+          };
+          avatarDiv.appendChild(img);
+        } else {
+          avatarDiv.textContent = getInitials(nickname || name);
+        }
+        leftEl.appendChild(avatarDiv);
+
+        // Info
+        const infoDiv = document.createElement("div");
+        infoDiv.className = "streamer-search-info";
+
+        const nameRow = document.createElement("div");
+        nameRow.className = "streamer-search-name-row";
+
+        const nickSpan = document.createElement("span");
+        nickSpan.className = "streamer-search-nickname";
+        nickSpan.innerHTML = highlightMatchHtml(nickname || name, query);
+        nameRow.appendChild(nickSpan);
+
+        if (nickname && name && nickname !== name) {
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "streamer-search-name";
+          nameSpan.innerHTML = `(${highlightMatchHtml(name, query)})`;
+          nameRow.appendChild(nameSpan);
+        }
+
+        infoDiv.appendChild(nameRow);
+
+        // Context snippet (if matched in context or has context)
+        if (context) {
+          const contextDiv = document.createElement("div");
+          contextDiv.className = "streamer-search-context";
+          contextDiv.innerHTML = getContextSnippetHtml(
+            context,
+            contextMatch ? query : "",
+            250,
+          );
+          infoDiv.appendChild(contextDiv);
+        }
+
+        leftEl.appendChild(infoDiv);
+        itemEl.appendChild(leftEl);
+
+        // Select Button
+        const btnSelect = document.createElement("button");
+        btnSelect.type = "button";
+        btnSelect.className = "btn btn-sm btn-primary";
+        btnSelect.textContent = "Select";
+        btnSelect.addEventListener("click", () => {
+          if (typeof activeSearchModalCallback === "function") {
+            activeSearchModalCallback(streamer, index);
+          }
+          closeStreamerSearchModal();
+        });
+
+        itemEl.appendChild(btnSelect);
+        streamerSearchResults.appendChild(itemEl);
+      },
+    );
+  }
+
+  if (streamerSearchModalInput) {
+    streamerSearchModalInput.addEventListener("input", () => {
+      renderSearchModalResults();
+    });
+    streamerSearchModalInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeStreamerSearchModal();
+      }
+    });
+  }
+
+  function openStreamerSearchModal(options = {}) {
+    activeSearchModalCallback = options.onSelect || null;
+    activeSearchModalGetContext = options.getContext || ((s) => s.note || "");
+
+    if (streamerSearchModalTitle) {
+      streamerSearchModalTitle.textContent =
+        options.title || "Search & Select Streamer";
+    }
+    if (streamerSearchModalSubtitle) {
+      streamerSearchModalSubtitle.textContent =
+        options.subtitle || "Type to search by nickname, name, or notes";
+    }
+    if (streamerSearchModalInput) {
+      streamerSearchModalInput.value = "";
+    }
+
+    renderSearchModalResults();
+
+    if (
+      streamerSearchModal &&
+      typeof streamerSearchModal.showModal === "function"
+    ) {
+      streamerSearchModal.showModal();
+      setTimeout(() => {
+        if (streamerSearchModalInput) streamerSearchModalInput.focus();
+      }, 50);
+    }
   }
 
   // Helper to get initials
@@ -2178,61 +2530,105 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // --- Multi-Streamer Selection Picker Helper ---
-  function populateStreamerMultiPicker(containerEl, selectedIds = []) {
+  // --- Assigned Streamers Tag/Chip Manager Helper ---
+  function renderAssignedStreamersTags(
+    containerEl,
+    countEl,
+    streamerIds,
+    onRemove,
+  ) {
     if (!containerEl) return;
     containerEl.innerHTML = "";
+    if (countEl) countEl.textContent = String(streamerIds.length);
 
-    if (localStreamers.length === 0) {
-      const emptySpan = document.createElement("span");
-      emptySpan.className = "empty-list-message";
-      emptySpan.style.padding = "4px 8px";
-      emptySpan.textContent =
-        "No streamers configured yet. Add streamer profiles above.";
-      containerEl.appendChild(emptySpan);
+    if (streamerIds.length === 0) {
+      const emptyMsg = document.createElement("span");
+      emptyMsg.className = "empty-assigned-streamers-msg";
+      emptyMsg.textContent =
+        "No streamers assigned to this rule yet. Click '+ Add Streamer' to search and assign.";
+      containerEl.appendChild(emptyMsg);
       return;
     }
 
-    localStreamers.forEach((s) => {
-      const label = document.createElement("label");
-      const isChecked = selectedIds.includes(s.id);
-      label.className = `picker-streamer-chip ${isChecked ? "chip-selected" : ""}`;
+    streamerIds.forEach((id) => {
+      const streamer = localStreamers.find((s) => s.id === id);
+      const displayName = streamer ? streamer.nickname || streamer.name : id;
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.value = s.id;
-      checkbox.checked = isChecked;
-      checkbox.addEventListener("change", () => {
-        label.classList.toggle("chip-selected", checkbox.checked);
-      });
+      const chip = document.createElement("div");
+      chip.className = "assigned-streamer-chip";
+
+      // Mini avatar
+      const avatarDiv = document.createElement("div");
+      avatarDiv.className = "assigned-streamer-avatar";
+      if (streamer && streamer.avatarImage) {
+        const img = document.createElement("img");
+        let imgPath = streamer.avatarImage;
+        if (
+          !imgPath.startsWith("http") &&
+          !imgPath.startsWith("data:") &&
+          !imgPath.startsWith("file:")
+        ) {
+          imgPath = `file:///${imgPath.replace(/\\/g, "/")}`;
+        }
+        img.src = imgPath;
+        img.alt = displayName;
+        img.onerror = () => {
+          img.remove();
+          avatarDiv.textContent = getInitials(displayName);
+        };
+        avatarDiv.appendChild(img);
+      } else {
+        avatarDiv.textContent = getInitials(displayName);
+      }
+      chip.appendChild(avatarDiv);
 
       const nameSpan = document.createElement("span");
-      nameSpan.textContent = s.name || "Streamer";
+      nameSpan.className = "assigned-streamer-name";
+      nameSpan.textContent = displayName;
+      chip.appendChild(nameSpan);
 
-      label.appendChild(checkbox);
-      label.appendChild(nameSpan);
-      containerEl.appendChild(label);
+      const btnRemove = document.createElement("button");
+      btnRemove.type = "button";
+      btnRemove.className = "btn-remove-assigned-chip";
+      btnRemove.title = `Remove ${displayName}`;
+      btnRemove.textContent = "✕";
+      btnRemove.addEventListener("click", () => {
+        if (typeof onRemove === "function") {
+          onRemove(id);
+        }
+      });
+      chip.appendChild(btnRemove);
+
+      containerEl.appendChild(chip);
     });
   }
 
-  function getSelectedStreamerIds(containerEl) {
-    if (!containerEl) return [];
-    const checkboxes = containerEl.querySelectorAll(
-      'input[type="checkbox"]:checked',
+  function renderAssignedActionStreamers() {
+    renderAssignedStreamersTags(
+      actionAssignedStreamersContainer,
+      actionAssignedCount,
+      editingActionStreamerIds,
+      (removedId) => {
+        editingActionStreamerIds = editingActionStreamerIds.filter(
+          (id) => id !== removedId,
+        );
+        renderAssignedActionStreamers();
+      },
     );
-    return Array.from(checkboxes).map((cb) => cb.value);
   }
 
-  function setAllPickerSelection(containerEl, selectAll) {
-    if (!containerEl) return;
-    const chips = containerEl.querySelectorAll(".picker-streamer-chip");
-    chips.forEach((chip) => {
-      const cb = chip.querySelector('input[type="checkbox"]');
-      if (cb) {
-        cb.checked = selectAll;
-        chip.classList.toggle("chip-selected", selectAll);
-      }
-    });
+  function renderAssignedColorStreamers() {
+    renderAssignedStreamersTags(
+      colorAssignedStreamersContainer,
+      colorAssignedCount,
+      editingColorStreamerIds,
+      (removedId) => {
+        editingColorStreamerIds = editingColorStreamerIds.filter(
+          (id) => id !== removedId,
+        );
+        renderAssignedColorStreamers();
+      },
+    );
   }
 
   // --- Action Rules (Action -> Streamers[]) Logic ---
@@ -2377,16 +2773,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       actionRuleIdInput.value = rule.id || "";
       actionRuleNameInput.value = rule.name || "";
       actionRuleCommandInput.value = rule.command || "";
-      populateStreamerMultiPicker(
-        actionStreamersPicker,
-        rule.streamerIds || [],
-      );
+      editingActionStreamerIds = Array.isArray(rule.streamerIds)
+        ? [...rule.streamerIds]
+        : [];
     } else {
       actionRuleIdInput.value = "";
       actionRuleNameInput.value = "";
       actionRuleCommandInput.value = "";
-      populateStreamerMultiPicker(actionStreamersPicker, []);
+      editingActionStreamerIds = [];
     }
+    renderAssignedActionStreamers();
     if (actionTestResult) {
       actionTestResult.style.display = "none";
       actionTestResult.textContent = "";
@@ -2401,6 +2797,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       actionRuleIdInput.value = "";
       actionRuleNameInput.value = "";
       actionRuleCommandInput.value = "";
+      editingActionStreamerIds = [];
     }
   }
 
@@ -2412,15 +2809,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btnCancelActionRule) {
     btnCancelActionRule.addEventListener("click", closeActionRuleEditor);
   }
-  if (btnActionSelectAll) {
-    btnActionSelectAll.addEventListener("click", () =>
-      setAllPickerSelection(actionStreamersPicker, true),
-    );
+  if (btnSearchAddActionStreamer) {
+    btnSearchAddActionStreamer.addEventListener("click", () => {
+      openStreamerSearchModal({
+        title: "Assign Streamer to Action Rule",
+        subtitle: "Search streamer by nickname, name, or notes",
+        getContext: (s) => s.note || "",
+        onSelect: (streamer) => {
+          if (!editingActionStreamerIds.includes(streamer.id)) {
+            editingActionStreamerIds.push(streamer.id);
+            renderAssignedActionStreamers();
+          }
+        },
+      });
+    });
   }
   if (btnActionDeselectAll) {
-    btnActionDeselectAll.addEventListener("click", () =>
-      setAllPickerSelection(actionStreamersPicker, false),
-    );
+    btnActionDeselectAll.addEventListener("click", () => {
+      editingActionStreamerIds = [];
+      renderAssignedActionStreamers();
+    });
   }
 
   if (btnBrowseCommand) {
@@ -2494,7 +2902,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const id = actionRuleIdInput.value || `action-rule-${Date.now()}`;
       const name = (actionRuleNameInput?.value || "").trim() || "Live Action";
-      const streamerIds = getSelectedStreamerIds(actionStreamersPicker);
+      const streamerIds = [...editingActionStreamerIds];
 
       const existingIndex = localActionRules.findIndex((r) => r.id === id);
       const ruleObj = {
@@ -2720,7 +3128,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (colorRuleSecondaryPicker) colorRuleSecondaryPicker.value = secCol;
       if (colorRuleSecondaryHex) colorRuleSecondaryHex.value = secCol;
       if (colorRulePatternSelect) colorRulePatternSelect.value = pattern;
-      populateStreamerMultiPicker(colorStreamersPicker, rule.streamerIds || []);
+      editingColorStreamerIds = Array.isArray(rule.streamerIds)
+        ? [...rule.streamerIds]
+        : [];
     } else {
       colorRuleIdInput.value = "";
       colorRuleNameInput.value = "";
@@ -2732,8 +3142,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         colorRuleSecondaryPicker.value = defaultSecCol;
       if (colorRuleSecondaryHex) colorRuleSecondaryHex.value = defaultSecCol;
       if (colorRulePatternSelect) colorRulePatternSelect.value = "solid";
-      populateStreamerMultiPicker(colorStreamersPicker, []);
+      editingColorStreamerIds = [];
     }
+    renderAssignedColorStreamers();
     updateColorRulePreview();
     colorRuleEditor.style.display = "block";
   }
@@ -2743,6 +3154,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       colorRuleEditor.style.display = "none";
       colorRuleIdInput.value = "";
       colorRuleNameInput.value = "";
+      editingColorStreamerIds = [];
     }
   }
 
@@ -2752,15 +3164,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btnCancelColorRule) {
     btnCancelColorRule.addEventListener("click", closeColorRuleEditor);
   }
-  if (btnColorSelectAll) {
-    btnColorSelectAll.addEventListener("click", () =>
-      setAllPickerSelection(colorStreamersPicker, true),
-    );
+  if (btnSearchAddColorStreamer) {
+    btnSearchAddColorStreamer.addEventListener("click", () => {
+      openStreamerSearchModal({
+        title: "Assign Streamer to Color Rule",
+        subtitle: "Search streamer by nickname, name, or notes",
+        getContext: (s) => s.note || "",
+        onSelect: (streamer) => {
+          if (!editingColorStreamerIds.includes(streamer.id)) {
+            editingColorStreamerIds.push(streamer.id);
+            renderAssignedColorStreamers();
+          }
+        },
+      });
+    });
   }
   if (btnColorDeselectAll) {
-    btnColorDeselectAll.addEventListener("click", () =>
-      setAllPickerSelection(colorStreamersPicker, false),
-    );
+    btnColorDeselectAll.addEventListener("click", () => {
+      editingColorStreamerIds = [];
+      renderAssignedColorStreamers();
+    });
   }
 
   if (colorRulePicker && colorRuleHex) {
@@ -2846,7 +3269,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const borderPattern = colorRulePatternSelect?.value || "solid";
       const id = colorRuleIdInput.value || `color-rule-${Date.now()}`;
       const name = (colorRuleNameInput?.value || "").trim() || "Color Group";
-      const streamerIds = getSelectedStreamerIds(colorStreamersPicker);
+      const streamerIds = [...editingColorStreamerIds];
 
       const existingIndex = localColorRules.findIndex((r) => r.id === id);
       const ruleObj = {
