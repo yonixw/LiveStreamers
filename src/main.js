@@ -387,8 +387,11 @@ function getEnrichedStreamer(streamer) {
   const activeUrl = status.activeUrl || primaryUrl;
   const activePlatform = status.activePlatform || detectPlatform(activeUrl);
 
-  // Find custom live border color from colorRules if any
+  // Find custom live border color and pattern from colorRules if any
   let liveBorderColor = null;
+  let liveBorderPattern = "solid";
+  let liveBorderSecondaryColor = null;
+
   if (Array.isArray(state.colorRules)) {
     const matchedRule = state.colorRules.find(
       (rule) =>
@@ -396,8 +399,16 @@ function getEnrichedStreamer(streamer) {
         Array.isArray(rule.streamerIds) &&
         rule.streamerIds.includes(streamer.id),
     );
-    if (matchedRule && matchedRule.color) {
-      liveBorderColor = matchedRule.color;
+    if (matchedRule) {
+      if (matchedRule.color) {
+        liveBorderColor = matchedRule.color;
+      }
+      if (matchedRule.borderPattern) {
+        liveBorderPattern = matchedRule.borderPattern;
+      }
+      if (matchedRule.secondaryColor) {
+        liveBorderSecondaryColor = matchedRule.secondaryColor;
+      }
     }
   }
 
@@ -406,6 +417,8 @@ function getEnrichedStreamer(streamer) {
     isLive: Boolean(status.isLive),
     offlineSince: status.isLive ? null : status.offlineSince || null,
     liveBorderColor,
+    liveBorderPattern,
+    liveBorderSecondaryColor,
     activeUrl,
     activePlatform,
     platform: activePlatform,

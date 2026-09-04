@@ -47,7 +47,17 @@ Replace the single-threaded [`src/tasks/stream-checker.js:YtDlpSequentialQueue`]
 Extend `colorRules` in [`src/tasks/storage.js`](src/tasks/storage.js:88) and streamer settings to include a `borderPattern` property (`solid`, `dashed`, `dotted`, `double`, `dual-gradient`, `striped`). In [`src/renderer/style.css:.circle-frame`](src/renderer/style.css:122) and [`src/renderer/renderer.js:renderAvatarsInPlace()`](src/renderer/renderer.js:458), dynamically apply border styles or `conic-gradient` / `repeating-linear-gradient` masks on `.circle-frame` based on the configured pattern and color pair. In [`src/settings/settings.html`](src/settings/settings.html:600), [`src/settings/settings.css`](src/settings/settings.css:1730), and [`src/settings/settings.js`](src/settings/settings.js:1680), add a pattern dropdown selector and secondary color picker within the Color Rules editor alongside an interactive circular avatar preview widget rendering real-time pattern simulations.
 
 ================================================================================
-### TASK 06: Trigger Debug Injection Simulator via JSON Metadata Payload
+### TASK 06: YAML Configuration File Support (data/settings.yaml)
+================================================================================
+1. **Type:** FEATURE
+2. **Priority:** LOW-MEDIUM
+3. **Complexity:** MEDIUM
+4. **Implementation Suggestion:**
+Install `js-yaml` or `yaml` dependency in [`package.json`](package.json:13). In [`src/tasks/storage.js`](src/tasks/storage.js:18), add `getSettingsYamlPath()` pointing to `data/settings.yaml`. Update [`src/tasks/storage.js:loadSettings()`](src/tasks/storage.js:60) and `saveSettings()` to check for `settings.yaml` first (with fallback to `settings.json` for backward compatibility), serializing configuration objects using `yaml.dump(data, { indent: 2, quotingType: '"' })` to enable easy, comment-friendly human editing in external text editors.
+
+
+================================================================================
+### TASK 07: Trigger Debug Injection Simulator via JSON Metadata Payload
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** MEDIUM
@@ -56,7 +66,7 @@ Extend `colorRules` in [`src/tasks/storage.js`](src/tasks/storage.js:88) and str
 In [`src/settings/settings.html`](src/settings/settings.html:480) and [`src/settings/settings.js`](src/settings/settings.js:550), add a "Debug Trigger Simulator" panel featuring a JSON textarea (pre-populated with `{ title, category, viewerCount, isLive, startTime }`) and a "Fire Mock Metadata" action button. Expose an IPC endpoint `debug:inject-streamer-metadata` in [`src/main.js`](src/main.js:1500) and [`src/preload.js`](src/preload.js:1) that forwards mock payloads directly into [`src/tasks/stream-checker.js:evaluateTriggers()`](src/tasks/stream-checker.js:250), bypassing network `yt-dlp` extraction to immediately trigger alert rules, action scripts, trigger diff logs, and overlay updates for rapid QA verification.
 
 ================================================================================
-### TASK 07: Live Session Timeline History in Links Popup & Tooltip Group Badges
+### TASK 08: Live Session Timeline History in Links Popup & Tooltip Group Badges
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** MEDIUM-HIGH
@@ -65,7 +75,7 @@ In [`src/settings/settings.html`](src/settings/settings.html:480) and [`src/sett
 In [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:581), record streamlined session history entries structured as `[category, title, viewer, local_time, live_time]` for the active broadcast. Append a new record to the streamer's history array strictly when `category` or `title` changes (as well as the initial stream start event), storing active sessions in `./data/history.json` via [`src/tasks/storage.js`](src/tasks/storage.js:22) as a persistent backup for the latest live session. In [`src/popup/popup.html`](src/popup/popup.html:30), [`src/popup/popup.css`](src/popup/popup.css:50), and [`src/popup/popup.js`](src/popup/popup.js:100), add a dedicated "Session History" carousel card displaying current category, title, viewers, and elapsed runtime with `[Prev]`, `[Next]`, and dynamic `Entry X/Y` navigation buttons allowing users to step through past transitions of the current/last session. In [`src/tooltip-win/tooltip.html`](src/tooltip-win/tooltip.html:20) and [`src/tooltip-win/tooltip.css`](src/tooltip-win/tooltip.css:90), display the latest trigger chip (`⚡ ${trigger.message}`) and assigned color rule group tag (`🎨 Group: ${groupName}`) for compact hovering.
 
 ================================================================================
-### TASK 08: Extended Snooze Presets (30 Days & 1 Year)
+### TASK 09: Extended Snooze Presets (30 Days & 1 Year)
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** LOW
@@ -74,7 +84,7 @@ In [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-chec
 In [`src/popup/popup.html:43`](src/popup/popup.html:43) and [`src/popup/popup.js`](src/popup/popup.js:105), add snooze duration buttons `<button data-snooze="30d">30d</button>` and `<button data-snooze="1y">1y</button>`. In [`src/main.js:ipcMain.handle('popup:snooze-streamer')`](src/main.js:740) and [`src/settings/settings.js`](src/settings/settings.js:726), extend duration calculation switch cases to calculate `30 * 24 * 60 * 60 * 1000` (30 days) and `365 * 24 * 60 * 60 * 1000` (1 year) from `Date.now()`, saving `snoozedUntil` in [`src/tasks/storage.js`](src/tasks/storage.js:169) and sinking snoozed streamers to the bottom of the overlay list.
 
 ================================================================================
-### TASK 09: Color Rules Case-Insensitive Search in Tags & Metadata
+### TASK 10: Color Rules Case-Insensitive Search in Tags & Metadata
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** LOW-MEDIUM
@@ -82,14 +92,6 @@ In [`src/popup/popup.html:43`](src/popup/popup.html:43) and [`src/popup/popup.js
 4. **Implementation Suggestion:**
 In [`src/settings/settings.html`](src/settings/settings.html:610), add a search input `#input-search-color-rules` with clear button `#btn-clear-search-color-rules` to the Color Rules section header, reusing the active search highlight styles (`#ffe600`) from `#input-search-streamers` in [`src/settings/settings.css:770`](src/settings/settings.css:770). In [`src/settings/settings.js:renderColorRules()`](src/settings/settings.js:1800), implement case-insensitive text filtering against rule names, color hex codes, and assigned streamer names/tags (`rule.name.toLowerCase().includes(term)` or `streamer.name.toLowerCase().includes(term)`), instantly hiding non-matching rule cards in the settings list without requiring sorting overhead.
 
-================================================================================
-### TASK 10: YAML Configuration File Support (data/settings.yaml)
-================================================================================
-1. **Type:** FEATURE
-2. **Priority:** LOW-MEDIUM
-3. **Complexity:** MEDIUM
-4. **Implementation Suggestion:**
-Install `js-yaml` or `yaml` dependency in [`package.json`](package.json:13). In [`src/tasks/storage.js`](src/tasks/storage.js:18), add `getSettingsYamlPath()` pointing to `data/settings.yaml`. Update [`src/tasks/storage.js:loadSettings()`](src/tasks/storage.js:60) and `saveSettings()` to check for `settings.yaml` first (with fallback to `settings.json` for backward compatibility), serializing configuration objects using `yaml.dump(data, { indent: 2, quotingType: '"' })` to enable easy, comment-friendly human editing in external text editors.
 
 ================================================================================
 ### TASK 11: Header State Indicator Formatting ("01" - "99" Zero-Padded Layout)

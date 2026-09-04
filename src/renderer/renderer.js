@@ -461,11 +461,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (frame.className !== desiredFrameClass) {
           frame.className = desiredFrameClass;
         }
-        if (isLive && streamer.liveBorderColor) {
-          frame.style.borderColor = streamer.liveBorderColor;
-          frame.style.boxShadow = `0 0 12px ${streamer.liveBorderColor}bf, 0 0 24px ${streamer.liveBorderColor}40, inset 0 0 6px ${streamer.liveBorderColor}80`;
+        if (isLive) {
+          const color1 = streamer.liveBorderColor || "#22c55e";
+          const color2 = streamer.liveBorderSecondaryColor || "#a855f7";
+          const pattern = streamer.liveBorderPattern || "solid";
+
+          frame.style.boxShadow = `0 0 12px ${color1}bf, 0 0 24px ${color1}40, inset 0 0 6px ${color1}80`;
+
+          if (pattern === "dashed") {
+            frame.style.border = `4px dashed ${color1}`;
+            frame.style.background = "#18181b";
+          } else if (pattern === "dotted") {
+            frame.style.border = `4px dotted ${color1}`;
+            frame.style.background = "#18181b";
+          } else if (pattern === "double") {
+            frame.style.border = `5px double ${color1}`;
+            frame.style.background = "#18181b";
+          } else if (pattern === "dual-gradient") {
+            frame.style.border = `4px solid transparent`;
+            frame.style.background = `linear-gradient(#18181b, #18181b) padding-box, linear-gradient(135deg, ${color1}, ${color2}) border-box`;
+          } else if (pattern === "striped") {
+            frame.style.border = `4px solid transparent`;
+            frame.style.background = `linear-gradient(#18181b, #18181b) padding-box, repeating-linear-gradient(45deg, ${color1}, ${color1} 6px, ${color2} 6px, ${color2} 12px) border-box`;
+          } else {
+            frame.style.border = `4px solid ${color1}`;
+            frame.style.background = "#18181b";
+          }
         } else {
-          frame.style.borderColor = "";
+          frame.style.border = "";
+          frame.style.background = "";
           frame.style.boxShadow = "";
         }
       }

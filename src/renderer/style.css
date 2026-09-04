@@ -235,6 +235,19 @@ body {
               inset 0 -2px 3px rgba(0, 0, 0, 0.6);
 }
 
+.circle-frame.pattern-dashed {
+  border-style: dashed;
+}
+
+.circle-frame.pattern-dotted {
+  border-style: dotted;
+}
+
+.circle-frame.pattern-double {
+  border-style: double;
+  border-width: 5px;
+}
+
 /* Avatar Inner Circle */
 .avatar-inner {
   width: 100%;

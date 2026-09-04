@@ -190,15 +190,33 @@ function normalizeActionRule(rule, index = 0) {
  * Normalizes a color rule object ({ id, name, enabled, color, streamerIds }).
  */
 function normalizeColorRule(rule, index = 0) {
+  const allowedPatterns = [
+    "solid",
+    "dashed",
+    "dotted",
+    "double",
+    "dual-gradient",
+    "striped",
+  ];
+
   if (!rule || typeof rule !== "object") {
     return {
       id: `color-rule-${Date.now()}-${index}`,
       name: `Color Rule ${index + 1}`,
       enabled: true,
       color: "#22c55e",
+      secondaryColor: "#a855f7",
+      borderPattern: "solid",
       streamerIds: [],
     };
   }
+
+  const borderPattern =
+    typeof rule.borderPattern === "string" &&
+    allowedPatterns.includes(rule.borderPattern.toLowerCase())
+      ? rule.borderPattern.toLowerCase()
+      : "solid";
+
   return {
     id:
       typeof rule.id === "string" && rule.id.trim()
@@ -213,6 +231,11 @@ function normalizeColorRule(rule, index = 0) {
       typeof rule.color === "string" && rule.color.trim()
         ? rule.color.trim()
         : "#22c55e",
+    secondaryColor:
+      typeof rule.secondaryColor === "string" && rule.secondaryColor.trim()
+        ? rule.secondaryColor.trim()
+        : "#a855f7",
+    borderPattern,
     streamerIds: Array.isArray(rule.streamerIds)
       ? rule.streamerIds.map((id) => String(id).trim()).filter(Boolean)
       : [],

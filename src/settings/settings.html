@@ -786,35 +786,96 @@
                         <!-- Color Rule Editor Form -->
                         <div id="color-rule-editor" class="rule-editor-box" style="display: none;">
                             <input type="hidden" id="color-rule-id" value="" />
-                            <div class="form-grid-two">
-                                <div class="form-group">
-                                    <label for="color-rule-name">Group Label / Name</label>
-                                    <input type="text" id="color-rule-name"
-                                        placeholder="e.g. VIP Red Group, Favorites" />
-                                </div>
-                                <div class="form-group">
-                                    <label>Avatar Live Circle Color</label>
-                                    <div class="color-picker-row">
-                                        <input type="color" id="color-rule-picker" value="#ef4444"
-                                            class="color-swatch-input" />
-                                        <input type="text" id="color-rule-hex" value="#ef4444"
-                                            class="form-input color-hex-input" maxlength="7" />
-                                        <div class="color-preset-palette">
-                                            <button type="button" class="btn-color-dot" data-color="#ef4444"
-                                                style="background:#ef4444;" title="Red"></button>
-                                            <button type="button" class="btn-color-dot" data-color="#f59e0b"
-                                                style="background:#f59e0b;" title="Amber"></button>
-                                            <button type="button" class="btn-color-dot" data-color="#3b82f6"
-                                                style="background:#3b82f6;" title="Blue"></button>
-                                            <button type="button" class="btn-color-dot" data-color="#a855f7"
-                                                style="background:#a855f7;" title="Purple"></button>
-                                            <button type="button" class="btn-color-dot" data-color="#ec4899"
-                                                style="background:#ec4899;" title="Pink"></button>
-                                            <button type="button" class="btn-color-dot" data-color="#06b6d4"
-                                                style="background:#06b6d4;" title="Cyan"></button>
-                                            <button type="button" class="btn-color-dot" data-color="#22c55e"
-                                                style="background:#22c55e;" title="Green (Default)"></button>
+                            <div class="color-rule-editor-layout">
+                                <div class="color-rule-editor-inputs">
+                                    <div class="form-grid-two">
+                                        <div class="form-group">
+                                            <label for="color-rule-name">Group Label / Name</label>
+                                            <input type="text" id="color-rule-name"
+                                                placeholder="e.g. VIP Red Group, Favorites" />
                                         </div>
+                                        <div class="form-group">
+                                            <label for="color-rule-pattern">Border Pattern</label>
+                                            <select id="color-rule-pattern" class="form-select">
+                                                <option value="solid">Solid</option>
+                                                <option value="dashed">Dashed</option>
+                                                <option value="dotted">Dotted</option>
+                                                <option value="double">Double</option>
+                                                <option value="dual-gradient">Dual Gradient</option>
+                                                <option value="striped">Striped</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-grid-two">
+                                        <div class="form-group">
+                                            <label>Primary Live Border Color</label>
+                                            <div class="color-picker-row">
+                                                <input type="color" id="color-rule-picker" value="#ef4444"
+                                                    class="color-swatch-input" />
+                                                <input type="text" id="color-rule-hex" value="#ef4444"
+                                                    class="form-input color-hex-input" maxlength="7" />
+                                                <div class="color-preset-palette">
+                                                    <button type="button" class="btn-color-dot" data-color="#ef4444"
+                                                        style="background:#ef4444;" title="Red"></button>
+                                                    <button type="button" class="btn-color-dot" data-color="#f59e0b"
+                                                        style="background:#f59e0b;" title="Amber"></button>
+                                                    <button type="button" class="btn-color-dot" data-color="#3b82f6"
+                                                        style="background:#3b82f6;" title="Blue"></button>
+                                                    <button type="button" class="btn-color-dot" data-color="#a855f7"
+                                                        style="background:#a855f7;" title="Purple"></button>
+                                                    <button type="button" class="btn-color-dot" data-color="#ec4899"
+                                                        style="background:#ec4899;" title="Pink"></button>
+                                                    <button type="button" class="btn-color-dot" data-color="#06b6d4"
+                                                        style="background:#06b6d4;" title="Cyan"></button>
+                                                    <button type="button" class="btn-color-dot" data-color="#22c55e"
+                                                        style="background:#22c55e;" title="Green (Default)"></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" id="group-secondary-color">
+                                            <label>Secondary Color <span class="text-muted"
+                                                    style="font-size:0.75rem;">(Gradients & Stripes)</span></label>
+                                            <div class="color-picker-row">
+                                                <input type="color" id="color-rule-secondary-picker" value="#a855f7"
+                                                    class="color-swatch-input" />
+                                                <input type="text" id="color-rule-secondary-hex" value="#a855f7"
+                                                    class="form-input color-hex-input" maxlength="7" />
+                                                <div class="color-preset-palette">
+                                                    <button type="button" class="btn-secondary-color-dot"
+                                                        data-color="#a855f7" style="background:#a855f7;"
+                                                        title="Purple"></button>
+                                                    <button type="button" class="btn-secondary-color-dot"
+                                                        data-color="#3b82f6" style="background:#3b82f6;"
+                                                        title="Blue"></button>
+                                                    <button type="button" class="btn-secondary-color-dot"
+                                                        data-color="#ec4899" style="background:#ec4899;"
+                                                        title="Pink"></button>
+                                                    <button type="button" class="btn-secondary-color-dot"
+                                                        data-color="#f59e0b" style="background:#f59e0b;"
+                                                        title="Amber"></button>
+                                                    <button type="button" class="btn-secondary-color-dot"
+                                                        data-color="#22c55e" style="background:#22c55e;"
+                                                        title="Green"></button>
+                                                    <button type="button" class="btn-secondary-color-dot"
+                                                        data-color="#ffffff" style="background:#ffffff;"
+                                                        title="White"></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Live Pattern Avatar Preview Box -->
+                                <div class="color-rule-preview-container">
+                                    <label class="preview-label">Live Preview</label>
+                                    <div class="color-rule-preview-box">
+                                        <div id="color-rule-preview-circle" class="preview-circle-frame">
+                                            <div class="preview-avatar-inner">
+                                                <img src="../assets/sample-avatar.svg" alt="Preview Avatar" />
+                                            </div>
+                                        </div>
+                                        <span id="color-rule-preview-tag" class="preview-badge">LIVE</span>
                                     </div>
                                 </div>
                             </div>

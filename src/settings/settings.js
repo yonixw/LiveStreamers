@@ -154,7 +154,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const colorRuleNameInput = document.getElementById("color-rule-name");
   const colorRulePicker = document.getElementById("color-rule-picker");
   const colorRuleHex = document.getElementById("color-rule-hex");
+  const colorRulePatternSelect = document.getElementById("color-rule-pattern");
+  const colorRuleSecondaryPicker = document.getElementById(
+    "color-rule-secondary-picker",
+  );
+  const colorRuleSecondaryHex = document.getElementById(
+    "color-rule-secondary-hex",
+  );
+  const colorRulePreviewCircle = document.getElementById(
+    "color-rule-preview-circle",
+  );
+  const colorRulePreviewTag = document.getElementById("color-rule-preview-tag");
   const colorPresetButtons = document.querySelectorAll(".btn-color-dot");
+  const secondaryColorPresetButtons = document.querySelectorAll(
+    ".btn-secondary-color-dot",
+  );
   const btnColorSelectAll = document.getElementById("btn-color-select-all");
   const btnColorDeselectAll = document.getElementById("btn-color-deselect-all");
   const colorStreamersPicker = document.getElementById(
@@ -2236,15 +2250,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       nameSpan.className = "rule-card-name";
       nameSpan.textContent = rule.name || "Color Rule";
 
+      const patternName = rule.borderPattern || "solid";
+      const patternBadge = document.createElement("span");
+      patternBadge.className = "rule-card-badge badge-color-preview";
+      patternBadge.textContent = patternName.toUpperCase();
+
       const colorBadge = document.createElement("span");
       colorBadge.className = "rule-card-badge badge-color-preview";
-      colorBadge.innerHTML = `<span class="color-swatch-mini" style="background:${rule.color || "#22c55e"};"></span> ${rule.color || "#22c55e"}`;
+      if (patternName === "dual-gradient" || patternName === "striped") {
+        colorBadge.innerHTML = `<span class="color-swatch-mini" style="background:${rule.color || "#22c55e"};"></span><span class="color-swatch-mini" style="background:${rule.secondaryColor || "#a855f7"};"></span> ${rule.color || "#22c55e"}`;
+      } else {
+        colorBadge.innerHTML = `<span class="color-swatch-mini" style="background:${rule.color || "#22c55e"};"></span> ${rule.color || "#22c55e"}`;
+      }
 
       const enabledBadge = document.createElement("span");
       enabledBadge.className = `rule-card-badge ${rule.enabled !== false ? "status-live" : "status-offline"}`;
       enabledBadge.textContent = rule.enabled !== false ? "Active" : "Disabled";
 
       titleRow.appendChild(nameSpan);
+      titleRow.appendChild(patternBadge);
       titleRow.appendChild(colorBadge);
       titleRow.appendChild(enabledBadge);
 
@@ -2342,23 +2366,77 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  function updateColorRulePreview() {
+    if (!colorRulePreviewCircle) return;
+    const color = (
+      colorRuleHex?.value ||
+      colorRulePicker?.value ||
+      "#ef4444"
+    ).trim();
+    const secondaryColor = (
+      colorRuleSecondaryHex?.value ||
+      colorRuleSecondaryPicker?.value ||
+      "#a855f7"
+    ).trim();
+    const pattern = colorRulePatternSelect?.value || "solid";
+
+    colorRulePreviewCircle.style.boxShadow = `0 0 12px ${color}bf, 0 0 20px ${color}40, inset 0 0 6px ${color}80`;
+
+    if (pattern === "dashed") {
+      colorRulePreviewCircle.style.border = `4px dashed ${color}`;
+      colorRulePreviewCircle.style.background = "#18181b";
+    } else if (pattern === "dotted") {
+      colorRulePreviewCircle.style.border = `4px dotted ${color}`;
+      colorRulePreviewCircle.style.background = "#18181b";
+    } else if (pattern === "double") {
+      colorRulePreviewCircle.style.border = `5px double ${color}`;
+      colorRulePreviewCircle.style.background = "#18181b";
+    } else if (pattern === "dual-gradient") {
+      colorRulePreviewCircle.style.border = `4px solid transparent`;
+      colorRulePreviewCircle.style.background = `linear-gradient(#18181b, #18181b) padding-box, linear-gradient(135deg, ${color}, ${secondaryColor}) border-box`;
+    } else if (pattern === "striped") {
+      colorRulePreviewCircle.style.border = `4px solid transparent`;
+      colorRulePreviewCircle.style.background = `linear-gradient(#18181b, #18181b) padding-box, repeating-linear-gradient(45deg, ${color}, ${color} 5px, ${secondaryColor} 5px, ${secondaryColor} 10px) border-box`;
+    } else {
+      colorRulePreviewCircle.style.border = `4px solid ${color}`;
+      colorRulePreviewCircle.style.background = "#18181b";
+    }
+
+    if (colorRulePreviewTag) {
+      colorRulePreviewTag.style.color = color;
+      colorRulePreviewTag.style.borderColor = color;
+      colorRulePreviewTag.style.background = `${color}25`;
+    }
+  }
+
   function openColorRuleEditor(rule = null) {
     if (!colorRuleEditor) return;
     if (rule) {
       colorRuleIdInput.value = rule.id || "";
       colorRuleNameInput.value = rule.name || "";
       const col = rule.color || "#ef4444";
+      const secCol = rule.secondaryColor || "#a855f7";
+      const pattern = rule.borderPattern || "solid";
       if (colorRulePicker) colorRulePicker.value = col;
       if (colorRuleHex) colorRuleHex.value = col;
+      if (colorRuleSecondaryPicker) colorRuleSecondaryPicker.value = secCol;
+      if (colorRuleSecondaryHex) colorRuleSecondaryHex.value = secCol;
+      if (colorRulePatternSelect) colorRulePatternSelect.value = pattern;
       populateStreamerMultiPicker(colorStreamersPicker, rule.streamerIds || []);
     } else {
       colorRuleIdInput.value = "";
       colorRuleNameInput.value = "";
       const defaultCol = "#ef4444";
+      const defaultSecCol = "#a855f7";
       if (colorRulePicker) colorRulePicker.value = defaultCol;
       if (colorRuleHex) colorRuleHex.value = defaultCol;
+      if (colorRuleSecondaryPicker)
+        colorRuleSecondaryPicker.value = defaultSecCol;
+      if (colorRuleSecondaryHex) colorRuleSecondaryHex.value = defaultSecCol;
+      if (colorRulePatternSelect) colorRulePatternSelect.value = "solid";
       populateStreamerMultiPicker(colorStreamersPicker, []);
     }
+    updateColorRulePreview();
     colorRuleEditor.style.display = "block";
   }
 
@@ -2390,6 +2468,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (colorRulePicker && colorRuleHex) {
     colorRulePicker.addEventListener("input", (e) => {
       colorRuleHex.value = e.target.value.toUpperCase();
+      updateColorRulePreview();
     });
     colorRuleHex.addEventListener("input", (e) => {
       let val = e.target.value.trim();
@@ -2397,6 +2476,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (/^#[0-9a-fA-F]{6}$/.test(val)) {
         colorRulePicker.value = val;
       }
+      updateColorRulePreview();
+    });
+  }
+
+  if (colorRuleSecondaryPicker && colorRuleSecondaryHex) {
+    colorRuleSecondaryPicker.addEventListener("input", (e) => {
+      colorRuleSecondaryHex.value = e.target.value.toUpperCase();
+      updateColorRulePreview();
+    });
+    colorRuleSecondaryHex.addEventListener("input", (e) => {
+      let val = e.target.value.trim();
+      if (!val.startsWith("#")) val = `#${val}`;
+      if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+        colorRuleSecondaryPicker.value = val;
+      }
+      updateColorRulePreview();
+    });
+  }
+
+  if (colorRulePatternSelect) {
+    colorRulePatternSelect.addEventListener("change", () => {
+      updateColorRulePreview();
     });
   }
 
@@ -2406,6 +2507,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (col) {
         if (colorRulePicker) colorRulePicker.value = col;
         if (colorRuleHex) colorRuleHex.value = col.toUpperCase();
+        updateColorRulePreview();
+      }
+    });
+  });
+
+  secondaryColorPresetButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const col = btn.getAttribute("data-color");
+      if (col) {
+        if (colorRuleSecondaryPicker) colorRuleSecondaryPicker.value = col;
+        if (colorRuleSecondaryHex)
+          colorRuleSecondaryHex.value = col.toUpperCase();
+        updateColorRulePreview();
       }
     });
   });
@@ -2420,6 +2534,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
+      let secondaryColor = (
+        colorRuleSecondaryHex?.value ||
+        colorRuleSecondaryPicker?.value ||
+        "#a855f7"
+      ).trim();
+      if (!secondaryColor.startsWith("#"))
+        secondaryColor = `#${secondaryColor}`;
+      if (!/^#[0-9a-fA-F]{6}$/i.test(secondaryColor)) {
+        secondaryColor = "#a855f7";
+      }
+
+      const borderPattern = colorRulePatternSelect?.value || "solid";
       const id = colorRuleIdInput.value || `color-rule-${Date.now()}`;
       const name = (colorRuleNameInput?.value || "").trim() || "Color Group";
       const streamerIds = getSelectedStreamerIds(colorStreamersPicker);
@@ -2430,6 +2556,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         name,
         enabled: true,
         color,
+        secondaryColor,
+        borderPattern,
         streamerIds,
       };
 
