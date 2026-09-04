@@ -105,7 +105,7 @@ Created a reusable, unified Streamer Search Modal (`#streamer-search-modal`) in 
 - **Group Rules (Action Rules & Color Rules)**: Replaced massive full-streamer checkbox lists with a tag/chip manager and "+ Add Streamer" search modal buttons (`#btn-search-add-action-streamer`, `#btn-search-add-color-streamer`) with note context search.
 
 ================================================================================
-### TASK 12: Keyword-Based Automated Stream Snoozing (Against 24/7 Re-Runs in Title & Game)
+### [COMPLETED] TASK 12: Keyword-Based Automated Stream Snoozing (Against 24/7 Re-Runs in Title & Game)
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** MEDIUM
@@ -114,7 +114,7 @@ Created a reusable, unified Streamer Search Modal (`#streamer-search-modal`) in 
 In [`src/tasks/storage.js:defaultSettings`](src/tasks/storage.js:88), introduce global and per-streamer auto-snooze keyword configurations: `autoSnoozeKeywordsEnabled` (boolean), `autoSnoozeKeywords` (comma-separated string, e.g. `"rerun, re-run, vod, 24/7"`), and `autoSnoozeDurationHours` (default 24h). In [`src/tasks/stream-checker.js:checkStreamerLiveTask()`](src/tasks/stream-checker.js:580), inspect live stream metadata `title` and `category/game`; if any case-insensitive keyword matches, set `streamer.snoozedUntil = Date.now() + durationMs` with status flag `autoSnoozed: true`, logging the auto-snooze event to the Activity Log and sinking the streamer in [`src/main.js:getSortedEnrichedStreamers()`](src/main.js:205). Add corresponding configuration fields in [`src/settings/settings.html`](src/settings/settings.html:340) and [`src/settings/settings.js`](src/settings/settings.js:460).
 
 ================================================================================
-### TASK 13: Minus Sign Prefix for Offline Elapsed Time Display ("-3h 40m")
+### [COMPLETED] TASK 13: Minus Sign Prefix for Offline Elapsed Time Display ("-3h 40m")
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** LOW

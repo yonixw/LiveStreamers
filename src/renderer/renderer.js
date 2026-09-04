@@ -84,12 +84,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       const hours = Math.floor((totalMins % 1440) / 60);
       const mins = totalMins % 60;
       if (days > 0) {
-        return `${days}d ${hours}h`;
+        return `-${days}d ${hours}h`;
       }
       if (hours > 0) {
-        return `${hours}h ${mins}m`;
+        return `-${hours}h ${mins}m`;
       }
-      return `${Math.max(1, mins)}m`;
+      return `-${Math.max(1, mins)}m`;
     } catch {
       return "Offline";
     }
