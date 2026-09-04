@@ -123,7 +123,7 @@ In [`src/tasks/storage.js:defaultSettings`](src/tasks/storage.js:88), introduce 
 In [`src/renderer/renderer.js:formatOfflineDuration()`](src/renderer/renderer.js:74), update the formatting return values to prepend `"- "` (minus sign with spacing) before non-fallback duration outputs: return `"- ${days}d ${hours}h"`, `"-${hours}h ${mins}m"`, or `"- ${Math.max(1, mins)}m"` (leaving `"Offline"` as the fallback when timestamps are missing). This creates an immediate visual distinction on Line 2 (`.streamer-runtime` in [`src/renderer/style.css`](src/renderer/style.css:204)) between positive live uptime (`2h 15m`) and elapsed time elapsed since the channel went offline (`- 2h 15m`).
 
 ================================================================================
-### TASK 14: Links Popup Visual Opening Accent (2-Second High-Contrast Yellow Flash)
+### [COMPLETED] TASK 14: Links Popup Visual Opening Accent (2-Second High-Contrast Yellow Flash)
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** LOW
@@ -132,7 +132,7 @@ In [`src/renderer/renderer.js:formatOfflineDuration()`](src/renderer/renderer.js
 In [`src/popup/popup.css`](src/popup/popup.css:15), define a CSS keyframe animation `@keyframes popupYellowFlash { 0% { box-shadow: 0 0 0 3px #ffe600, 0 0 25px rgba(255, 230, 0, 0.6); border-color: #ffe600; } 100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6); border-color: rgba(255, 255, 255, 0.12); } }` applied to `.popup-container.highlight-flash` with a 2-second ease-out duration. In [`src/popup/popup.js`](src/popup/popup.js:1), add the `.highlight-flash` class on `DOMContentLoaded` and whenever [`src/preload.js:onPopupData`](src/preload.js:45) delivers new streamer metadata to ensure the popup instantly grabs user focus against dark desktop backgrounds.
 
 ================================================================================
-### TASK 15: Periodic Topmost Z-Order Re-Assertion for Desktop Overlay
+### [COMPLETED] TASK 15: Periodic Topmost Z-Order Re-Assertion for Desktop Overlay
 ================================================================================
 1. **Type:** BUG
 2. **Priority:** MEDIUM
@@ -141,7 +141,7 @@ In [`src/popup/popup.css`](src/popup/popup.css:15), define a CSS keyframe animat
 In [`src/main.js`](src/main.js:150), establish a recurring 60-second interval timer `setInterval(() => assertOverlayTopmost(), 60000)` (or hook into `StreamLiveCheckerService` in [`src/tasks/stream-checker.js:716`](src/tasks/stream-checker.js:716)). In `assertOverlayTopmost()`, verify `if (state.isAlwaysOnTop && overlayWindow && !overlayWindow.isDestroyed() && state.overlayVisible)`, invoking `overlayWindow.setAlwaysOnTop(true, "screen-saver")` and `overlayWindow.moveTop()` to re-assert OS-level z-order whenever third-party fullscreen applications or Windows Explorer shell resets cause the transparent overlay to drop behind background windows.
 
 ================================================================================
-### TASK 16: Translucent Dark Backdrop Container & Color Theme for Avatar Info Lines
+### [COMPLETED] TASK 16: Translucent Dark Backdrop Container & Color Theme for Avatar Info Lines
 ================================================================================
 1. **Type:** FEATURE
 2. **Priority:** LOW-MEDIUM
@@ -150,7 +150,7 @@ In [`src/main.js`](src/main.js:150), establish a recurring 60-second interval ti
 In [`src/renderer/style.css:.streamer-info-lines`](src/renderer/style.css:204), add a sleek translucent dark backdrop pill: `background: rgba(0, 0, 0, 0.72); border-radius: 4px; padding: 2px 6px; margin-top: 4px; pointer-events: none; width: max-content; max-width: 100%; box-sizing: border-box;`. In [`src/tasks/storage.js`](src/tasks/storage.js:88), [`src/settings/settings.html`](src/settings/settings.html:120), and [`src/settings/settings.js`](src/settings/settings.js:1200), add an `infoLinesTheme` option (`dark-badge`, `plain-white`, `plain-dark`) allowing users to choose between high-contrast dark badge styling and raw text-stroke modes for optimum readability over varied desktop wallpaper backgrounds.
 
 ================================================================================
-### TASK 17: Automatic Trigger State Cleanup on Transition to Offline
+### [COMPLETED] TASK 17: Automatic Trigger State Cleanup on Transition to Offline
 ================================================================================
 1. **Type:** BUG / FEATURE
 2. **Priority:** MEDIUM
