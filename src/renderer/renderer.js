@@ -316,6 +316,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       title: fullTitle,
       isLive,
       liveBorderColor: streamer.liveBorderColor || null,
+      lastTrigger: streamer.lastTrigger || null,
+      groupName: streamer.liveGroupName || streamer.groupName || null,
       targetRect,
     };
   }

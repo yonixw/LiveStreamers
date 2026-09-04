@@ -1,5 +1,23 @@
 const path = require("path");
 const { getStreamMetadata, cleanStreamTitle } = require("./yt-dlp-utils");
+const { loadHistory, saveHistory } = require("./storage");
+
+/**
+ * Formats elapsed live stream uptime duration string (e.g. "15m", "2h 30m").
+ */
+function formatElapsedLiveDuration(isoStartTime) {
+  if (!isoStartTime) return "0m";
+  const startMs = new Date(isoStartTime).getTime();
+  if (isNaN(startMs)) return "0m";
+  const diffMs = Math.max(0, Date.now() - startMs);
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  if (hours > 0) {
+    return `${hours}h ${mins}m`;
+  }
+  return `${mins}m`;
+}
 
 /**
  * Extracts normalized domain name or platform key for per-domain queue throttling.
@@ -803,6 +821,68 @@ async function checkStreamerLiveTask(
   currentResult.lastTriggeredAt = lastTriggeredAt;
   currentResult.newTriggerFired = Boolean(firedTrigger);
 
+  // Live Session Timeline History Recording [category, title, viewer, local_time, live_time]
+  if (isLive) {
+    try {
+      const historyMap = loadHistory();
+      let streamerHistory = Array.isArray(historyMap[streamer.id])
+        ? historyMap[streamer.id]
+        : [];
+      const isStartOfSession = !previousStatus || !previousStatus.isLive;
+
+      const currCat = (cachedInfo?.category || cachedInfo?.game || "").trim();
+      const currTitle = (cachedInfo?.title || "").trim();
+      const currViewers = Number(cachedInfo?.viewerCount) || 0;
+      const currLocalTime = new Date().toLocaleTimeString();
+      const startTimeStr =
+        cachedInfo?.startTime || cachedInfo?.liveTime || nowIso;
+      const currLiveTime = formatElapsedLiveDuration(startTimeStr);
+
+      if (isStartOfSession) {
+        // Initial stream start event: start fresh session history
+        streamerHistory = [
+          [currCat, currTitle, currViewers, currLocalTime, currLiveTime],
+        ];
+        historyMap[streamer.id] = streamerHistory;
+        saveHistory(historyMap);
+      } else if (streamerHistory.length > 0) {
+        const lastEntry = streamerHistory[streamerHistory.length - 1];
+        const prevCat = (lastEntry[0] || "").trim();
+        const prevTitle = (lastEntry[1] || "").trim();
+
+        const catChanged = currCat.toLowerCase() !== prevCat.toLowerCase();
+        const titleChanged = currTitle !== prevTitle;
+
+        if (catChanged || titleChanged) {
+          streamerHistory.push([
+            currCat,
+            currTitle,
+            currViewers,
+            currLocalTime,
+            currLiveTime,
+          ]);
+          historyMap[streamer.id] = streamerHistory;
+          saveHistory(historyMap);
+        }
+      } else {
+        streamerHistory.push([
+          currCat,
+          currTitle,
+          currViewers,
+          currLocalTime,
+          currLiveTime,
+        ]);
+        historyMap[streamer.id] = streamerHistory;
+        saveHistory(historyMap);
+      }
+    } catch (histErr) {
+      console.error(
+        `[SessionHistory] Failed to record timeline entry for [${streamerName}]:`,
+        histErr,
+      );
+    }
+  }
+
   return currentResult;
 }
 
@@ -993,6 +1073,7 @@ module.exports = {
   extractDomainKey,
   normalizeUrl,
   extractStreamerName,
+  formatElapsedLiveDuration,
   checkSingleUrlLive,
   evaluateTriggers,
   checkStreamerLiveTask,

@@ -34,17 +34,8 @@ html, body {
 .tooltip-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 6px;
-}
-
-.tooltip-streamer-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow: hidden;
 }
 
 .tooltip-streamer-name {
@@ -55,26 +46,29 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: -0.01em;
+  width: 100%;
 }
 
-.tooltip-badge {
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-  padding: 2px 5px;
+.tooltip-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.tooltip-group-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 2px 6px;
   border-radius: 4px;
-  letter-spacing: 0.05em;
-  flex-shrink: 0;
-}
-
-.live-badge {
-  background-color: #22c55e;
-  color: #052e16;
-}
-
-.offline-badge {
-  background-color: #475569;
-  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
 }
 
 .tooltip-domain-tag {
@@ -116,4 +110,30 @@ html, body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+
+.tooltip-trigger-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 500;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 3px 6px;
+  border-radius: 4px;
+  word-break: break-word;
+  margin-top: 2px;
+}
+
+.tooltip-trigger-icon {
+  font-size: 10px;
+  flex-shrink: 0;
+  line-height: 1.35;
+}
+
+.tooltip-trigger-msg {
+  flex: 1;
 }

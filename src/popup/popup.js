@@ -10,7 +10,73 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnSnoozeOptions = document.querySelectorAll(".btn-snooze-option");
   const btnUnsnooze = document.getElementById("btn-unsnooze");
 
+  // Session History carousel elements
+  const popupHistorySection = document.getElementById("popup-history-section");
+  const btnHistoryPrev = document.getElementById("btn-history-prev");
+  const btnHistoryNext = document.getElementById("btn-history-next");
+  const popupHistoryCounter = document.getElementById("popup-history-counter");
+  const popupHistoryCategory = document.getElementById(
+    "popup-history-category",
+  );
+  const popupHistoryViewers = document.getElementById("popup-history-viewers");
+  const popupHistoryTitle = document.getElementById("popup-history-title");
+  const popupHistoryTime = document.getElementById("popup-history-time");
+  const popupHistoryRuntime = document.getElementById("popup-history-runtime");
+
   let currentStreamerId = null;
+  let historyEntries = [];
+  let currentHistoryIdx = 0;
+
+  function updateHistoryCard(idx) {
+    if (!historyEntries || historyEntries.length === 0) {
+      if (popupHistorySection) popupHistorySection.style.display = "none";
+      return;
+    }
+    currentHistoryIdx = Math.max(0, Math.min(historyEntries.length - 1, idx));
+    const entry = historyEntries[currentHistoryIdx];
+    if (!entry) return;
+
+    const [cat, title, viewer, localTime, liveTime] = entry;
+
+    if (popupHistoryCategory) {
+      popupHistoryCategory.textContent = cat || "(no category)";
+    }
+    if (popupHistoryViewers) {
+      const vNum = Number(viewer);
+      popupHistoryViewers.textContent =
+        !isNaN(vNum) && vNum > 0 ? `👥 ${vNum.toLocaleString()}` : "👥 0";
+    }
+    if (popupHistoryTitle) {
+      popupHistoryTitle.textContent = title || "No Title";
+    }
+    if (popupHistoryTime) {
+      popupHistoryTime.textContent = `🕒 ${localTime || "--:--:--"}`;
+    }
+    if (popupHistoryRuntime) {
+      popupHistoryRuntime.textContent = `⏱️ ${liveTime || "0m"}`;
+    }
+    if (popupHistoryCounter) {
+      popupHistoryCounter.textContent = `Entry ${currentHistoryIdx + 1}/${historyEntries.length}`;
+    }
+    if (btnHistoryPrev) {
+      btnHistoryPrev.disabled = currentHistoryIdx === 0;
+    }
+    if (btnHistoryNext) {
+      btnHistoryNext.disabled = currentHistoryIdx === historyEntries.length - 1;
+    }
+  }
+
+  if (btnHistoryPrev) {
+    btnHistoryPrev.addEventListener("click", () => {
+      updateHistoryCard(currentHistoryIdx - 1);
+    });
+  }
+
+  if (btnHistoryNext) {
+    btnHistoryNext.addEventListener("click", () => {
+      updateHistoryCard(currentHistoryIdx + 1);
+    });
+  }
 
   // Helper to detect platform
   function detectPlatform(url) {
@@ -109,11 +175,32 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Render streamer details and link cards
   function renderStreamerData(data) {
     if (!data || !data.streamer) return;
-    const { streamer, isLive, activeUrl, isSnoozed, snoozedUntil } = data;
+    const { streamer, isLive, activeUrl, isSnoozed, snoozedUntil, history } =
+      data;
     currentStreamerId = streamer.id;
 
     const name = streamer.name || "Streamer";
     popupStreamerName.textContent = name;
+
+    // Session Timeline History Carousel
+    if (Array.isArray(history) && history.length > 0) {
+      historyEntries = history;
+      if (popupHistorySection) popupHistorySection.style.display = "flex";
+      updateHistoryCard(historyEntries.length - 1);
+    } else if (isLive && streamer.cachedInfo) {
+      const cached = streamer.cachedInfo;
+      const cat = (cached.category || cached.game || "").trim();
+      const title = (cached.title || "").trim();
+      const viewer = Number(cached.viewerCount) || 0;
+      const localTime = new Date().toLocaleTimeString();
+      const liveTime = "Live";
+      historyEntries = [[cat, title, viewer, localTime, liveTime]];
+      if (popupHistorySection) popupHistorySection.style.display = "flex";
+      updateHistoryCard(0);
+    } else {
+      historyEntries = [];
+      if (popupHistorySection) popupHistorySection.style.display = "none";
+    }
 
     // Snooze status badge
     if (isSnoozed && snoozedUntil) {

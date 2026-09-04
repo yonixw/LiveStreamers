@@ -113,6 +113,8 @@ const {
   saveSettings,
   loadStatus,
   saveStatus,
+  loadHistory,
+  saveHistory,
   defaultStreamers,
   normalizeStreamerConfig,
   normalizeUrlEntry,
@@ -388,10 +390,11 @@ function getEnrichedStreamer(streamer) {
   const activeUrl = status.activeUrl || primaryUrl;
   const activePlatform = status.activePlatform || detectPlatform(activeUrl);
 
-  // Find custom live border color and pattern from colorRules if any
+  // Find custom live border color, pattern, and group name from colorRules if any
   let liveBorderColor = null;
   let liveBorderPattern = "solid";
   let liveBorderSecondaryColor = null;
+  let liveGroupName = null;
 
   if (Array.isArray(state.colorRules)) {
     const matchedRule = state.colorRules.find(
@@ -401,6 +404,9 @@ function getEnrichedStreamer(streamer) {
         rule.streamerIds.includes(streamer.id),
     );
     if (matchedRule) {
+      if (matchedRule.name) {
+        liveGroupName = matchedRule.name;
+      }
       if (matchedRule.color) {
         liveBorderColor = matchedRule.color;
       }
@@ -420,6 +426,8 @@ function getEnrichedStreamer(streamer) {
     liveBorderColor,
     liveBorderPattern,
     liveBorderSecondaryColor,
+    liveGroupName,
+    groupName: liveGroupName,
     activeUrl,
     activePlatform,
     platform: activePlatform,
@@ -728,7 +736,7 @@ function createSettingsWindow() {
 function createLinksPopupWindow(streamerId) {
   activePopupStreamerId = streamerId;
 
-  let initialBounds = { width: 340, height: 440 };
+  let initialBounds = { width: 340, height: 480 };
   let shouldCenter = true;
 
   if (state.popupBounds && typeof state.popupBounds.width === "number") {
@@ -1418,12 +1426,15 @@ ipcMain.handle("popup:get-active-streamer", () => {
   const streamer = state.streamers.find((s) => s.id === activePopupStreamerId);
   if (!streamer) return null;
   const enriched = getEnrichedStreamer(streamer);
+  const historyMap = loadHistory();
+  const history = historyMap[streamer.id] || [];
   return {
     streamer: enriched,
     isLive: enriched.isLive,
     activeUrl: enriched.activeUrl,
     isSnoozed: isSnoozed(streamer),
     snoozedUntil: streamer.snoozedUntil || null,
+    history,
   };
 });
 

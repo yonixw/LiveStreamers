@@ -11,10 +11,7 @@
 <body>
     <div id="tooltip-card" class="tooltip-card">
         <div class="tooltip-header">
-            <div class="tooltip-streamer-info">
-                <span id="tooltip-name" class="tooltip-streamer-name">Streamer</span>
-            </div>
-            <span id="tooltip-domain" class="tooltip-domain-tag">domain.com</span>
+            <span id="tooltip-name" class="tooltip-streamer-name">Streamer</span>
         </div>
 
         <div id="tooltip-game-row" class="tooltip-game-row">
@@ -23,15 +20,31 @@
         </div>
 
         <div id="tooltip-title" class="tooltip-title-text">Stream Title</div>
+
+        <div id="tooltip-meta-row" class="tooltip-meta-row">
+            <span id="tooltip-domain" class="tooltip-domain-tag">domain.com</span>
+        </div>
+
+        <div id="tooltip-meta-row" class="tooltip-meta-row">
+            <span id="tooltip-group-tag" class="tooltip-group-tag" style="display: none;">🎨 Group</span>
+        </div>
+
+        <div id="tooltip-trigger-chip" class="tooltip-trigger-chip" style="display: none;">
+            <span class="tooltip-trigger-icon">⚡</span>
+            <span id="tooltip-trigger-msg" class="tooltip-trigger-msg"></span>
+        </div>
     </div>
 
     <script>
         const card = document.getElementById("tooltip-card");
         const nameEl = document.getElementById("tooltip-name");
         const domainEl = document.getElementById("tooltip-domain");
+        const groupTagEl = document.getElementById("tooltip-group-tag");
         const gameRowEl = document.getElementById("tooltip-game-row");
         const gameEl = document.getElementById("tooltip-game");
         const titleEl = document.getElementById("tooltip-title");
+        const triggerChipEl = document.getElementById("tooltip-trigger-chip");
+        const triggerMsgEl = document.getElementById("tooltip-trigger-msg");
 
         if (window.electronAPI && window.electronAPI.onTooltipData) {
             window.electronAPI.onTooltipData((data) => {
@@ -40,6 +53,13 @@
                 nameEl.textContent = data.name || "Streamer";
                 domainEl.textContent = data.domain || "";
                 domainEl.style.display = data.domain ? "inline-block" : "none";
+
+                if (data.groupName) {
+                    groupTagEl.textContent = `🎨 ${data.groupName}`;
+                    groupTagEl.style.display = "inline-block";
+                } else {
+                    groupTagEl.style.display = "none";
+                }
 
                 const gameText = data.game && data.game !== "(---)" ? data.game.trim() : "";
                 if (gameText) {
@@ -50,12 +70,19 @@
                 }
 
                 titleEl.textContent = data.title || "No Title";
+
+                const triggerMsg = data.lastTrigger?.message || data.lastTrigger?.label || null;
+                if (triggerMsg) {
+                    triggerMsgEl.textContent = triggerMsg;
+                    triggerChipEl.style.display = "flex";
+                } else {
+                    triggerChipEl.style.display = "none";
+                }
+
                 if (data.liveBorderColor && data.isLive) {
                     card.style.borderColor = data.liveBorderColor;
-                    statusBadgeEl.style.backgroundColor = data.liveBorderColor;
                 } else {
                     card.style.borderColor = "rgba(148, 163, 184, 0.25)";
-                    statusBadgeEl.style.backgroundColor = "";
                 }
             });
         }

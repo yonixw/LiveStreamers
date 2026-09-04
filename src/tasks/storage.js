@@ -27,6 +27,10 @@ function getStatusPath() {
   return path.join(getDataDir(), "status.json");
 }
 
+function getHistoryPath() {
+  return path.join(getDataDir(), "history.json");
+}
+
 function getTodayDateString() {
   const now = new Date();
   const year = now.getFullYear();
@@ -557,11 +561,42 @@ function saveStatus(statusMap) {
   }
 }
 
+/**
+ * Loads session timeline history from history.json.
+ */
+function loadHistory() {
+  const filePath = getHistoryPath();
+  try {
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error("[Storage] Error reading history.json:", err);
+  }
+  return {};
+}
+
+/**
+ * Saves session timeline history to history.json atomically.
+ */
+function saveHistory(historyMap) {
+  const filePath = getHistoryPath();
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(historyMap, null, 2), "utf-8");
+    return true;
+  } catch (err) {
+    console.error("[Storage] Failed to save history.json:", err);
+    return false;
+  }
+}
+
 module.exports = {
   getDataDir,
   getSettingsPath,
   getSettingsYamlPath,
   getStatusPath,
+  getHistoryPath,
   defaultStreamers,
   defaultSettings,
   normalizeUrlEntry,
@@ -572,4 +607,6 @@ module.exports = {
   saveSettings,
   loadStatus,
   saveStatus,
+  loadHistory,
+  saveHistory,
 };

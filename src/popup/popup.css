@@ -126,6 +126,138 @@ html, body {
   border-color: #ef4444;
 }
 
+/* Session History Carousel Section */
+.popup-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.popup-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup-history-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.02em;
+}
+
+.popup-history-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-history-nav {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  width: 22px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-history-nav:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-history-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.popup-history-counter {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 55px;
+  text-align: center;
+}
+
+.popup-history-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 7px 9px;
+}
+
+.popup-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.popup-history-category {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #38bdf8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.popup-history-viewers {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #4ade80;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.popup-history-title {
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--text-main);
+  word-break: break-word;
+  max-height: 2.7em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.popup-history-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.popup-history-time {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  font-family: 'Consolas', monospace;
+}
+
+.popup-history-runtime {
+  font-size: 0.64rem;
+  color: #fbbf24;
+  font-weight: 600;
+}
+
 .popup-instruction {
   font-size: 0.75rem;
   color: var(--text-muted);

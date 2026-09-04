@@ -27,6 +27,31 @@
             <button type="button" id="btn-close-window" class="btn-close-popup" title="Close Window">✕</button>
         </header>
 
+        <!-- Session History Carousel Section -->
+        <section id="popup-history-section" class="popup-history-section" style="display: none;">
+            <div class="popup-history-header">
+                <span class="popup-history-label">📜 Session Timeline</span>
+                <div class="popup-history-nav">
+                    <button type="button" id="btn-history-prev" class="btn-history-nav" title="Previous entry"
+                        disabled>◀</button>
+                    <span id="popup-history-counter" class="popup-history-counter">Entry 1/1</span>
+                    <button type="button" id="btn-history-next" class="btn-history-nav" title="Next entry"
+                        disabled>▶</button>
+                </div>
+            </div>
+            <div class="popup-history-card">
+                <div class="popup-history-row">
+                    <span id="popup-history-category" class="popup-history-category">Category</span>
+                    <span id="popup-history-viewers" class="popup-history-viewers">👥 0</span>
+                </div>
+                <div id="popup-history-title" class="popup-history-title">Stream Title</div>
+                <div class="popup-history-footer">
+                    <span id="popup-history-time" class="popup-history-time">🕒 00:00:00</span>
+                    <span id="popup-history-runtime" class="popup-history-runtime">⏱️ 0m</span>
+                </div>
+            </div>
+        </section>
+
         <!-- Subheader hint -->
         <div class="popup-instruction">
             <span>Select a platform to watch:</span>
