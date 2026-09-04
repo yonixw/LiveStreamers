@@ -107,6 +107,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Window Controls
   const chkShowNicknameTag = document.getElementById("chk-show-nickname-tag");
+  const selectInfoLinesTheme = document.getElementById(
+    "select-info-lines-theme",
+  );
   const chkShowOverlay = document.getElementById("chk-show-overlay");
   const chkAlwaysOnTop = document.getElementById("chk-always-on-top");
   const chkSmartClickThrough = document.getElementById(
@@ -2338,6 +2341,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  if (selectInfoLinesTheme) {
+    selectInfoLinesTheme.addEventListener("change", () => {
+      if (window.electronAPI && window.electronAPI.updateSettings) {
+        window.electronAPI.updateSettings({
+          infoLinesTheme: selectInfoLinesTheme.value,
+        });
+        appendLog(
+          `Avatar info lines theme set to: ${selectInfoLinesTheme.value}`,
+          "info",
+          "Settings",
+        );
+      }
+    });
+  }
+
   // External Community Links
   externalLinkCards.forEach((card) => {
     card.addEventListener("click", (e) => {
@@ -3439,6 +3457,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (typeof settings.showNicknameTag === "boolean" && chkShowNicknameTag) {
       chkShowNicknameTag.checked = settings.showNicknameTag;
+    }
+
+    if (settings.infoLinesTheme && selectInfoLinesTheme) {
+      selectInfoLinesTheme.value = settings.infoLinesTheme;
     }
 
     if (typeof settings.overlayVisible === "boolean") {

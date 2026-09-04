@@ -108,6 +108,7 @@ const defaultSettings = {
   layoutOrientation: "vertical",
   layoutReversed: false,
   showNicknameTag: false,
+  infoLinesTheme: "dark-badge",
   isAlwaysOnTop: true,
   isIgnoringMouseEvents: false,
   smartClickThrough: false,
@@ -462,6 +463,13 @@ function loadSettings() {
           typeof data.autoSnoozeKeywords === "string"
             ? data.autoSnoozeKeywords
             : "rerun, re-run, vod, 24/7",
+        infoLinesTheme:
+          typeof data.infoLinesTheme === "string" &&
+          ["dark-badge", "plain-white", "plain-dark"].includes(
+            data.infoLinesTheme,
+          )
+            ? data.infoLinesTheme
+            : defaultSettings.infoLinesTheme,
         autoSnoozeDurationHours:
           typeof data.autoSnoozeDurationHours !== "undefined"
             ? Math.max(1, parseInt(data.autoSnoozeDurationHours, 10) || 24)

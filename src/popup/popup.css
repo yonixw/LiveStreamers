@@ -29,12 +29,31 @@ html, body {
   user-select: none;
 }
 
-.popup-window-container {
+@keyframes popupYellowFlash {
+  0% {
+    box-shadow: 0 0 0 3px #ffe600, 0 0 25px rgba(255, 230, 0, 0.6);
+    border-color: #ffe600;
+  }
+  100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.popup-window-container,
+.popup-container {
   display: flex;
   flex-direction: column;
   height: 100%;
   padding: 16px;
   gap: 12px;
+  border: 1px solid var(--border-color);
+  box-sizing: border-box;
+}
+
+.popup-window-container.highlight-flash,
+.popup-container.highlight-flash {
+  animation: popupYellowFlash 2s ease-out forwards;
 }
 
 /* Header */

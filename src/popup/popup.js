@@ -1,4 +1,19 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  const popupContainer =
+    document.querySelector(".popup-window-container") ||
+    document.querySelector(".popup-container");
+
+  function triggerHighlightFlash() {
+    if (popupContainer) {
+      popupContainer.classList.remove("highlight-flash");
+      void popupContainer.offsetWidth; // trigger DOM reflow to restart animation
+      popupContainer.classList.add("highlight-flash");
+    }
+  }
+
+  // Trigger visual opening flash
+  triggerHighlightFlash();
+
   const popupAvatar = document.getElementById("popup-avatar");
   const popupAvatarFallback = document.getElementById("popup-avatar-fallback");
   const popupAvatarImg = document.getElementById("popup-avatar-img");
@@ -193,6 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Render streamer details and link cards
   function renderStreamerData(data) {
     if (!data || !data.streamer) return;
+    triggerHighlightFlash();
     const { streamer, isLive, activeUrl, isSnoozed, snoozedUntil, history } =
       data;
     currentStreamerId = streamer.id;
@@ -356,5 +372,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (err) {
       console.error("Failed to load popup data:", err);
     }
+  }
+
+  // Listen for real-time popup data broadcasts if available
+  if (window.electronAPI && window.electronAPI.onPopupData) {
+    window.electronAPI.onPopupData((data) => {
+      renderStreamerData(data);
+    });
   }
 });

@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getActivePopupStreamer: () => ipcRenderer.invoke("popup:get-active-streamer"),
   snoozeStreamer: (streamerId, durationMs) =>
     ipcRenderer.invoke("popup:snooze-streamer", { streamerId, durationMs }),
+  onPopupData: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on("popup:set-data", handler);
+    return () => ipcRenderer.removeListener("popup:set-data", handler);
+  },
 
   // Node.js Side Tasks & Debug Simulator
   runPetAvatarTask: (userName) =>

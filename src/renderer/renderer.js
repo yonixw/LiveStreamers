@@ -209,6 +209,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     }
 
+    if (settings.infoLinesTheme) {
+      document.body.classList.remove(
+        "info-theme-dark-badge",
+        "info-theme-plain-white",
+        "info-theme-plain-dark",
+      );
+      document.body.classList.add(`info-theme-${settings.infoLinesTheme}`);
+    }
+
     // Update window state indicator badge in header
     if (headerStateIndicator) {
       const stateCount = Math.max(

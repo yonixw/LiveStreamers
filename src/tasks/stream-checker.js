@@ -688,6 +688,7 @@ async function checkStreamerLiveTask(
   const urlObjects = getNormalizedUrlObjects(streamer);
 
   if (urlObjects.length === 0) {
+    const isTransitionToOffline = Boolean(previousStatus?.isLive);
     return {
       success: false,
       streamerId: streamer.id,
@@ -698,8 +699,14 @@ async function checkStreamerLiveTask(
       cachedInfo: null,
       lastChecked: new Date().toISOString(),
       lastError: "No URLs configured for this streamer",
-      lastTrigger: previousStatus?.lastTrigger || null,
-      lastTriggeredAt: previousStatus?.lastTriggeredAt || null,
+      lastTrigger: isTransitionToOffline
+        ? null
+        : previousStatus?.lastTrigger || null,
+      lastTriggeredAt: isTransitionToOffline
+        ? null
+        : previousStatus?.lastTriggeredAt || null,
+      runtimeTriggerMilestones: [],
+      viewerSurgeFired: false,
     };
   }
 
@@ -886,20 +893,34 @@ async function checkStreamerLiveTask(
   }
 
   // Trigger evaluation
-  const firedTrigger = evaluateTriggers(
-    streamer,
-    currentResult,
-    previousStatus,
-  );
-  let lastTrigger = previousStatus?.lastTrigger || null;
-  let lastTriggeredAt = previousStatus?.lastTriggeredAt || null;
+  let firedTrigger = null;
+  let lastTrigger = null;
+  let lastTriggeredAt = null;
 
-  if (firedTrigger) {
-    lastTrigger = firedTrigger;
-    lastTriggeredAt = firedTrigger.timestamp;
-    console.log(
-      `[${timestamp}] [Trigger Alert] [${streamerName}] ⚡ ${firedTrigger.label}: ${firedTrigger.message}`,
-    );
+  if (!isLive && previousStatus?.isLive) {
+    // Exact live-to-offline state transition: reset active trigger cache fields
+    lastTrigger = null;
+    lastTriggeredAt = null;
+    currentResult.runtimeTriggerMilestones = [];
+    currentResult.viewerSurgeFired = false;
+  } else if (!isLive) {
+    lastTrigger = previousStatus?.lastTrigger || null;
+    lastTriggeredAt = previousStatus?.lastTriggeredAt || null;
+    currentResult.runtimeTriggerMilestones =
+      previousStatus?.runtimeTriggerMilestones || [];
+    currentResult.viewerSurgeFired = previousStatus?.viewerSurgeFired || false;
+  } else {
+    firedTrigger = evaluateTriggers(streamer, currentResult, previousStatus);
+    lastTrigger = previousStatus?.lastTrigger || null;
+    lastTriggeredAt = previousStatus?.lastTriggeredAt || null;
+
+    if (firedTrigger) {
+      lastTrigger = firedTrigger;
+      lastTriggeredAt = firedTrigger.timestamp;
+      console.log(
+        `[${timestamp}] [Trigger Alert] [${streamerName}] ⚡ ${firedTrigger.label}: ${firedTrigger.message}`,
+      );
+    }
   }
 
   currentResult.lastTrigger = lastTrigger;

@@ -155,6 +155,7 @@ const state = {
   layoutOrientation: persistedSettings.layoutOrientation || "vertical",
   layoutReversed: persistedSettings.layoutReversed ?? false,
   showNicknameTag: persistedSettings.showNicknameTag ?? false,
+  infoLinesTheme: persistedSettings.infoLinesTheme || "dark-badge",
   isAlwaysOnTop: persistedSettings.isAlwaysOnTop ?? true,
   isIgnoringMouseEvents: persistedSettings.isIgnoringMouseEvents ?? false,
   smartClickThrough: persistedSettings.smartClickThrough ?? false,
@@ -699,6 +700,11 @@ function createOverlayWindow() {
   });
 
   overlayWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
+
+  if (state.isAlwaysOnTop) {
+    overlayWindow.setAlwaysOnTop(true, "screen-saver");
+    overlayWindow.moveTop();
+  }
 
   if (state.isIgnoringMouseEvents || state.smartClickThrough) {
     overlayWindow.setIgnoreMouseEvents(true, { forward: true });
@@ -1296,10 +1302,24 @@ ipcMain.handle("settings:update", (_event, partialSettings) => {
     state.showNicknameTag = partialSettings.showNicknameTag;
   }
 
+  if (
+    typeof partialSettings.infoLinesTheme === "string" &&
+    ["dark-badge", "plain-white", "plain-dark"].includes(
+      partialSettings.infoLinesTheme,
+    )
+  ) {
+    state.infoLinesTheme = partialSettings.infoLinesTheme;
+  }
+
   if (typeof partialSettings.isAlwaysOnTop === "boolean") {
     state.isAlwaysOnTop = partialSettings.isAlwaysOnTop;
     if (overlayWindow && !overlayWindow.isDestroyed()) {
-      overlayWindow.setAlwaysOnTop(state.isAlwaysOnTop);
+      if (state.isAlwaysOnTop) {
+        overlayWindow.setAlwaysOnTop(true, "screen-saver");
+        overlayWindow.moveTop();
+      } else {
+        overlayWindow.setAlwaysOnTop(false);
+      }
     }
   }
 
@@ -1755,7 +1775,12 @@ ipcMain.handle("window:center-overlay", () => {
 ipcMain.handle("window:toggle-always-on-top", () => {
   state.isAlwaysOnTop = !state.isAlwaysOnTop;
   if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.setAlwaysOnTop(state.isAlwaysOnTop);
+    if (state.isAlwaysOnTop) {
+      overlayWindow.setAlwaysOnTop(true, "screen-saver");
+      overlayWindow.moveTop();
+    } else {
+      overlayWindow.setAlwaysOnTop(false);
+    }
   }
   saveSettings(state);
   broadcastStateUpdate();
@@ -1903,11 +1928,26 @@ ipcMain.handle("app:quit", () => {
   app.quit();
 });
 
+function assertOverlayTopmost() {
+  if (
+    state.isAlwaysOnTop &&
+    overlayWindow &&
+    !overlayWindow.isDestroyed() &&
+    state.overlayVisible
+  ) {
+    overlayWindow.setAlwaysOnTop(true, "screen-saver");
+    overlayWindow.moveTop();
+  }
+}
+
 // App lifecycle
 app.whenReady().then(() => {
   createOverlayWindow();
   createTray();
   initBackgroundChecker();
+
+  // Periodic topmost z-order re-assertion for desktop overlay (every 60 seconds)
+  setInterval(() => assertOverlayTopmost(), 60000);
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
